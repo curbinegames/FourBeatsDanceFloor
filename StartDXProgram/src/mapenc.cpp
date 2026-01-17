@@ -158,7 +158,7 @@ int MapLoadOne(FBDF_map_t *map, const char *nex_music) {
 		}
 		else if (strands(buf, "BPM:")) {
 			strmods(buf, 4);
-			option.now_bpm = strtol(buf, NULL, 10);
+			option.now_bpm = strtod(buf, NULL);
 		}
 		else {
 			GetNoteLine(map, buf, &option);
