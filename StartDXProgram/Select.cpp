@@ -1258,7 +1258,19 @@ int FBDF_WriteMeta(const music_detail_t *buf, const char *d_name) {
 
 #endif /* メタデータ関連 */
 
-void FBDF_select_MapLoadMusicGetDetail(
+#if 1 /* 譜面リスト読み込み系 */
+
+/**
+ * @brief ファイル名から楽曲を読み込む
+ * @param[out] detail 読み込んだリストの保存先
+ * @param[in] music_detail_base 全難易度共通部分のデータ
+ * @param[in] d_name PCフォルダー名
+ * @param[in] file ファイル名
+ * @param[in] dif 難易度タイプ
+ * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
+ * @return なし
+ */
+static void FBDF_select_MapLoadMusicGetDetail(
 	std::vector<music_detail_t> &detail, const FBDF_music_detail_base_st &music_detail_base,
 	const char *d_name, const char *file, int dif
 ) {
@@ -1296,7 +1308,13 @@ void FBDF_select_MapLoadMusicGetDetail(
 	detail.push_back(buf);
 }
 
-void FBDF_select_MapLoadMusic(music_list_c *musiclist, const char *d_name) {
+/**
+ * @brief PCフォルダー名から楽曲のリストを読み込む
+ * @param[out] musiclist 譜面リスト
+ * @param[in] d_name PCフォルダー名。 "asd" とすると "music/asd" フォルダーから楽曲のリストを読み込む
+ * @return なし
+ */
+static void FBDF_select_MapLoadMusic(music_list_c *musiclist, const char *d_name) {
 	char str_buf[256] = "";
 	FBDF_map_t map;
 	music_detail_t buf;
@@ -1447,8 +1465,12 @@ void FBDF_select_MapLoadMusic(music_list_c *musiclist, const char *d_name) {
 	return;
 }
 
-/* フォルダから楽曲のリストを読み込む */
-int FBDF_LoadMusicList(music_list_c *musiclist) {
+/**
+ * @brief PCフォルダー内を調べて楽曲のリストを読み込む
+ * @param[out] musiclist 譜面リスト
+ * @return int 0=成功, -1=失敗
+ */
+static int FBDF_LoadMusicList(music_list_c *musiclist) {
 	DIR *dir;
 	struct dirent *dirs;
 	dir = opendir("music");
@@ -1465,7 +1487,14 @@ int FBDF_LoadMusicList(music_list_c *musiclist) {
 	return 0;
 }
 
-/* 条件から譜面リストを作る */
+#endif /* 譜面リスト読み込み系 */
+
+/**
+ * @brief 条件から譜面リストを作る
+ * @param[out] musiclist 譜面リスト
+ * @param[in] folder_num 今いるゲーム内フォルダー
+ * @return なし
+ */
 static void FBDF_MakeMusicList(music_list_c *musiclist, music_folder_num_t folder_num) {
 	musiclist->sort.clear();
 	music_folder_str.clear();
@@ -1551,7 +1580,11 @@ static void FBDF_MakeMusicList(music_list_c *musiclist, music_folder_num_t folde
 	return;
 }
 
-/* フォルダの用意 */
+/**
+ * @brief ゲーム内フォルダを用意する
+ * @param なし
+ * @return なし
+ */
 static void FBDF_select_init_folder(void) {
 	if (begin_folder_str.empty()) {
 		std::string buf = "all";
@@ -1586,6 +1619,15 @@ static void FBDF_select_init_folder(void) {
 	}
 }
 
+/**
+ * @brief セレクト画面のキー入力を管理する
+ * @param[out] folder_stack 今いるゲーム内フォルダーのパス
+ * @param[out] command 今のカーソル位置
+ * @param[out] musiclist 譜面リスト
+ * @param[out] cutin カットイン管理クラス
+ * @param[out] list_size 譜面リストのサイズ
+ * @return なし
+ */
 static void FBDF_select_KeyCheck(
 	std::stack<music_folder_num_t> &folder_stack,
 	int &command,
@@ -1699,10 +1741,10 @@ static void FBDF_select_KeyCheck(
 	}
 }
 
-/* 返り値: 次のシーンの番号 */
-
 /**
- * @brief
+ * @brief セレクト画面のベース
+ * @param[out] nex_music プレイ画面に渡すデータ
+ * @return view_num_t 次の画面
  */
 view_num_t FirstSelectView(FBDF::play_choose_music_st *nex_music) {
 	int keybox[5] = { KEY_INPUT_RETURN, KEY_INPUT_UP, KEY_INPUT_DOWN, KEY_INPUT_LEFT, KEY_INPUT_RIGHT };
