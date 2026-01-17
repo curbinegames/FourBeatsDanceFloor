@@ -1,0 +1,9 @@
+#move1:
+#image:upper.png
+#type:4,8
+#next:
+
+#move2:
+#image:rool.png
+#type:1,4
+#next:
