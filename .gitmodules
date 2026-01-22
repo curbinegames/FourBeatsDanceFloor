@@ -1,0 +1,3 @@
+[submodule "StartDXProgram/general"]
+	path = StartDXProgram/general
+	url = https://github.com/curbinegames/curbineCodes.git
