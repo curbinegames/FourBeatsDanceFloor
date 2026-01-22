@@ -1,5 +1,44 @@
 #pragma once
 
+/**
+* コーディング規約
+* 自分が忘れるので書いておく
+* 
+* ・includeの順番
+* 標準関数
+* DxLib
+* curbinecodes
+* FBDF_main関連
+* FBDF_個別関連
+* 自分ヘッダ
+* 
+* ・変数指定の順番
+* bool
+* char
+* int
+* size_t
+* double
+* enum
+* struct
+* STL系(std::vectorとか)
+* FILE
+* class
+* DxPic_t関連
+* DxSnd_t関連
+* DxTime_t関連
+* cutin関連
+* 
+* ・引数指定の順番
+* 変数指定+可変ポインタを先頭に
+* Ntime関連は末尾に
+* 
+* ・構造体、関数名
+* 先頭にFBDF_をつける。
+* 
+* ・関数の引数の数
+* 5個以内が望ましい。5個を超えるなら構造体にすることを検討する。
+*/
+
 #define WINDOW_SIZE_MODE 0 // 0~2 を切り替えながら使ってね
 
 #define TOOL_NAME "Four Beat Dance Floor" // ツールの名前
