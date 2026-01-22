@@ -3,6 +3,7 @@ memo2.cpp
 StartDXProgram.sln
 
 *.bak
+*.dat
 *.dll
 *.mp3
 *.mp4

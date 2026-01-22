@@ -5,6 +5,7 @@
 #include <dxcur.h>
 
 #include "main.h"
+#include <save.h>
 #include "Result.h"
 #include <Play.h>
 
@@ -334,8 +335,7 @@ void FBDF_result_DrawFinalBar(double acc) {
 	);
 }
 
-/* 返り値: 次のシーンの番号 */
-view_num_t FirstResultView(const FBDF_result_data_t *data) {
+static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int hitkey = 0;
 
@@ -413,4 +413,25 @@ view_num_t FirstResultView(const FBDF_result_data_t *data) {
 		WaitTimer(10); // ループウェイト
 	}
 	return VIEW_EXIT;
+}
+
+static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *data) {
+	if ((data->drop <= 0) && (data->save <= 0)) { return FBDF_CLEAR_TYPE_PERFECT; }
+	if (data->drop <= 0) { return FBDF_CLEAR_TYPE_FULLCOMBO; }
+	if (70.0 < data->acc) { return FBDF_CLEAR_TYPE_CLEARED; }
+	return FBDF_CLEAR_TYPE_FAILED;
+}
+
+static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
+	FBDF_file_music_score_st this_time_score;
+	this_time_score.acc        = data->acc;
+	this_time_score.clear_type = FBDF_Resule_JudgeClearType(data);
+	this_time_score.score      = data->score;
+	FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type);
+}
+
+/* 返り値: 次のシーンの番号 */
+view_num_t FirstResultView(const FBDF_result_data_t *data) {
+	FBDF_Result_SaveMusicScore(data);
+	return FBDF_Result_View(data);
 }

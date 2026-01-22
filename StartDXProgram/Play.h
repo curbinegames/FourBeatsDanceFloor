@@ -19,7 +19,7 @@ namespace FBDF {
 		std::string folder_name;
 		std::string music_name;
 		std::string map_file_name;
-		int dif = 0; /* 0,1,2 */
+		FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
 	} play_choose_music_st;
 }
 

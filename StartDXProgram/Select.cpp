@@ -221,9 +221,10 @@ typedef struct music_detail_s {
 	uint Length = 0;
 	music_dif_t auto_cal_dif;
 	int user_dif = 0;
-	int dif_type = 1; /* 0,1,2 */
+	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::LIGHT;
 	music_most_colorpat_t most_colorpat[MOST_COLORPAT_NUM];
 	music_colorcount_t color_count;
+	FBDF_file_music_score_st user_highscore;
 } music_detail_t;
 
 typedef struct music_folder_s {
@@ -375,7 +376,7 @@ static void DrawMusicListOne(const char *name, int offset,
 }
 
 static void DrawMusicList2(std::vector<std::string> *list,
-	int command, int view_dif_type, const music_ber_pic_t *music_ber_pic)
+	int command, FBDF_dif_type_ec view_dif_type, const music_ber_pic_t *music_ber_pic)
 {
 	if (list->empty()) {
 		/* フォルダ内に項目がない。曲フォルダである場合が多い */
@@ -406,7 +407,7 @@ static void DrawMusicList2(std::vector<std::string> *list,
 }
 
 static void DrawMusicList(std::stack<music_folder_num_t> *folder_stack,
-	const music_list_c *musiclist, int command, int view_dif_type,
+	const music_list_c *musiclist, int command, FBDF_dif_type_ec view_dif_type,
 	const music_ber_pic_t *music_ber_pic)
 {
 	/* フォルダはグレー色にしたい */
@@ -1273,7 +1274,7 @@ int FBDF_WriteMeta(const music_detail_t *buf, const char *d_name) {
  */
 static void FBDF_select_MapLoadMusicGetDetail(
 	std::vector<music_detail_t> &detail, const FBDF_music_detail_base_st &music_detail_base,
-	const char *d_name, const char *file, int dif
+	const char *d_name, const char *file, FBDF_dif_type_ec dif
 ) {
 	FBDF_map_t map;
 	music_detail_t buf;
@@ -1303,6 +1304,7 @@ static void FBDF_select_MapLoadMusicGetDetail(
 		buf.dif_type = dif;
 		CalMapMostColorPat(buf.most_colorpat, &map);
 		CountMapColor(&buf.color_count, &map, buf.Length);
+		FBDF_Save_ReadScoreOneDif(&buf.user_highscore, d_name, dif);
 		// FBDF_WriteMeta(&buf, d_name);
 	}
 
@@ -1458,9 +1460,9 @@ static void FBDF_select_MapLoadMusic(music_list_c *musiclist, const char *d_name
 		else { /* なかったらmap.txtだけ探す */
 			detail_base[1].map_path = "map.txt";
 		}
-		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[0], d_name, detail_base[0].map_path.c_str(), 0);
-		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[1], d_name, detail_base[1].map_path.c_str(), 1);
-		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[2], d_name, detail_base[2].map_path.c_str(), 2);
+		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[0], d_name, detail_base[0].map_path.c_str(), FBDF_dif_type_ec::LIGHT );
+		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[1], d_name, detail_base[1].map_path.c_str(), FBDF_dif_type_ec::NORMAL);
+		FBDF_select_MapLoadMusicGetDetail(musiclist->detail, detail_base[2], d_name, detail_base[2].map_path.c_str(), FBDF_dif_type_ec::HYPER );
 	}
 
 	return;
@@ -1499,7 +1501,7 @@ static int FBDF_LoadMusicList(music_list_c *musiclist) {
  */
 static void FBDF_MakeMusicList(
 	music_list_c *musiclist, music_folder_num_t folder_num,
-	int view_dif_type)
+	FBDF_dif_type_ec view_dif_type)
 {
 	musiclist->sort.clear();
 	music_folder_str.clear();
@@ -1571,13 +1573,13 @@ static void FBDF_MakeMusicList(
 	for (int is = 0; is < musiclist->sort.size(); is++) {
 		std::string buf = (*musiclist)[is].music_name;
 		switch ((*musiclist)[is].dif_type) {
-		case 0:
+		case FBDF_dif_type_ec::LIGHT:
 			buf += "[light]";
 			break;
-		case 1:
+		case FBDF_dif_type_ec::NORMAL:
 			buf += "[normal]";
 			break;
-		case 2:
+		case FBDF_dif_type_ec::HYPER:
 			buf += "[hyper]";
 			break;
 		}
@@ -1639,7 +1641,7 @@ static void FBDF_select_init_folder(void) {
 static void FBDF_select_KeyCheck(
 	std::stack<music_folder_num_t> &folder_stack,
 	int &command,
-	int &view_dif_type,
+	FBDF_dif_type_ec &view_dif_type,
 	music_list_c *musiclist,
 	fbdf_cutin_c *cutin,
 	size_t list_size
@@ -1742,13 +1744,15 @@ static void FBDF_select_KeyCheck(
 			command = MOD_AVOID_ZERO((command + 1), list_size, 0);
 			break;
 		case KEY_INPUT_LEFT:
-			view_dif_type = max(0, view_dif_type - 1);
+			command = 0;
+			--view_dif_type;
 			if (folder_stack.top() == ALL_MUSIC_FOLDER) {
 				FBDF_MakeMusicList(musiclist, ALL_MUSIC_FOLDER, view_dif_type);
 			}
 			break;
 		case KEY_INPUT_RIGHT:
-			view_dif_type = min(view_dif_type + 1, 2);
+			command = 0;
+			++view_dif_type;
 			if (folder_stack.top() == ALL_MUSIC_FOLDER) {
 				FBDF_MakeMusicList(musiclist, ALL_MUSIC_FOLDER, view_dif_type);
 			}
@@ -1770,7 +1774,7 @@ view_num_t FirstSelectView(FBDF::play_choose_music_st *nex_music) {
 	int hitkey = 0;
 	int keyBlock = 1;
 	int command = 0;
-	int view_dif_type = 1; /* 0,1,2 */
+	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
 	//int monoFG = 0;
 
 	bool exit_fg = false;
@@ -1820,6 +1824,9 @@ view_num_t FirstSelectView(FBDF::play_choose_music_st *nex_music) {
 			DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.color);
 			DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.trick);
 			DrawFormatString(5, 125, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.all);
+			DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[command].user_highscore.score);
+			DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[command].user_highscore.acc);
+			DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[command].user_highscore.clear_type);
 			DrawColorCount(5, 660, &(musiclist[command].color_count));
 		}
 		DrawMusicList(&folder_stack, &musiclist, command, view_dif_type, &music_ber_pic);
@@ -1836,6 +1843,6 @@ view_num_t FirstSelectView(FBDF::play_choose_music_st *nex_music) {
 	nex_music->folder_name = musiclist[command].folder_name;
 	nex_music->map_file_name = musiclist[command].map_file_name;
 	nex_music->music_name = musiclist[command].music_name;
-	nex_music->dif = musiclist[command].dif_type;
+	nex_music->dif_type = musiclist[command].dif_type;
 	return VIEW_PLAY;
 }

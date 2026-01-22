@@ -1622,6 +1622,7 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 
 	result_data->name   = nex_music->folder_name;
 	result_data->artist = map.artist;
+	result_data->folder_name = nex_music->folder_name;
 	result_data->level = 0; /* meta.bin‚©‚çŽæ‚Á‚Ä‚­‚é */
 	result_data->score = score.point;
 	result_data->acc  = play_class.score_bar_class.GetScore_ave();
@@ -1632,6 +1633,7 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	result_data->gap_ave = play_class.gap_bar_class.GetAve();
 	result_data->charaNo = 0; /* ‚Ü‚¾‚È‚ñ‚àƒCƒ‰ƒXƒg•`‚¢‚Ä‚È‚¢ */
 	play_class.score_bar_class.get_graph(result_data->score_graph);
+	result_data->dif_type = nex_music->dif_type;
 
 	return VIEW_RESULT;
 }
