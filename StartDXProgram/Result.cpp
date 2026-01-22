@@ -416,10 +416,12 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 }
 
 static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *data) {
-	if ((data->drop <= 0) && (data->save <= 0)) { return FBDF_CLEAR_TYPE_PERFECT; }
-	if (data->drop <= 0) { return FBDF_CLEAR_TYPE_FULLCOMBO; }
-	if (70.0 < data->acc) { return FBDF_CLEAR_TYPE_CLEARED; }
-	return FBDF_CLEAR_TYPE_FAILED;
+	if (data->acc < 70.0) { return FBDF_CLEAR_TYPE_FAILED;    }
+	if (30 < data->drop)  { return FBDF_CLEAR_TYPE_CLEARED;   }
+	if ( 5 < data->drop)  { return FBDF_CLEAR_TYPE_CAKEWALK;  }
+	if ( 0 < data->drop)  { return FBDF_CLEAR_TYPE_MISSLESS;  }
+	if ( 0 < data->save)  { return FBDF_CLEAR_TYPE_FULLCOMBO; }
+	return FBDF_CLEAR_TYPE_PERFECT;
 }
 
 static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
