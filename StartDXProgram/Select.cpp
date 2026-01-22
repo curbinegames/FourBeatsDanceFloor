@@ -305,58 +305,52 @@ static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
 {
 	size_t list_size = 0;
 
-	if (folder_stack->empty()) {
+	switch (folder_stack->top()) {
+	case DEFAULT_MUSIC_FOLDER:
 		list_size = 2;
-	}
-	else {
-		switch (folder_stack->top()) {
-		case LEVEL_SET_MUSIC_FOLDER:
-			list_size = 11;
-			break;
-		case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-		case LEVEL0_MUSIC_FOLDER:
-		case LEVEL1_MUSIC_FOLDER:
-		case LEVEL2_MUSIC_FOLDER:
-		case LEVEL3_MUSIC_FOLDER:
-		case LEVEL4_MUSIC_FOLDER:
-		case LEVEL5_MUSIC_FOLDER:
-		case LEVEL6_MUSIC_FOLDER:
-		case LEVEL7_MUSIC_FOLDER:
-		case LEVEL8_MUSIC_FOLDER:
-		case LEVEL9_MUSIC_FOLDER:
-		case LEVEL10_MUSIC_FOLDER:
-			list_size = music_folder_str.size();
-			break;
-		}
+		break;
+	case LEVEL_SET_MUSIC_FOLDER:
+		list_size = 11;
+		break;
+	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
+	case LEVEL0_MUSIC_FOLDER:
+	case LEVEL1_MUSIC_FOLDER:
+	case LEVEL2_MUSIC_FOLDER:
+	case LEVEL3_MUSIC_FOLDER:
+	case LEVEL4_MUSIC_FOLDER:
+	case LEVEL5_MUSIC_FOLDER:
+	case LEVEL6_MUSIC_FOLDER:
+	case LEVEL7_MUSIC_FOLDER:
+	case LEVEL8_MUSIC_FOLDER:
+	case LEVEL9_MUSIC_FOLDER:
+	case LEVEL10_MUSIC_FOLDER:
+		list_size = music_folder_str.size();
+		break;
 	}
 
 	return list_size;
 }
 
 static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
-	if (folder_stack->empty()) {
+	switch (folder_stack->top()) {
+	case DEFAULT_MUSIC_FOLDER:
+	case LEVEL_SET_MUSIC_FOLDER:
 		return false;
-	}
-	else {
-		switch (folder_stack->top()) {
-		case LEVEL_SET_MUSIC_FOLDER:
-			return false;
-			break;
-		case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-		case LEVEL0_MUSIC_FOLDER:
-		case LEVEL1_MUSIC_FOLDER:
-		case LEVEL2_MUSIC_FOLDER:
-		case LEVEL3_MUSIC_FOLDER:
-		case LEVEL4_MUSIC_FOLDER:
-		case LEVEL5_MUSIC_FOLDER:
-		case LEVEL6_MUSIC_FOLDER:
-		case LEVEL7_MUSIC_FOLDER:
-		case LEVEL8_MUSIC_FOLDER:
-		case LEVEL9_MUSIC_FOLDER:
-		case LEVEL10_MUSIC_FOLDER:
-			return true;
-			break;
-		}
+		break;
+	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
+	case LEVEL0_MUSIC_FOLDER:
+	case LEVEL1_MUSIC_FOLDER:
+	case LEVEL2_MUSIC_FOLDER:
+	case LEVEL3_MUSIC_FOLDER:
+	case LEVEL4_MUSIC_FOLDER:
+	case LEVEL5_MUSIC_FOLDER:
+	case LEVEL6_MUSIC_FOLDER:
+	case LEVEL7_MUSIC_FOLDER:
+	case LEVEL8_MUSIC_FOLDER:
+	case LEVEL9_MUSIC_FOLDER:
+	case LEVEL10_MUSIC_FOLDER:
+		return true;
+		break;
 	}
 	return false;
 }
@@ -411,30 +405,27 @@ static void DrawMusicList(std::stack<music_folder_num_t> *folder_stack,
 	const music_ber_pic_t *music_ber_pic)
 {
 	/* フォルダはグレー色にしたい */
-	if (folder_stack->empty()) {
-		/* 最初のフォルダ */
+	switch (folder_stack->top()) {
+	case DEFAULT_MUSIC_FOLDER:
 		DrawMusicList2(&begin_folder_str, command, view_dif_type, music_ber_pic);
-	}
-	else {
-		switch (folder_stack->top()) {
-		case LEVEL_SET_MUSIC_FOLDER: /* レベルフォルダ */
-			DrawMusicList2(&level_folder_str, command, view_dif_type, music_ber_pic);
-			break;
-		case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-		case LEVEL0_MUSIC_FOLDER:
-		case LEVEL1_MUSIC_FOLDER:
-		case LEVEL2_MUSIC_FOLDER:
-		case LEVEL3_MUSIC_FOLDER:
-		case LEVEL4_MUSIC_FOLDER:
-		case LEVEL5_MUSIC_FOLDER:
-		case LEVEL6_MUSIC_FOLDER:
-		case LEVEL7_MUSIC_FOLDER:
-		case LEVEL8_MUSIC_FOLDER:
-		case LEVEL9_MUSIC_FOLDER:
-		case LEVEL10_MUSIC_FOLDER:
-			DrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
-			break;
-		}
+		break;
+	case LEVEL_SET_MUSIC_FOLDER: /* レベルフォルダ */
+		DrawMusicList2(&level_folder_str, command, view_dif_type, music_ber_pic);
+		break;
+	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
+	case LEVEL0_MUSIC_FOLDER:
+	case LEVEL1_MUSIC_FOLDER:
+	case LEVEL2_MUSIC_FOLDER:
+	case LEVEL3_MUSIC_FOLDER:
+	case LEVEL4_MUSIC_FOLDER:
+	case LEVEL5_MUSIC_FOLDER:
+	case LEVEL6_MUSIC_FOLDER:
+	case LEVEL7_MUSIC_FOLDER:
+	case LEVEL8_MUSIC_FOLDER:
+	case LEVEL9_MUSIC_FOLDER:
+	case LEVEL10_MUSIC_FOLDER:
+		DrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
+		break;
 	}
 
 	return;
@@ -1649,7 +1640,8 @@ static void FBDF_select_KeyCheck(
 	if (!cutin->IsClosing()) {
 		switch (GetKeyPushOnce()) {
 		case KEY_INPUT_RETURN:
-			if (folder_stack.empty()) {
+			switch (folder_stack.top()) {
+			case DEFAULT_MUSIC_FOLDER:
 				switch (command) {
 				case 0:
 					folder_stack.push(ALL_MUSIC_FOLDER);
@@ -1660,79 +1652,76 @@ static void FBDF_select_KeyCheck(
 					break;
 				}
 				command = 0;
-			}
-			else {
-				switch (folder_stack.top()) {
-				case LEVEL_SET_MUSIC_FOLDER:
-					switch (command) {
-					case 0:
-						folder_stack.push(LEVEL0_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL0_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 1:
-						folder_stack.push(LEVEL1_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL1_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 2:
-						folder_stack.push(LEVEL2_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL2_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 3:
-						folder_stack.push(LEVEL3_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL3_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 4:
-						folder_stack.push(LEVEL4_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL4_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 5:
-						folder_stack.push(LEVEL5_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL5_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 6:
-						folder_stack.push(LEVEL6_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL6_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 7:
-						folder_stack.push(LEVEL7_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL7_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 8:
-						folder_stack.push(LEVEL8_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL8_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 9:
-						folder_stack.push(LEVEL9_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL9_MUSIC_FOLDER, view_dif_type);
-						break;
-					case 10:
-						folder_stack.push(LEVEL10_MUSIC_FOLDER);
-						FBDF_MakeMusicList(musiclist, LEVEL10_MUSIC_FOLDER, view_dif_type);
-						break;
-					}
-					command = 0;
+				break;
+			case LEVEL_SET_MUSIC_FOLDER:
+				switch (command) {
+				case 0:
+					folder_stack.push(LEVEL0_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL0_MUSIC_FOLDER, view_dif_type);
 					break;
-				case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-				case LEVEL0_MUSIC_FOLDER:
-				case LEVEL1_MUSIC_FOLDER:
-				case LEVEL2_MUSIC_FOLDER:
-				case LEVEL3_MUSIC_FOLDER:
-				case LEVEL4_MUSIC_FOLDER:
-				case LEVEL5_MUSIC_FOLDER:
-				case LEVEL6_MUSIC_FOLDER:
-				case LEVEL7_MUSIC_FOLDER:
-				case LEVEL8_MUSIC_FOLDER:
-				case LEVEL9_MUSIC_FOLDER:
-				case LEVEL10_MUSIC_FOLDER:
-					if (!musiclist->sort.empty()) {
-						cutin->SetIo(CUT_FRAG_IN);
-					}
+				case 1:
+					folder_stack.push(LEVEL1_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL1_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 2:
+					folder_stack.push(LEVEL2_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL2_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 3:
+					folder_stack.push(LEVEL3_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL3_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 4:
+					folder_stack.push(LEVEL4_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL4_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 5:
+					folder_stack.push(LEVEL5_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL5_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 6:
+					folder_stack.push(LEVEL6_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL6_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 7:
+					folder_stack.push(LEVEL7_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL7_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 8:
+					folder_stack.push(LEVEL8_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL8_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 9:
+					folder_stack.push(LEVEL9_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL9_MUSIC_FOLDER, view_dif_type);
+					break;
+				case 10:
+					folder_stack.push(LEVEL10_MUSIC_FOLDER);
+					FBDF_MakeMusicList(musiclist, LEVEL10_MUSIC_FOLDER, view_dif_type);
 					break;
 				}
+				command = 0;
+				break;
+			case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
+			case LEVEL0_MUSIC_FOLDER:
+			case LEVEL1_MUSIC_FOLDER:
+			case LEVEL2_MUSIC_FOLDER:
+			case LEVEL3_MUSIC_FOLDER:
+			case LEVEL4_MUSIC_FOLDER:
+			case LEVEL5_MUSIC_FOLDER:
+			case LEVEL6_MUSIC_FOLDER:
+			case LEVEL7_MUSIC_FOLDER:
+			case LEVEL8_MUSIC_FOLDER:
+			case LEVEL9_MUSIC_FOLDER:
+			case LEVEL10_MUSIC_FOLDER:
+				if (!musiclist->sort.empty()) {
+					cutin->SetIo(CUT_FRAG_IN);
+				}
+				break;
 			}
 			break;
 		case KEY_INPUT_BACK:
-			if (!folder_stack.empty()) {
+			if (folder_stack.top() != DEFAULT_MUSIC_FOLDER) {
 				folder_stack.pop();
 				command = 0;
 			}
@@ -1782,6 +1771,7 @@ view_num_t FirstSelectView(FBDF::play_choose_music_st *nex_music) {
 	size_t list_size = 0;
 
 	std::stack<music_folder_num_t> folder_stack;
+	folder_stack.push(DEFAULT_MUSIC_FOLDER);
 
 	music_list_c musiclist;
 
