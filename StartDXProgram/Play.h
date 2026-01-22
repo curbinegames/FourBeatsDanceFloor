@@ -1,7 +1,7 @@
 #pragma once
 
-#include "main.h"
-#include "Result.h"
+#include <main.h>
+#include <Result.h>
 
 #define FBDF_PLAY_SCOREBAR_COLOR_RED60     0xFFEB3324 /* 70  - 60 */
 #define FBDF_PLAY_SCOREBAR_COLOR_RED0      0xFF962117 /* 60  -  0 */

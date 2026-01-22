@@ -1,13 +1,13 @@
 
 #include <vector>
 
-#include "DxLib.h"
+#include <DxLib.h>
 
+#include <dxcur.h>
+#include <keycur.h>
+
+#include <main.h>
 #include <fbdf_cutin.h>
-
-#include "main.h"
-#include "keycur.h"
-#include "dxcur.h"
 
 #define FBDF_TITLE_PART_LIFETIME  4000
 #define FBDF_TITLE_PART_MAX_COUNT 500

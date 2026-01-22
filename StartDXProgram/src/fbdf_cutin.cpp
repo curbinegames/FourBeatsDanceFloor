@@ -3,9 +3,9 @@
 #include <DxLib.h>
 
 /* curbine code include */
+#include <dxcur.h>
 #include <sancur.h>
 #include <strcur.h>
-#include <dxcur.h>
 
 /* own include */
 #include <fbdf_cutin.h>

@@ -1,14 +1,15 @@
 
-#include "DxLib.h"
-#include "sancur.h"
-#include "strcur.h"
-#include "dxcur.h"
+#include <DxLib.h>
 
-#include "main.h"
-#include "Title.h"
-#include "Select.h"
-#include "Play.h"
-#include "Result.h"
+#include <dxcur.h>
+#include <sancur.h>
+#include <strcur.h>
+
+#include <main.h>
+#include <Title.h>
+#include <Select.h>
+#include <Play.h>
+#include <Result.h>
 
 #define DX_MAIN_DEF HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow
 

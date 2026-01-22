@@ -2,20 +2,20 @@
 #include <vector>
 #include <queue>
 
-#include "dirent.h"
-#include "DxLib.h"
+#include <DxLib.h>
+#include <dirent.h>
 
-#include "keycur.h"
-#include "strcur.h"
-#include "dxcur.h"
-#include "dxdraw.h"
+#include <dxcur.h>
+#include <dxdraw.h>
+#include <keycur.h>
+#include <strcur.h>
 
+#include <main.h>
 #include <fbdf_cutin.h>
-
-#include "main.h"
-#include <play.h>
 #include <mapenc.h>
-#include "Result.h"
+
+#include <play.h>
+#include <Result.h>
 
 #define D_JUDGE_WIDTH 17
 #define JUDGE_WIDTH 200

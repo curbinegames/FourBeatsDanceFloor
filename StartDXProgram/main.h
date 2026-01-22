@@ -6,6 +6,7 @@
 * 
 * Einclude‚Ì‡”Ô
 * •W€ŠÖ”
+* STLŒn
 * DxLib
 * curbinecodes
 * FBDF_mainŠÖ˜A

@@ -3,19 +3,20 @@
 #include <vector>
 #include <queue>
 #include <stack>
+
+#include <DxLib.h>
+#include <dirent.h>
+
+#include <keycur.h>
+#include <dxcur.h>
+#include <strcur.h>
 #include <UTF8_conv.h>
 
-#include "dirent.h"
-#include "DxLib.h"
-#include "keycur.h"
-#include "dxcur.h"
-#include <strcur.h>
-
+#include <main.h>
 #include <fbdf_cutin.h>
-
-#include "main.h"
-#include <Play.h>
 #include <mapenc.h>
+
+#include <Play.h>
 
 /* num‚ªtarget}gapˆÈ“à‚Å‚ ‚ê‚Îtrue‚ğ•Ô‚·define */
 #define IS_NEAR_NUM(num, target, gap) (((target) - (gap)) <= (num) && (num) <= ((target) + (gap)))

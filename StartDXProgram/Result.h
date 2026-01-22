@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "main.h"
+#include <main.h>
 #include <save.h>
 
 #define FBDF_RESULT_SCORE_GRAPH_COUNT 25

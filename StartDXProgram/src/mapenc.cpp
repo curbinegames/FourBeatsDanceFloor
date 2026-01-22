@@ -1,6 +1,7 @@
 ﻿
 #include <vector>
 #include <string>
+
 #include <DxLib.h>
 
 #include <sancur.h>

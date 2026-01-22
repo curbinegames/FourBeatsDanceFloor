@@ -1,13 +1,14 @@
 
-#include "DxLib.h"
+#include <DxLib.h>
 
-#include "keycur.h"
+#include <keycur.h>
 #include <dxcur.h>
 
-#include "main.h"
+#include <main.h>
 #include <save.h>
-#include "Result.h"
 #include <Play.h>
+
+#include <Result.h>
 
 #define VIEW_MARGIN 10
 #define SCORE_GRAPH_X_SIZE 400

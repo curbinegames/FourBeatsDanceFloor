@@ -1,8 +1,10 @@
 
-#include <vector>
-#include <string>
-#include <sancur.h>
 #include <tchar.h>
+
+#include <string>
+#include <vector>
+
+#include <sancur.h>
 
 typedef struct FBDF_note_s {
 	uint time = 0; /* 押すタイミング 0: none, [ms] */
