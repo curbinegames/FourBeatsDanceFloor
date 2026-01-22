@@ -123,6 +123,18 @@ typedef enum music_folder_num_e {
 	LEVEL8_MUSIC_FOLDER,
 	LEVEL9_MUSIC_FOLDER,
 	LEVEL10_MUSIC_FOLDER,
+	SCORE_SET_MUSIC_FOLDER,
+	SCORE_P_MUSIC_FOLDER,
+	SCORE_XP_MUSIC_FOLDER,
+	SCORE_X_MUSIC_FOLDER,
+	SCORE_SP_MUSIC_FOLDER,
+	SCORE_S_MUSIC_FOLDER,
+	SCORE_AP_MUSIC_FOLDER,
+	SCORE_A_MUSIC_FOLDER,
+	SCORE_B_MUSIC_FOLDER,
+	SCORE_C_MUSIC_FOLDER,
+	SCORE_D_MUSIC_FOLDER,
+	SCORE_F_MUSIC_FOLDER,
 } music_folder_num_t;
 
 #if 1 /* struct */
@@ -299,6 +311,7 @@ public:
 std::vector<std::string> begin_folder_str;
 std::vector<std::string> level_folder_str;
 std::vector<std::string> music_folder_str;
+std::vector<std::string> score_folder_str;
 
 static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
 	const music_list_c *musiclist)
@@ -307,10 +320,13 @@ static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
 
 	switch (folder_stack->top()) {
 	case DEFAULT_MUSIC_FOLDER:
-		list_size = 2;
+		list_size = begin_folder_str.size();
 		break;
 	case LEVEL_SET_MUSIC_FOLDER:
-		list_size = 11;
+		list_size = level_folder_str.size();
+		break;
+	case SCORE_SET_MUSIC_FOLDER:
+		list_size = score_folder_str.size();
 		break;
 	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
 	case LEVEL0_MUSIC_FOLDER:
@@ -324,6 +340,17 @@ static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
 	case LEVEL8_MUSIC_FOLDER:
 	case LEVEL9_MUSIC_FOLDER:
 	case LEVEL10_MUSIC_FOLDER:
+	case SCORE_P_MUSIC_FOLDER:
+	case SCORE_XP_MUSIC_FOLDER:
+	case SCORE_X_MUSIC_FOLDER:
+	case SCORE_SP_MUSIC_FOLDER:
+	case SCORE_S_MUSIC_FOLDER:
+	case SCORE_AP_MUSIC_FOLDER:
+	case SCORE_A_MUSIC_FOLDER:
+	case SCORE_B_MUSIC_FOLDER:
+	case SCORE_C_MUSIC_FOLDER:
+	case SCORE_D_MUSIC_FOLDER:
+	case SCORE_F_MUSIC_FOLDER:
 		list_size = music_folder_str.size();
 		break;
 	}
@@ -335,9 +362,10 @@ static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
 	switch (folder_stack->top()) {
 	case DEFAULT_MUSIC_FOLDER:
 	case LEVEL_SET_MUSIC_FOLDER:
+	case SCORE_SET_MUSIC_FOLDER:
 		return false;
 		break;
-	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
+	case ALL_MUSIC_FOLDER:
 	case LEVEL0_MUSIC_FOLDER:
 	case LEVEL1_MUSIC_FOLDER:
 	case LEVEL2_MUSIC_FOLDER:
@@ -349,6 +377,17 @@ static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
 	case LEVEL8_MUSIC_FOLDER:
 	case LEVEL9_MUSIC_FOLDER:
 	case LEVEL10_MUSIC_FOLDER:
+	case SCORE_P_MUSIC_FOLDER:
+	case SCORE_XP_MUSIC_FOLDER:
+	case SCORE_X_MUSIC_FOLDER:
+	case SCORE_SP_MUSIC_FOLDER:
+	case SCORE_S_MUSIC_FOLDER:
+	case SCORE_AP_MUSIC_FOLDER:
+	case SCORE_A_MUSIC_FOLDER:
+	case SCORE_B_MUSIC_FOLDER:
+	case SCORE_C_MUSIC_FOLDER:
+	case SCORE_D_MUSIC_FOLDER:
+	case SCORE_F_MUSIC_FOLDER:
 		return true;
 		break;
 	}
@@ -412,6 +451,9 @@ static void DrawMusicList(std::stack<music_folder_num_t> *folder_stack,
 	case LEVEL_SET_MUSIC_FOLDER: /* レベルフォルダ */
 		DrawMusicList2(&level_folder_str, command, view_dif_type, music_ber_pic);
 		break;
+	case SCORE_SET_MUSIC_FOLDER: /* スコアフォルダ */
+		DrawMusicList2(&score_folder_str, command, view_dif_type, music_ber_pic);
+		break;
 	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
 	case LEVEL0_MUSIC_FOLDER:
 	case LEVEL1_MUSIC_FOLDER:
@@ -424,6 +466,17 @@ static void DrawMusicList(std::stack<music_folder_num_t> *folder_stack,
 	case LEVEL8_MUSIC_FOLDER:
 	case LEVEL9_MUSIC_FOLDER:
 	case LEVEL10_MUSIC_FOLDER:
+	case SCORE_P_MUSIC_FOLDER:
+	case SCORE_XP_MUSIC_FOLDER:
+	case SCORE_X_MUSIC_FOLDER:
+	case SCORE_SP_MUSIC_FOLDER:
+	case SCORE_S_MUSIC_FOLDER:
+	case SCORE_AP_MUSIC_FOLDER:
+	case SCORE_A_MUSIC_FOLDER:
+	case SCORE_B_MUSIC_FOLDER:
+	case SCORE_C_MUSIC_FOLDER:
+	case SCORE_D_MUSIC_FOLDER:
+	case SCORE_F_MUSIC_FOLDER:
 		DrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
 		break;
 	}
@@ -1536,6 +1589,39 @@ static void FBDF_MakeMusicList(
 		case LEVEL10_MUSIC_FOLDER:
 			detect_fg = (10 <= musiclist->detail[i].auto_cal_dif.all);
 			break;
+		case SCORE_P_MUSIC_FOLDER:
+			detect_fg = (FBDF_SCORE_RANK_P_BORDER <= musiclist->detail[i].user_highscore.acc);
+			break;
+		case SCORE_XP_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_XP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_P_BORDER);
+			break;
+		case SCORE_X_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_X_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_XP_BORDER);
+			break;
+		case SCORE_SP_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_SP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_X_BORDER);
+			break;
+		case SCORE_S_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_S_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_SP_BORDER);
+			break;
+		case SCORE_AP_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_AP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_S_BORDER);
+			break;
+		case SCORE_A_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_A_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_AP_BORDER);
+			break;
+		case SCORE_B_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_B_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_A_BORDER);
+			break;
+		case SCORE_C_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_C_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_B_BORDER);
+			break;
+		case SCORE_D_MUSIC_FOLDER:
+			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_D_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_C_BORDER);
+			break;
+		case SCORE_F_MUSIC_FOLDER:
+			detect_fg = (musiclist->detail[i].user_highscore.acc < FBDF_SCORE_RANK_D_BORDER);
+			break;
 		default:
 			return;
 		}
@@ -1586,15 +1672,18 @@ static void FBDF_MakeMusicList(
  * @return なし
  */
 static void FBDF_select_init_folder(void) {
+	std::string buf;
 	if (begin_folder_str.empty()) {
-		std::string buf = "all";
+		buf = "all";
 		begin_folder_str.push_back(buf);
 		buf = "level";
+		begin_folder_str.push_back(buf);
+		buf = "score";
 		begin_folder_str.push_back(buf);
 	}
 
 	if (level_folder_str.empty()) {
-		std::string buf = "level under 0";
+		buf = "level under 0";
 		level_folder_str.push_back(buf);
 		buf = "level 1";
 		level_folder_str.push_back(buf);
@@ -1616,6 +1705,31 @@ static void FBDF_select_init_folder(void) {
 		level_folder_str.push_back(buf);
 		buf = "level over 10";
 		level_folder_str.push_back(buf);
+	}
+
+	if (score_folder_str.empty()) {
+		buf = "score P";
+		score_folder_str.push_back(buf);
+		buf = "score X+";
+		score_folder_str.push_back(buf);
+		buf = "score X";
+		score_folder_str.push_back(buf);
+		buf = "score S+";
+		score_folder_str.push_back(buf);
+		buf = "score S";
+		score_folder_str.push_back(buf);
+		buf = "score A+";
+		score_folder_str.push_back(buf);
+		buf = "score A";
+		score_folder_str.push_back(buf);
+		buf = "score B";
+		score_folder_str.push_back(buf);
+		buf = "score C";
+		score_folder_str.push_back(buf);
+		buf = "score D";
+		score_folder_str.push_back(buf);
+		buf = "score F";
+		score_folder_str.push_back(buf);
 	}
 }
 
@@ -1649,6 +1763,9 @@ static void FBDF_select_KeyCheck(
 					break;
 				case 1:
 					folder_stack.push(LEVEL_SET_MUSIC_FOLDER);
+					break;
+				case 2:
+					folder_stack.push(SCORE_SET_MUSIC_FOLDER);
 					break;
 				}
 				command = 0;
@@ -1702,6 +1819,45 @@ static void FBDF_select_KeyCheck(
 				}
 				command = 0;
 				break;
+			case SCORE_SET_MUSIC_FOLDER:
+				switch (command) {
+				case 0:
+					folder_stack.push(SCORE_P_MUSIC_FOLDER);
+					break;
+				case 1:
+					folder_stack.push(SCORE_XP_MUSIC_FOLDER);
+					break;
+				case 2:
+					folder_stack.push(SCORE_X_MUSIC_FOLDER);
+					break;
+				case 3:
+					folder_stack.push(SCORE_SP_MUSIC_FOLDER);
+					break;
+				case 4:
+					folder_stack.push(SCORE_S_MUSIC_FOLDER);
+					break;
+				case 5:
+					folder_stack.push(SCORE_AP_MUSIC_FOLDER);
+					break;
+				case 6:
+					folder_stack.push(SCORE_A_MUSIC_FOLDER);
+					break;
+				case 7:
+					folder_stack.push(SCORE_B_MUSIC_FOLDER);
+					break;
+				case 8:
+					folder_stack.push(SCORE_C_MUSIC_FOLDER);
+					break;
+				case 9:
+					folder_stack.push(SCORE_D_MUSIC_FOLDER);
+					break;
+				case 10:
+					folder_stack.push(SCORE_F_MUSIC_FOLDER);
+					break;
+				}
+				FBDF_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
+				command = 0;
+				break;
 			case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
 			case LEVEL0_MUSIC_FOLDER:
 			case LEVEL1_MUSIC_FOLDER:
@@ -1714,6 +1870,17 @@ static void FBDF_select_KeyCheck(
 			case LEVEL8_MUSIC_FOLDER:
 			case LEVEL9_MUSIC_FOLDER:
 			case LEVEL10_MUSIC_FOLDER:
+			case SCORE_P_MUSIC_FOLDER:
+			case SCORE_XP_MUSIC_FOLDER:
+			case SCORE_X_MUSIC_FOLDER:
+			case SCORE_SP_MUSIC_FOLDER:
+			case SCORE_S_MUSIC_FOLDER:
+			case SCORE_AP_MUSIC_FOLDER:
+			case SCORE_A_MUSIC_FOLDER:
+			case SCORE_B_MUSIC_FOLDER:
+			case SCORE_C_MUSIC_FOLDER:
+			case SCORE_D_MUSIC_FOLDER:
+			case SCORE_F_MUSIC_FOLDER:
 				if (!musiclist->sort.empty()) {
 					cutin->SetIo(CUT_FRAG_IN);
 				}
