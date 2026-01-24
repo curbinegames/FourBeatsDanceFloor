@@ -1411,6 +1411,27 @@ static void NoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_t *score, FB
 	return;
 }
 
+/* リザルト用のデータを作成 */
+static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music,
+	const FBDF_map_t &map, const FBDF_score_t &score, const FBDF_play_class_set_t &play_class
+) {
+	result_data->name        = nex_music->folder_name;
+	result_data->artist      = map.artist;
+	result_data->folder_name = nex_music->folder_name;
+	result_data->level       = 0; /* meta.binから取ってくる */
+	result_data->score       = score.point;
+	result_data->acc         = play_class.score_bar_class.GetScore_ave();
+	result_data->crit        = score.crit;
+	result_data->hit         = score.hit;
+	result_data->save        = score.save;
+	result_data->drop        = score.drop;
+	result_data->gap_ave     = play_class.gap_bar_class.GetAve();
+	result_data->charaNo     = 0; /* まだなんもイラスト描いてない */
+	play_class.score_bar_class.get_graph(result_data->score_graph);
+	result_data->dif_type    = nex_music->dif_type;
+	return;
+}
+
 /* 返り値: 次のシーンの番号 */
 view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music) {
 	int keybox[1] = { KEY_INPUT_RETURN };
@@ -1617,22 +1638,7 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	StopSoundMem(musicData);
 	DeleteSoundMem(musicData);
 
-	/* リザルト用のデータを作成 */
-
-	result_data->name   = nex_music->folder_name;
-	result_data->artist = map.artist;
-	result_data->folder_name = nex_music->folder_name;
-	result_data->level = 0; /* meta.binから取ってくる */
-	result_data->score = score.point;
-	result_data->acc  = play_class.score_bar_class.GetScore_ave();
-	result_data->crit = score.crit;
-	result_data->hit  = score.hit;
-	result_data->save = score.save;
-	result_data->drop = score.drop;
-	result_data->gap_ave = play_class.gap_bar_class.GetAve();
-	result_data->charaNo = 0; /* まだなんもイラスト描いてない */
-	play_class.score_bar_class.get_graph(result_data->score_graph);
-	result_data->dif_type = nex_music->dif_type;
+	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);
 
 	return VIEW_RESULT;
 }
