@@ -1372,39 +1372,22 @@ static void NoteJudge(
 
 /* 残っているすべてのノーツをdropにする */
 static void NoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_t *score, FBDF_map_t *map) {
+	size_t remain_notes = 0;
 	FBDF_judge_c     *judge_class     = &play_class->judge_class;
 	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
 	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
 
-	std::queue<FBDF_judge_event_t>judge_event;
 	FBDF_judge_event_t buf;
 
 	while (map->note[map->noteNo].time != 0) {
-		buf.mat = JUDGE_MISS;
-		judge_event.push(buf);
+		remain_notes++;
 		map->noteNo++;
 	}
 
-	bool note_judged = !judge_event.empty();
-	while (!judge_event.empty()) {
-		buf = judge_event.front();
-		judge_event.pop();
-
-		judge_class->SetJudge(buf.mat);
-
-		/* 判定数追加 */
-		score->drop++;
-
-		/* キャラモーション変更 */
-		if (buf.mat == JUDGE_MISS) {
-			dancer_class->SetState(buf.tip, -1, buf.mtime);
-		}
-		else {
-			dancer_class->SetState(buf.tip, buf.len, buf.mtime);
-		}
-	}
-
-	if (note_judged) {
+	if (0 < remain_notes) {
+		judge_class->SetJudge(JUDGE_MISS);
+		score->drop += remain_notes;
+		dancer_class->SetState(0, -1, 0);
 		score_bar_class->update_score(score, map->noteN);
 	}
 
