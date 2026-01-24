@@ -1432,6 +1432,71 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	return;
 }
 
+/* キー入力関係 */
+static void FBDF_Play_KeyCheck(
+	FBDF_push_key_t &pkey, FBDF_play_class_set_t &play_class,
+	FBDF_score_t &score, FBDF_map_t &map, bool auto_fg, fbdf_cutin_c &cutin
+) {
+	int keybox[1] = { KEY_INPUT_RETURN };
+
+	int hitkey = keycur(keybox, 1);
+
+	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_RETURN)) {
+		NoteTrash(&play_class, &score, &map);
+		play_class.score_bar_class.fill_graph_force();
+		cutin.SetIo(CUT_FRAG_IN);
+	}
+
+	if (auto_fg) {
+		pkey.D = (IS_BETWEEN(1, pkey.D, 5)) ? (pkey.D + 1) : (0);
+		pkey.F = (IS_BETWEEN(1, pkey.F, 5)) ? (pkey.F + 1) : (0);
+		pkey.J = (IS_BETWEEN(1, pkey.J, 5)) ? (pkey.J + 1) : (0);
+		pkey.K = (IS_BETWEEN(1, pkey.K, 5)) ? (pkey.K + 1) : (0);
+
+		if (map.note[map.noteNo].time <= 8 + map.Ntime) {
+			switch (map.note[map.noteNo].btn) {
+			case 1:
+				pkey.D = 1;
+				pkey.F = 0;
+				pkey.J = 0;
+				pkey.K = 0;
+				break;
+			case 2:
+				pkey.D = 0;
+				pkey.F = 1;
+				pkey.J = 0;
+				pkey.K = 0;
+				break;
+			case 3:
+				pkey.D = 0;
+				pkey.F = 0;
+				pkey.J = 1;
+				pkey.K = 0;
+				break;
+			case 4:
+				pkey.D = 0;
+				pkey.F = 0;
+				pkey.J = 0;
+				pkey.K = 1;
+				break;
+			}
+		}
+	}
+	else {
+		pkey.D = (CheckHitKey(KEY_INPUT_D) == 1) ? (pkey.D + 1) : (0);
+		pkey.F = (CheckHitKey(KEY_INPUT_F) == 1) ? (pkey.F + 1) : (0);
+		pkey.J = (CheckHitKey(KEY_INPUT_J) == 1) ? (pkey.J + 1) : (0);
+		pkey.K = (CheckHitKey(KEY_INPUT_K) == 1) ? (pkey.K + 1) : (0);
+	}
+
+	pkey.alltap = 0;
+	pkey.alltap += (pkey.D == 1);
+	pkey.alltap += (pkey.F == 1);
+	pkey.alltap += (pkey.J == 1);
+	pkey.alltap += (pkey.K == 1);
+	return;
+}
+
 /* 返り値: 次のシーンの番号 */
 view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music) {
 	int keybox[1] = { KEY_INPUT_RETURN };
@@ -1506,88 +1571,7 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 			map.Ntime = GetNowCount() - map.Stime;
 		}
 
-		/* キー */ {
-			hitkey = keycur(keybox, 1);
-			if (!cutin.IsClosing() && (hitkey == KEY_INPUT_RETURN)) {
-				NoteTrash(&play_class, &score, &map);
-				play_class.score_bar_class.fill_graph_force();
-				cutin.SetIo(CUT_FRAG_IN);
-			}
-
-#if 0 /* auto */
-			if (IS_BETWEEN(1, pkey.D, 5)) {
-				pkey.D++;
-			}
-			else {
-				pkey.D = 0;
-			}
-			if (IS_BETWEEN(1, pkey.F, 5)) {
-				pkey.F++;
-			}
-			else {
-				pkey.F = 0;
-			}
-			if (IS_BETWEEN(1, pkey.J, 5)) {
-				pkey.J++;
-			}
-			else {
-				pkey.J = 0;
-			}
-			if (IS_BETWEEN(1, pkey.K, 5)) {
-				pkey.K++;
-			}
-			else {
-				pkey.K = 0;
-			}
-			if (map.note[map.noteNo].time <= 8 + map.Ntime) {
-				switch (map.note[map.noteNo].btn) {
-				case 1:
-					pkey.D = 1;
-					pkey.F = 0;
-					pkey.J = 0;
-					pkey.K = 0;
-					break;
-				case 2:
-					pkey.D = 0;
-					pkey.F = 1;
-					pkey.J = 0;
-					pkey.K = 0;
-					break;
-				case 3:
-					pkey.D = 0;
-					pkey.F = 0;
-					pkey.J = 1;
-					pkey.K = 0;
-					break;
-				case 4:
-					pkey.D = 0;
-					pkey.F = 0;
-					pkey.J = 0;
-					pkey.K = 1;
-					break;
-				}
-				pkey.alltap = 1;
-			}
-			else {
-				pkey.alltap = 0;
-			}
-#else /* manual */
-			switch (hitkey) {
-			default:
-				break;
-			}
-
-			pkey.D = (CheckHitKey(KEY_INPUT_D) == 1) ? (pkey.D + 1) : (0);
-			pkey.F = (CheckHitKey(KEY_INPUT_F) == 1) ? (pkey.F + 1) : (0);
-			pkey.J = (CheckHitKey(KEY_INPUT_J) == 1) ? (pkey.J + 1) : (0);
-			pkey.K = (CheckHitKey(KEY_INPUT_K) == 1) ? (pkey.K + 1) : (0);
-			pkey.alltap = 0;
-			pkey.alltap += (pkey.D == 1);
-			pkey.alltap += (pkey.F == 1);
-			pkey.alltap += (pkey.J == 1);
-			pkey.alltap += (pkey.K == 1);
-#endif
-		}
+		FBDF_Play_KeyCheck(pkey, play_class, score, map, false, cutin); /* autoにしたいなら5番目をtrueに */
 
 		/* ノーツ全処理判定 */
 		if ((FinishTime == 0) && (map.noteN == map.noteNo)) {
