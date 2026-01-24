@@ -10,6 +10,7 @@
 #include <strcur.h>
 
 #include <main.h>
+#include <system.h>
 #include <fbdf_cutin.h>
 #include <mapenc.h>
 
@@ -277,16 +278,16 @@ private:
 	int Stime = 0;
 	int Etime = 60000;
 
-	FBDF_result_score_graph_t graph[FBDF_RESULT_SCORE_GRAPH_COUNT]; /* リザルト用 */
+	FBDF_score_bar_st graph[FBDF_RESULT_SCORE_GRAPH_COUNT]; /* リザルト用 */
 	int graphNo = 0; /* 次に入れる場所 */
 
 	void set_graph(void) {
 		if (this->graphNo >= FBDF_RESULT_SCORE_GRAPH_COUNT) { return; }
-		this->graph[this->graphNo].gr_70 = this->score_70;
-		this->graph[this->graphNo].gr_90 = this->score_90;
-		this->graph[this->graphNo].gr_96 = this->score_96;
-		this->graph[this->graphNo].gr_98 = this->score_98;
-		this->graph[this->graphNo].gr_99 = this->score_99;
+		this->graph[this->graphNo].bar_70 = this->score_70;
+		this->graph[this->graphNo].bar_90 = this->score_90;
+		this->graph[this->graphNo].bar_96 = this->score_96;
+		this->graph[this->graphNo].bar_98 = this->score_98;
+		this->graph[this->graphNo].bar_99 = this->score_99;
 		this->graphNo++;
 	}
 
@@ -321,44 +322,20 @@ public:
 		}
 	}
 
-	void get_graph(FBDF_result_score_graph_t *dest) const {
+	void get_graph(FBDF_score_bar_st *dest) const {
 		for (int i = 0; i < FBDF_RESULT_SCORE_GRAPH_COUNT; i++) {
 			dest[i] = this->graph[i];
 		}
 	}
 
 	void draw_bar(int x1, int y1, int x2, int y2) const {
-		double drawRight = 167;
-		/* 70-60 */
-		drawRight = lins_scale(70.0, x1,  60.0, x2, this->score_70);
-		DrawBox(x1, y1, drawRight, y2, 0xFFEB3324, TRUE); // 赤
-		/* 60- 0 */
-		drawRight = lins_scale(60.0, x1,   0.0, x2, this->score_70);
-		DrawBox(x1, y1, drawRight, y2, 0xFF962117, TRUE); // 赤
-		/* 70-80 */
-		drawRight = lins_scale(70.0, x1,  80.0, x2, this->score_70);
-		DrawBox(x1, y1, drawRight, y2, 0xFFBDBB3F, TRUE); // 黄色
-		/* 80-90 */
-		drawRight = lins_scale(80.0, x1,  90.0, x2, this->score_70);
-		DrawBox(x1, y1, drawRight, y2, 0xFFEDEB4F, TRUE); // 黄色
-		/* 90-95 */
-		drawRight = lins_scale(90.0, x1,  95.0, x2, this->score_90);
-		DrawBox(x1, y1, drawRight, y2, 0xFF5BC23C, TRUE); // 緑
-		/* 95-97 */
-		drawRight = lins_scale(95.0, x1,  97.0, x2, this->score_90);
-		DrawBox(x1, y1, drawRight, y2, 0xFF78FF4F, TRUE); // 緑
-		/* 97-98 */
-		drawRight = lins_scale(97.0, x1,  98.0, x2, this->score_96);
-		DrawBox(x1, y1, drawRight, y2, 0xFF3282F6, TRUE); // 青
-		/* 98-99 */
-		drawRight = lins_scale(98.0, x1,  99.0, x2, this->score_96);
-		DrawBox(x1, y1, drawRight, y2, 0xFF73FBFD, TRUE); // 青
-		/* 99-100 */
-		drawRight = lins_scale(99.0, x1, 100.0, x2, this->score_98);
-		DrawBox(x1, y1, drawRight, y2, 0xFFA349A4, TRUE); // 紫
-		/* 99.5-100 */
-		drawRight = lins_scale(99.5, x1, 100.0, x2, this->score_99);
-		DrawBox(x1, y1, drawRight, y2, 0xFFEA3FF7, TRUE); // 紫
+		FBDF_score_bar_st score_bar;
+		score_bar.bar_70 = this->score_70;
+		score_bar.bar_90 = this->score_90;
+		score_bar.bar_96 = this->score_96;
+		score_bar.bar_98 = this->score_98;
+		score_bar.bar_99 = this->score_99;
+		FBDF_DrawScoreBarHori(score_bar, x1, y1, x2, y2);
 	}
 
 	double GetScore_ave(void) const {

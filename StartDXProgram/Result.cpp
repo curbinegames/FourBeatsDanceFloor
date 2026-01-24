@@ -4,6 +4,7 @@
 #include <dxcur.h>
 
 #include <main.h>
+#include <system.h>
 #include <save.h>
 #include <Play.h>
 
@@ -15,7 +16,7 @@
 
 #define SCORE_FINAL_BAR_XSIZE 15
 
-void FBDF_result_DrawScoreGraph(const FBDF_result_score_graph_t *src, const char *rank) {
+void FBDF_result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
 	int all_left  = VIEW_MARGIN;
 	int all_up    = VIEW_MARGIN;
 	int all_right = VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
@@ -23,154 +24,10 @@ void FBDF_result_DrawScoreGraph(const FBDF_result_score_graph_t *src, const char
 
 	int all_y_middle = (all_down + all_up) / 2;
 
-	/* 70-60 */
 	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
 		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
 		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(70.0, all_y_middle, 60.0, all_up, src[i    ].gr_70), all_down);
-		int ypos2 = betweens(all_up, lins(70.0, all_y_middle, 60.0, all_up, src[i + 1].gr_70), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_RED60, TRUE
-		);
-	}
-
-	/* 60- 0 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(60.0, all_y_middle, 0.0, all_up, src[i    ].gr_70), all_down);
-		int ypos2 = betweens(all_up, lins(60.0, all_y_middle, 0.0, all_up, src[i + 1].gr_70), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_RED0, TRUE
-		);
-	}
-
-	/* 70-80 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(70.0, all_y_middle,80.0, all_up, src[i    ].gr_70), all_down);
-		int ypos2 = betweens(all_up, lins(70.0, all_y_middle,80.0, all_up, src[i + 1].gr_70), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_YELLOW70, TRUE
-		);
-	}
-
-	/* 80-90 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(80.0, all_y_middle, 90.0, all_up, src[i    ].gr_70), all_down);
-		int ypos2 = betweens(all_up, lins(80.0, all_y_middle, 90.0, all_up, src[i + 1].gr_70), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_YELLOW80, TRUE
-		);
-	}
-
-	/* 90-95 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(90.0, all_y_middle, 95.0, all_up, src[i    ].gr_90), all_down);
-		int ypos2 = betweens(all_up, lins(90.0, all_y_middle, 95.0, all_up, src[i + 1].gr_90), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_GREEN90, TRUE
-		);
-	}
-
-	/* 95-97 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(95.0, all_y_middle, 97.0, all_up, src[i    ].gr_90), all_down);
-		int ypos2 = betweens(all_up, lins(95.0, all_y_middle, 97.0, all_up, src[i + 1].gr_90), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_GREEN95, TRUE
-		);
-	}
-
-	/* 97-98 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(97.0, all_y_middle, 98.0, all_up, src[i    ].gr_96), all_down);
-		int ypos2 = betweens(all_up, lins(97.0, all_y_middle, 98.0, all_up, src[i + 1].gr_96), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_BLUE97, TRUE
-		);
-	}
-
-	/* 98-99 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(98.0, all_y_middle, 99.0, all_up, src[i    ].gr_96), all_down);
-		int ypos2 = betweens(all_up, lins(98.0, all_y_middle, 99.0, all_up, src[i + 1].gr_96), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_BLUE98, TRUE
-		);
-	}
-
-	/* 99-100 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(99.0, all_y_middle, 100.0, all_up, src[i    ].gr_98), all_down);
-		int ypos2 = betweens(all_up, lins(99.0, all_y_middle, 100.0, all_up, src[i + 1].gr_98), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_PURPLE99, TRUE
-		);
-	}
-
-	/* 99.5-100 */
-	for (int i = 0; i < (FBDF_RESULT_SCORE_GRAPH_COUNT - 1); i++) {
-		int xpos1 = lins_scale(0, all_left, 24, all_right, i    );
-		int xpos2 = lins_scale(0, all_left, 24, all_right, i + 1);
-		int ypos1 = betweens(all_up, lins(99.5, all_y_middle, 100.0, all_up, src[i    ].gr_99), all_down);
-		int ypos2 = betweens(all_up, lins(99.5, all_y_middle, 100.0, all_up, src[i + 1].gr_99), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_PURPLE100, TRUE
-		);
+		FBDF_DrawScoreBarVertQuad(src[i], src[i + 1], xpos1, all_up, xpos2, all_down);
 	}
 
 	DrawLine(all_left, all_y_middle, all_right, all_y_middle, COLOR_RED);
@@ -179,7 +36,7 @@ void FBDF_result_DrawScoreGraph(const FBDF_result_score_graph_t *src, const char
 	return;
 }
 
-void FBDF_result_DrawFinalBar(double acc) {
+static void FBDF_result_DrawFinalBar(double acc) {
 	int all_left  = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
 	int all_up    =     VIEW_MARGIN;
 	int all_right = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE;
@@ -187,145 +44,14 @@ void FBDF_result_DrawFinalBar(double acc) {
 
 	int all_y_middle = (all_down + all_up) / 2;
 
-	/* 70-60 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(70.0, all_y_middle, 60.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(70.0, all_y_middle, 60.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_RED60, TRUE
-		);
-	}
+	FBDF_score_bar_st acc_buf;
+	acc_buf.bar_70 = acc;
+	acc_buf.bar_90 = acc;
+	acc_buf.bar_96 = acc;
+	acc_buf.bar_98 = acc;
+	acc_buf.bar_99 = acc;
 
-	/* 60- 0 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(60.0, all_y_middle, 0.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(60.0, all_y_middle, 0.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_RED0, TRUE
-		);
-	}
-
-	/* 70-80 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(70.0, all_y_middle,80.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(70.0, all_y_middle,80.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_YELLOW70, TRUE
-		);
-	}
-
-	/* 80-90 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(80.0, all_y_middle, 90.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(80.0, all_y_middle, 90.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_YELLOW80, TRUE
-		);
-	}
-
-	/* 90-95 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(90.0, all_y_middle, 95.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(90.0, all_y_middle, 95.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_GREEN90, TRUE
-		);
-	}
-
-	/* 95-97 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(95.0, all_y_middle, 97.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(95.0, all_y_middle, 97.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_GREEN95, TRUE
-		);
-	}
-
-	/* 97-98 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(97.0, all_y_middle, 98.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(97.0, all_y_middle, 98.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_BLUE97, TRUE
-		);
-	}
-
-	/* 98-99 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(98.0, all_y_middle, 99.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(98.0, all_y_middle, 99.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_BLUE98, TRUE
-		);
-	}
-
-	/* 99-100 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(99.0, all_y_middle, 100.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(99.0, all_y_middle, 100.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_PURPLE99, TRUE
-		);
-	}
-
-	/* 99.5-100 */ {
-		int xpos1 = all_left;
-		int xpos2 = all_right;
-		int ypos1 = betweens(all_up, lins(99.5, all_y_middle, 100.0, all_up, acc), all_down);
-		int ypos2 = betweens(all_up, lins(99.5, all_y_middle, 100.0, all_up, acc), all_down);
-		DrawQuadrangle(
-			xpos1, ypos1,
-			xpos2, ypos2,
-			xpos2, all_down,
-			xpos1, all_down,
-			FBDF_PLAY_SCOREBAR_COLOR_PURPLE100, TRUE
-		);
-	}
+	FBDF_DrawScoreBarVert(acc_buf, all_left, all_up, all_right, all_down);
 
 	DrawLine(all_left, all_y_middle, all_right, all_y_middle, COLOR_RED);
 	DrawBox(

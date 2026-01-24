@@ -3,17 +3,10 @@
 #include <string>
 
 #include <main.h>
+#include <system.h>
 #include <save.h>
 
 #define FBDF_RESULT_SCORE_GRAPH_COUNT 25
-
-typedef struct FBDF_result_score_graph_s {
-	double gr_70;
-	double gr_90;
-	double gr_96;
-	double gr_98;
-	double gr_99;
-} FBDF_result_score_graph_t;
 
 typedef struct FBDF_result_data_s {
 	std::string name;
@@ -28,7 +21,7 @@ typedef struct FBDF_result_data_s {
 	uint drop = 0;
 	double gap_ave = 0;
 	uint charaNo = 0;
-	FBDF_result_score_graph_t score_graph[FBDF_RESULT_SCORE_GRAPH_COUNT];
+	FBDF_score_bar_st score_graph[FBDF_RESULT_SCORE_GRAPH_COUNT];
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
 } FBDF_result_data_t;
 
