@@ -7,7 +7,6 @@
 #include <DxLib.h>
 #include <dirent.h>
 
-#include <keycur.h>
 #include <dxcur.h>
 #include <strcur.h>
 #include <UTF8_conv.h>

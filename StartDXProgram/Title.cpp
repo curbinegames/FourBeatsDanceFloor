@@ -4,7 +4,6 @@
 #include <DxLib.h>
 
 #include <dxcur.h>
-#include <keycur.h>
 
 #include <main.h>
 #include <fbdf_cutin.h>

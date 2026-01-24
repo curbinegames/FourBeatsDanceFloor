@@ -7,7 +7,6 @@
 
 #include <dxcur.h>
 #include <dxdraw.h>
-#include <keycur.h>
 #include <strcur.h>
 
 #include <main.h>

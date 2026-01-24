@@ -1,7 +1,6 @@
 
 #include <DxLib.h>
 
-#include <keycur.h>
 #include <dxcur.h>
 
 #include <main.h>
