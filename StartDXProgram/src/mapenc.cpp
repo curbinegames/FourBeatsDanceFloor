@@ -26,56 +26,56 @@ int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 			buf_note.pos = option->now_shutpos + ic;
 			switch (option->now_block) {
 			case 2:
-				buf_note.btn = (ic == 1) ? 3 : 1;
+				buf_note.btn = (ic == 1) ? FBDF_PLAY_NOTE_BTN_3 : FBDF_PLAY_NOTE_BTN_1;
 				break;
 			case 3:
 			case 4:
-				buf_note.btn = ic + 1;
+				buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
 				break;
 			case 5:
 				switch (ic) {
 				case 4:
-					buf_note.btn = 3;
+					buf_note.btn = FBDF_PLAY_NOTE_BTN_3;
 					break;
 				default:
-					buf_note.btn = ic + 1;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
 					break;
 				}
 				break;
 			case 6:
 				switch (ic) {
 				case 4:
-					buf_note.btn = 3;
+					buf_note.btn = FBDF_PLAY_NOTE_BTN_3;
 					break;
 				case 5:
-					buf_note.btn = 2;
+					buf_note.btn = FBDF_PLAY_NOTE_BTN_2;
 					break;
 				default:
-					buf_note.btn = ic + 1;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
 					break;
 				}
 				break;
 			case 7:
 				if (ic <= 3) {
-					buf_note.btn = ic + 1;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
 				}
 				else {
-					buf_note.btn = ic - 2;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 2);
 				}
 				break;
 			case 9:
 				if (ic <= 2) {
-					buf_note.btn = ic + 1;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
 				}
 				else if (ic <= 5) {
-					buf_note.btn = ic - 2;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 2);
 				}
 				else {
-					buf_note.btn = ic - 5;
+					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 5);
 				}
 				break;
 			default:
-				buf_note.btn = (ic) % 4 + 1;
+				buf_note.btn = static_cast<FBDF_Play_note_btn_et>((ic) % 4 + 1);
 				break;
 			}
 			buf_note.len = 99;

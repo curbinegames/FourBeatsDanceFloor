@@ -504,16 +504,16 @@ static void NoteJudge(
 			buf.len = map->note[map->noteNo].len;
 			buf.mtime = map->note[map->noteNo].mtime;
 			switch (map->note[map->noteNo].btn) {
-			case 1:
+			case FBDF_PLAY_NOTE_BTN_1:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
 				break;
-			case 2:
+			case FBDF_PLAY_NOTE_BTN_2:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_f, map);
 				break;
-			case 3:
+			case FBDF_PLAY_NOTE_BTN_3:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_j, map);
 				break;
-			case 4:
+			case FBDF_PLAY_NOTE_BTN_4:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_k, map);
 				break;
 			}
@@ -661,25 +661,25 @@ static void FBDF_Play_KeyCheck(
 
 		if (map.note[map.noteNo].time <= 8 + map.Ntime) {
 			switch (map.note[map.noteNo].btn) {
-			case 1:
+			case FBDF_PLAY_NOTE_BTN_1:
 				pkey.D = 1;
 				pkey.F = 0;
 				pkey.J = 0;
 				pkey.K = 0;
 				break;
-			case 2:
+			case FBDF_PLAY_NOTE_BTN_2:
 				pkey.D = 0;
 				pkey.F = 1;
 				pkey.J = 0;
 				pkey.K = 0;
 				break;
-			case 3:
+			case FBDF_PLAY_NOTE_BTN_3:
 				pkey.D = 0;
 				pkey.F = 0;
 				pkey.J = 1;
 				pkey.K = 0;
 				break;
-			case 4:
+			case FBDF_PLAY_NOTE_BTN_4:
 				pkey.D = 0;
 				pkey.F = 0;
 				pkey.J = 0;

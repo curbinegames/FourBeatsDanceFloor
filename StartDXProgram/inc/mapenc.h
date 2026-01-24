@@ -6,10 +6,18 @@
 
 #include <sancur.h>
 
+typedef enum FBDF_Play_note_button_e {
+	FBDF_PLAY_NOTE_BTN_NONE,
+	FBDF_PLAY_NOTE_BTN_1,
+	FBDF_PLAY_NOTE_BTN_2,
+	FBDF_PLAY_NOTE_BTN_3,
+	FBDF_PLAY_NOTE_BTN_4
+} FBDF_Play_note_btn_et;
+
 typedef struct FBDF_note_s {
 	uint time = 0; /* 押すタイミング 0: none, [ms] */
 	uint pos = 0; /* %4 */
-	uint btn = 0; /* 1-4 */
+	FBDF_Play_note_btn_et btn = FBDF_PLAY_NOTE_BTN_NONE;
 	uint len = 99;
 	uint mtime = 0; /* ダンスの長さ */
 	uint bpm = 120;
