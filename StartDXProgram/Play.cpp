@@ -474,6 +474,33 @@ static void DrawLamp(const FBDF_push_key_t *pkey) {
 
 #endif
 
+/* キー押し検出後の1ノーツ判定 */
+static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_t &buf, bool &key_detect, const FBDF_map_t *map) {
+	if (key_detect) {
+		key_detect = false;
+		buf.gap = map->note[map->noteNo].time - map->Ntime;
+		if (buf.gap <= 0) {
+			buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
+		}
+		else {
+			buf.score = betweens(0, JUDGE_WIDTH - buf.gap, CRIT_SCORE);
+		}
+		if (buf.score == CRIT_SCORE) {
+			buf.mat = JUDGE_CRIT;
+		}
+		else if (SAVE_SCORE_WIDTH <= buf.score) {
+			buf.mat = JUDGE_HIT;
+		}
+		else {
+			buf.mat = JUDGE_SAVE;
+		}
+	}
+	else {
+		buf.mat = JUDGE_MISS;
+	}
+	return;
+}
+
 static void NoteJudge(
 	FBDF_play_class_set_t *play_class, FBDF_score_t *score, FBDF_map_t *map,
 	const FBDF_push_key_t *pkey, const FBDT_hit_snd_t *se)
@@ -501,100 +528,16 @@ static void NoteJudge(
 			buf.mtime = map->note[map->noteNo].mtime;
 			switch (map->note[map->noteNo].btn) {
 			case 1:
-				if (key_detect_d) {
-					key_detect_d = false;
-					buf.gap = map->note[map->noteNo].time - map->Ntime;
-					if (buf.gap <= 0) {
-						buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
-					}
-					else {
-						buf.score = betweens(0, JUDGE_WIDTH - buf.gap, CRIT_SCORE);
-					}
-					if (buf.score == CRIT_SCORE) {
-						buf.mat = JUDGE_CRIT;
-					}
-					else if (SAVE_SCORE_WIDTH <= buf.score) {
-						buf.mat = JUDGE_HIT;
-					}
-					else {
-						buf.mat = JUDGE_SAVE;
-					}
-				}
-				else {
-					buf.mat = JUDGE_MISS;
-				}
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
 				break;
 			case 2:
-				if (key_detect_f) {
-					key_detect_f = false;
-					buf.gap = map->note[map->noteNo].time - map->Ntime;
-					if (buf.gap <= 0) {
-						buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
-					}
-					else {
-						buf.score = betweens(0, JUDGE_WIDTH - buf.gap, CRIT_SCORE);
-					}
-					if (buf.score == CRIT_SCORE) {
-						buf.mat = JUDGE_CRIT;
-					}
-					else if (SAVE_SCORE_WIDTH <= buf.score) {
-						buf.mat = JUDGE_HIT;
-					}
-					else {
-						buf.mat = JUDGE_SAVE;
-					}
-				}
-				else {
-					buf.mat = JUDGE_MISS;
-				}
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_f, map);
 				break;
 			case 3:
-				if (key_detect_j) {
-					key_detect_j = false;
-					buf.gap = map->note[map->noteNo].time - map->Ntime;
-					if (buf.gap <= 0) {
-						buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
-					}
-					else {
-						buf.score = betweens(0, JUDGE_WIDTH - buf.gap, CRIT_SCORE);
-					}
-					if (buf.score == CRIT_SCORE) {
-						buf.mat = JUDGE_CRIT;
-					}
-					else if (SAVE_SCORE_WIDTH <= buf.score) {
-						buf.mat = JUDGE_HIT;
-					}
-					else {
-						buf.mat = JUDGE_SAVE;
-					}
-				}
-				else {
-					buf.mat = JUDGE_MISS;
-				}
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_j, map);
 				break;
 			case 4:
-				if (key_detect_k) {
-					key_detect_k = false;
-					buf.gap = map->note[map->noteNo].time - map->Ntime;
-					if (buf.gap <= 0) {
-						buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
-					}
-					else {
-						buf.score = betweens(0, JUDGE_WIDTH - buf.gap, CRIT_SCORE);
-					}
-					if (buf.score == CRIT_SCORE) {
-						buf.mat = JUDGE_CRIT;
-					}
-					else if (SAVE_SCORE_WIDTH <= buf.score) {
-						buf.mat = JUDGE_HIT;
-					}
-					else {
-						buf.mat = JUDGE_SAVE;
-					}
-				}
-				else {
-					buf.mat = JUDGE_MISS;
-				}
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_k, map);
 				break;
 			}
 			judge_event.push(buf);
