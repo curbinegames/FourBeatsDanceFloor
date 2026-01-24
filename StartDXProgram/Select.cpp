@@ -322,61 +322,6 @@ std::vector<std::string> score_folder_str;
 std::vector<std::string> clear_folder_str;
 std::vector<std::string> music_folder_str;
 
-static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
-	const music_list_c *musiclist)
-{
-	size_t list_size = 0;
-
-	switch (folder_stack->top()) {
-	case DEFAULT_MUSIC_FOLDER:
-		list_size = begin_folder_str.size();
-		break;
-	case LEVEL_SET_MUSIC_FOLDER:
-		list_size = level_folder_str.size();
-		break;
-	case SCORE_SET_MUSIC_FOLDER:
-		list_size = score_folder_str.size();
-		break;
-	case CLEARTYPE_SET_MUSIC_FOLDER:
-		list_size = clear_folder_str.size();
-		break;
-	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-	case LEVEL0_MUSIC_FOLDER:
-	case LEVEL1_MUSIC_FOLDER:
-	case LEVEL2_MUSIC_FOLDER:
-	case LEVEL3_MUSIC_FOLDER:
-	case LEVEL4_MUSIC_FOLDER:
-	case LEVEL5_MUSIC_FOLDER:
-	case LEVEL6_MUSIC_FOLDER:
-	case LEVEL7_MUSIC_FOLDER:
-	case LEVEL8_MUSIC_FOLDER:
-	case LEVEL9_MUSIC_FOLDER:
-	case LEVEL10_MUSIC_FOLDER:
-	case SCORE_P_MUSIC_FOLDER:
-	case SCORE_XP_MUSIC_FOLDER:
-	case SCORE_X_MUSIC_FOLDER:
-	case SCORE_SP_MUSIC_FOLDER:
-	case SCORE_S_MUSIC_FOLDER:
-	case SCORE_AP_MUSIC_FOLDER:
-	case SCORE_A_MUSIC_FOLDER:
-	case SCORE_B_MUSIC_FOLDER:
-	case SCORE_C_MUSIC_FOLDER:
-	case SCORE_D_MUSIC_FOLDER:
-	case SCORE_F_MUSIC_FOLDER:
-	case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-	case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-	case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-	case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-	case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-	case CLEARTYPE_FAILED_MUSIC_FOLDER:
-	case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-		list_size = music_folder_str.size();
-		break;
-	}
-
-	return list_size;
-}
-
 static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
 	switch (folder_stack->top()) {
 	case DEFAULT_MUSIC_FOLDER:
@@ -419,6 +364,34 @@ static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
 		break;
 	}
 	return false;
+}
+
+static size_t GetListCount(const std::stack<music_folder_num_t> *folder_stack,
+	const music_list_c *musiclist)
+{
+	size_t list_size = 0;
+
+	switch (folder_stack->top()) {
+	case DEFAULT_MUSIC_FOLDER:
+		list_size = begin_folder_str.size();
+		break;
+	case LEVEL_SET_MUSIC_FOLDER:
+		list_size = level_folder_str.size();
+		break;
+	case SCORE_SET_MUSIC_FOLDER:
+		list_size = score_folder_str.size();
+		break;
+	case CLEARTYPE_SET_MUSIC_FOLDER:
+		list_size = clear_folder_str.size();
+		break;
+	default:
+		if (IsMusicFolder(folder_stack)) {
+			list_size = music_folder_str.size();
+		}
+		break;
+	}
+
+	return list_size;
 }
 
 static void DrawMusicListOne(const char *name, int offset,
@@ -484,37 +457,10 @@ static void DrawMusicList(std::stack<music_folder_num_t> *folder_stack,
 	case CLEARTYPE_SET_MUSIC_FOLDER: /* クリアタイプフォルダ */
 		DrawMusicList2(&clear_folder_str, command, view_dif_type, music_ber_pic);
 		break;
-	case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-	case LEVEL0_MUSIC_FOLDER:
-	case LEVEL1_MUSIC_FOLDER:
-	case LEVEL2_MUSIC_FOLDER:
-	case LEVEL3_MUSIC_FOLDER:
-	case LEVEL4_MUSIC_FOLDER:
-	case LEVEL5_MUSIC_FOLDER:
-	case LEVEL6_MUSIC_FOLDER:
-	case LEVEL7_MUSIC_FOLDER:
-	case LEVEL8_MUSIC_FOLDER:
-	case LEVEL9_MUSIC_FOLDER:
-	case LEVEL10_MUSIC_FOLDER:
-	case SCORE_P_MUSIC_FOLDER:
-	case SCORE_XP_MUSIC_FOLDER:
-	case SCORE_X_MUSIC_FOLDER:
-	case SCORE_SP_MUSIC_FOLDER:
-	case SCORE_S_MUSIC_FOLDER:
-	case SCORE_AP_MUSIC_FOLDER:
-	case SCORE_A_MUSIC_FOLDER:
-	case SCORE_B_MUSIC_FOLDER:
-	case SCORE_C_MUSIC_FOLDER:
-	case SCORE_D_MUSIC_FOLDER:
-	case SCORE_F_MUSIC_FOLDER:
-	case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-	case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-	case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-	case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-	case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-	case CLEARTYPE_FAILED_MUSIC_FOLDER:
-	case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-		DrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
+	default:
+		if (IsMusicFolder(folder_stack)) {
+			DrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
+		}
 		break;
 	}
 
@@ -1965,38 +1911,11 @@ static void FBDF_select_KeyCheck(
 				FBDF_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
 				command = 0;
 				break;
-			case ALL_MUSIC_FOLDER: /* 以下曲フォルダ */
-			case LEVEL0_MUSIC_FOLDER:
-			case LEVEL1_MUSIC_FOLDER:
-			case LEVEL2_MUSIC_FOLDER:
-			case LEVEL3_MUSIC_FOLDER:
-			case LEVEL4_MUSIC_FOLDER:
-			case LEVEL5_MUSIC_FOLDER:
-			case LEVEL6_MUSIC_FOLDER:
-			case LEVEL7_MUSIC_FOLDER:
-			case LEVEL8_MUSIC_FOLDER:
-			case LEVEL9_MUSIC_FOLDER:
-			case LEVEL10_MUSIC_FOLDER:
-			case SCORE_P_MUSIC_FOLDER:
-			case SCORE_XP_MUSIC_FOLDER:
-			case SCORE_X_MUSIC_FOLDER:
-			case SCORE_SP_MUSIC_FOLDER:
-			case SCORE_S_MUSIC_FOLDER:
-			case SCORE_AP_MUSIC_FOLDER:
-			case SCORE_A_MUSIC_FOLDER:
-			case SCORE_B_MUSIC_FOLDER:
-			case SCORE_C_MUSIC_FOLDER:
-			case SCORE_D_MUSIC_FOLDER:
-			case SCORE_F_MUSIC_FOLDER:
-			case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-			case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-			case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-			case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-			case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-			case CLEARTYPE_FAILED_MUSIC_FOLDER:
-			case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-				if (!musiclist->sort.empty()) {
-					cutin->SetIo(CUT_FRAG_IN);
+			default:
+				if (IsMusicFolder(&folder_stack)) {
+					if (!musiclist->sort.empty()) {
+						cutin->SetIo(CUT_FRAG_IN);
+					}
 				}
 				break;
 			}
