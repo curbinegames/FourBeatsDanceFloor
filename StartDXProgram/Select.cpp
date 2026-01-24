@@ -487,39 +487,6 @@ static void DrawColorCount(int x, int y, const music_colorcount_t *count) {
 	return;
 }
 
-static void CreateMapDetail(const char *folder_name) {
-	FILE *fp = NULL;
-	std::string path = "music/";
-
-	path += folder_name;
-	path += "/detail.bin";
-
-	fopen_s(&fp, path.c_str(), "wb");
-	if (fp == NULL) { return; }
-
-	/* 処理 */
-
-	return;
-}
-
-static void LoadMapDetail(const char *folder_name) {
-	FILE *fp = NULL;
-	std::string path = "music/";
-
-	path += folder_name;
-	path += "/detail.bin";
-
-	fopen_s(&fp, path.c_str(), "rb");
-	if (fp == NULL) {
-		CreateMapDetail(folder_name);
-		fopen_s(&fp, path.c_str(), "rb");
-	}
-
-	/* 処理 */
-
-	return;
-}
-
 #if 1 /* 譜面情報系 */
 
 /* 譜面の長さを計算する */
@@ -1216,77 +1183,6 @@ static void CountMapColor(music_colorcount_t *count, const FBDF_map_t *map, uint
 
 #endif /* 譜面情報系 */
 
-#if 1 /* メタデータ関連 */
-
-/* 楽曲のメタデータを読みこむ */
-int FBDF_ReadMeta(music_detail_t *buf, const char *d_name) {
-	FILE *readfp = NULL;
-	char save_path[256];
-
-	if ((buf == NULL) || (d_name == NULL)) { return -1; }
-
-	strcpy_s(save_path, 256, "music/");
-	strcat_s(save_path, 256, d_name);
-	strcat_s(save_path, 256, "/meta.bin");
-
-	fopen_s(&readfp, save_path, "rb");
-	if (readfp == NULL) { return -1; }
-
-	int read_buf = buf->music_name.size();
-
-	/* 曲名は取得済み */
-	fread(&read_buf, sizeof(int), 1, readfp);
-	fseek(readfp, read_buf, SEEK_CUR);
-
-	/* アーティスト名 */
-	buf->artist = "";
-	fread(&read_buf, sizeof(int), 1, readfp);
-	for (int ic = 0; ic < read_buf; ic++) {
-		char c_buf = '\0';
-		fread(&c_buf, sizeof(char), 1, readfp);
-		buf->artist += c_buf;
-	}
-
-	fread(&buf->auto_cal_dif, sizeof(music_dif_t), 1, readfp);
-	fread(&buf->most_colorpat, sizeof(music_most_colorpat_t), MOST_COLORPAT_NUM, readfp);
-	fread(&buf->color_count, sizeof(music_colorcount_t), 1, readfp);
-	fclose(readfp);
-
-	return 0;
-}
-
-/* 楽曲のメタデータを保存する */
-int FBDF_WriteMeta(const music_detail_t *buf, const char *d_name) {
-	FILE *writefp = NULL;
-	char save_path[256];
-
-	if ((buf == NULL) || (d_name == NULL)) { return -1; }
-
-	strcpy_s(save_path, 256, "music/");
-	strcat_s(save_path, 256, d_name);
-	strcat_s(save_path, 256, "/meta.bin");
-
-	fopen_s(&writefp, save_path, "wb");
-	if (writefp == NULL) { return -1; }
-
-	int write_buf = buf->music_name.size();
-	fwrite(&write_buf, sizeof(int), 1, writefp);
-	fwrite(buf->music_name.c_str(), sizeof(char), write_buf, writefp);
-
-	write_buf = buf->artist.size();
-	fwrite(&write_buf, sizeof(int), 1, writefp);
-	fwrite(buf->artist.c_str(), sizeof(char), write_buf, writefp);
-
-	fwrite(&buf->auto_cal_dif, sizeof(music_dif_t), 1, writefp);
-	fwrite(&buf->most_colorpat, sizeof(music_most_colorpat_t), MOST_COLORPAT_NUM, writefp);
-	fwrite(&buf->color_count, sizeof(music_colorcount_t), 1, writefp);
-	fclose(writefp);
-
-	return 0;
-}
-
-#endif /* メタデータ関連 */
-
 #if 1 /* 譜面リスト読み込み系 */
 
 /**
@@ -1312,28 +1208,22 @@ static void FBDF_select_MapLoadMusicGetDetail(
 	map_path += '/';
 	map_path += file;
 
-#if 0
-	if (FBDF_ReadMeta(&buf, d_name) != 0)
-#endif
-	{
-		if (MapLoadOne(&map, map_path.c_str()) == -1) { return; }
+	if (MapLoadOne(&map, map_path.c_str()) == -1) { return; }
 
-		buf.folder_name = d_name;
-		buf.music_name = d_name;
-		buf.artist = map.artist;
-		buf.Length = CalMapLength(&map);
-		buf.auto_cal_dif.notes = CalMapNotesDif(&buf, &map);
-		buf.auto_cal_dif.color = CalMapColorDif(&buf, &map);
-		buf.auto_cal_dif.trick = CalMapTrickDif(&buf, &map);
-		buf.auto_cal_dif.all = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
-		buf.user_dif = music_detail_base.level;
-		buf.map_file_name = file;
-		buf.dif_type = dif;
-		CalMapMostColorPat(buf.most_colorpat, &map);
-		CountMapColor(&buf.color_count, &map, buf.Length);
-		FBDF_Save_ReadScoreOneDif(&buf.user_highscore, d_name, dif);
-		// FBDF_WriteMeta(&buf, d_name);
-	}
+	buf.folder_name = d_name;
+	buf.music_name = d_name;
+	buf.artist = map.artist;
+	buf.Length = CalMapLength(&map);
+	buf.auto_cal_dif.notes = CalMapNotesDif(&buf, &map);
+	buf.auto_cal_dif.color = CalMapColorDif(&buf, &map);
+	buf.auto_cal_dif.trick = CalMapTrickDif(&buf, &map);
+	buf.auto_cal_dif.all = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
+	buf.user_dif = music_detail_base.level;
+	buf.map_file_name = file;
+	buf.dif_type = dif;
+	CalMapMostColorPat(buf.most_colorpat, &map);
+	CountMapColor(&buf.color_count, &map, buf.Length);
+	FBDF_Save_ReadScoreOneDif(&buf.user_highscore, d_name, dif);
 
 	detail.push_back(buf);
 }
