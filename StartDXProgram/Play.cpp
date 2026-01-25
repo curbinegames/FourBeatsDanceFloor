@@ -638,6 +638,27 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	return;
 }
 
+/* 譜面を読み込む */
+static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const TCHAR *map_file_name) {
+	std::string path = "music/";
+	path += folder_name;
+	path += '/';
+	path += map_file_name;
+	if (MapLoadOne(&map, path.c_str()) != 0) { return false; }
+	map.noteNo = 0;
+	map.Stime = GetNowCount();
+	return true;
+}
+
+/* 曲の音声ファイルを読み込む */
+static DxSnd_t FBDF_Play_Loadmusic(const TCHAR *folder_name, const TCHAR *music_file_name) {
+	std::string path = "music/";
+	path += folder_name;
+	path += '/';
+	path += music_file_name;
+	return LoadSoundMem(path.c_str());
+}
+
 /* キー入力関係 */
 static void FBDF_Play_KeyCheck(
 	FBDF_push_key_t &pkey, FBDF_play_class_set_t &play_class,
@@ -705,42 +726,24 @@ static void FBDF_Play_KeyCheck(
 
 /* 返り値: 次のシーンの番号 */
 view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music) {
-	int keybox[1] = { KEY_INPUT_RETURN };
-	int hitkey = 0;
-	DxTime_t FinishTime = 0;
-
-	char musicPath[256];
-	TCHAR map_path[256];
-
 	FBDF_map_t map;
 	FBDF_score_t score;
 	FBDF_push_key_t pkey;
-	FBDF_play_class_set_t play_class;
 
+	FBDF_play_class_set_t play_class;
 	fbdf_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	int backPic = LoadGraph(_T("pic/PlayBack.png"));
-	int musicData = 0;
 
+	DxSnd_t musicData = 0;
 	FBDT_hit_snd_t se;
 
-	{
-		std::string map_path;
-		map_path  = "music/";
-		map_path += nex_music->folder_name;
-		map_path += '/';
-		map_path += nex_music->map_file_name;
-		if (MapLoadOne(&map, map_path.c_str()) != 0) { return VIEW_EXIT; }
-	}
+	DxTime_t FinishTime = 0;
 
-	strcpy_s(musicPath, "music/");
-	strcat_s(musicPath, nex_music->folder_name.c_str());
-	strcat_s(musicPath, "/");
-	strcat_s(musicPath, map.music_file);
+	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
 
-	musicData = LoadSoundMem(musicPath);
-
+	musicData = FBDF_Play_Loadmusic(nex_music->folder_name.c_str(), map.music_file);
 	PlaySoundMem(musicData, DX_PLAYTYPE_BACK);
 
 	map.noteNo = 0;
@@ -753,16 +756,12 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
 
-		/* 時間 */ {
-			map.Ntime = GetNowCount() - map.Stime;
-		}
+		map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
 
 		FBDF_Play_KeyCheck(pkey, play_class, score, map, false, cutin); /* autoにしたいなら5番目をtrueに */
 
 		/* ノーツ全処理判定 */
-		if ((FinishTime == 0) && (map.noteN == map.noteNo)) {
-			FinishTime = map.Ntime;
-		}
+		if ((FinishTime == 0) && (map.noteN == map.noteNo)) { FinishTime = map.Ntime; }
 
 		/* 譜面終了判定 */
 		if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(musicData))) {
