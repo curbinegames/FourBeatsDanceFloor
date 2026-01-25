@@ -68,6 +68,8 @@ typedef struct FBDF_score_s {
 	uint save  = 0;
 	uint drop  = 0;
 	uint point = 0; /* 理論値 = 184 * ノーツ数 */
+	uint chain = 0;
+	uint chain_point = 0; /* 理論値 = 1~ノーツ数までの和 */
 } FBDF_score_t;
 
 typedef struct FBDF_judge_event_s {
@@ -569,8 +571,12 @@ static void NoteJudge(
 			}
 		}
 
+		/* コンボ計算 */
+		if (buf.mat != JUDGE_MISS) { score->chain++; }
+
 		/* スコア計算 */
 		score->point += buf.score;
+		score->chain_point += score->chain;
 
 		/* キャラモーション変更 */
 		if (buf.mat == JUDGE_MISS) {
@@ -625,7 +631,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	result_data->artist      = map.artist;
 	result_data->folder_name = nex_music->folder_name;
 	result_data->level       = 0; /* meta.binから取ってくる */
-	result_data->score       = score.point;
+	result_data->score       = score.point + score.chain_point;
 	result_data->acc         = play_class.score_bar_class.GetScore_ave();
 	result_data->crit        = score.crit;
 	result_data->hit         = score.hit;
@@ -785,7 +791,7 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 			
 			DrawLamp(&pkey);
 			DrawNotes(&map);
-			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point);
+			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
 			play_class.judge_class.DrawJudge(230, 530);
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
 			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
