@@ -22,7 +22,7 @@
  * @param[in] rank スコアランク
  * @return なし
  */
-void FBDF_result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
+static void FBDF_ResultDrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
 	int all_left  = VIEW_MARGIN;
 	int all_up    = VIEW_MARGIN;
 	int all_right = VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
@@ -47,7 +47,7 @@ void FBDF_result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) 
  * @param[in] acc 最終精度
  * @return なし
  */
-static void FBDF_result_DrawFinalBar(double acc) {
+static void FBDF_ResultDrawFinalBar(double acc) {
 	int all_left  = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
 	int all_up    =     VIEW_MARGIN;
 	int all_right = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE;
@@ -77,7 +77,7 @@ static void FBDF_result_DrawFinalBar(double acc) {
  * @param[in] data プレイデータ
  * @return view_num_t 次の画面
  */
-static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
+static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int hitkey = 0;
 
@@ -133,10 +133,10 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, back.handle(), TRUE);
 
 		/* スコアグラフ */
-		FBDF_result_DrawScoreGraph(data->score_graph, score_rank_char.c_str());
+		FBDF_ResultDrawScoreGraph(data->score_graph, score_rank_char.c_str());
 
 		/* スコアグラフの横 */
-		FBDF_result_DrawFinalBar(data->acc);
+		FBDF_ResultDrawFinalBar(data->acc);
 		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN     , COLOR_WHITE, _T("%s / %s")    , data->name.c_str(), data->artist.c_str());
 		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN + 20, COLOR_WHITE, _T("level: %.2f"), data->level);
 
@@ -164,7 +164,7 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
  * @param[in] data プレイデータ
  * @return FBDF_clear_type_et クリアタイプ
  */
-static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *data) {
+static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t *data) {
 	if (data->acc < 70.0) { return FBDF_CLEAR_TYPE_FAILED;    }
 	if (30 < data->drop)  { return FBDF_CLEAR_TYPE_CLEARED;   }
 	if ( 5 < data->drop)  { return FBDF_CLEAR_TYPE_CAKEWALK;  }
@@ -178,10 +178,10 @@ static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *d
  * @param[in] data プレイデータ
  * @return bool true=成功, false=失敗
  */
-static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
+static void FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
 	FBDF_file_music_score_st this_time_score;
 	this_time_score.acc        = data->acc;
-	this_time_score.clear_type = FBDF_Resule_JudgeClearType(data);
+	this_time_score.clear_type = FBDF_ResultJudgeClearType(data);
 	this_time_score.score      = data->score;
 	FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type);
 }
@@ -192,6 +192,6 @@ static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
  * @return view_num_t 次の画面
  */
 view_num_t FirstResultView(const FBDF_result_data_t *data) {
-	FBDF_Result_SaveMusicScore(data);
-	return FBDF_Result_View(data);
+	FBDF_ResultSaveMusicScore(data);
+	return FBDF_ResultView(data);
 }

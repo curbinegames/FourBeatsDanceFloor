@@ -2,4 +2,4 @@
 
 #include <main.h>
 
-extern view_num_t FirstTitleView();
+extern view_num_t FBDF_TitleView(void);

@@ -196,7 +196,7 @@ static int CalMusicMovieDiv(int STime, DxPic_t handle) {
  * @param ‚È‚µ
  * @return view_num_t ŽŸ‚Ì‰æ–Ê
  */
-view_num_t FirstTitleView() {
+view_num_t FBDF_TitleView(void) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int hitkey = 0;
 	int STime = 0;

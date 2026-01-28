@@ -23,13 +23,13 @@ static void GameMain() {
 	while (next != VIEW_EXIT) {
 		switch (next) {
 		case VIEW_TITLE:
-			next = FirstTitleView();
+			next = FBDF_TitleView();
 			break;
 		case VIEW_SELECT:
-			next = FirstSelectView(&next_music);
+			next = FBDF_SelectView(&next_music);
 			break;
 		case VIEW_PLAY:
-			next = FirstPlayView(&result, &next_music);
+			next = FBDF_PlayView(&result, &next_music);
 			break;
 		case VIEW_RESULT:
 			next = FirstResultView(&result);

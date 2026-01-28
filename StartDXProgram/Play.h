@@ -23,4 +23,4 @@ namespace FBDF {
 	} play_choose_music_st;
 }
 
-extern view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *next);
+extern view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *next);
