@@ -320,16 +320,16 @@ private:
 	 * @param[out] musiclist 譜面リスト
 	 * @return なし
 	 */
-	void SortMusicListDif(FBDF_music_list_c *musiclist) const {
-		if (musiclist->sort.empty()) { return; }
-		for (int is = 0; is + 1 < (musiclist->sort.size()); is++) {
-			for (int ie = is + 1; ie < musiclist->sort.size(); ie++) {
-				if (musiclist->detail[musiclist->sort[is]].auto_cal_dif.all >
-					musiclist->detail[musiclist->sort[ie]].auto_cal_dif.all)
+	void SortMusicListDif(FBDF_music_list_c &musiclist) const {
+		if (musiclist.sort.empty()) { return; }
+		for (int is = 0; is + 1 < (musiclist.sort.size()); is++) {
+			for (int ie = is + 1; ie < musiclist.sort.size(); ie++) {
+				if (musiclist.detail[musiclist.sort[is]].auto_cal_dif.all >
+					musiclist.detail[musiclist.sort[ie]].auto_cal_dif.all)
 				{
-					uint temp = musiclist->sort[is];
-					musiclist->sort[is] = musiclist->sort[ie];
-					musiclist->sort[ie] = temp;
+					uint temp = musiclist.sort[is];
+					musiclist.sort[is] = musiclist.sort[ie];
+					musiclist.sort[ie] = temp;
 				}
 			}
 		}
@@ -514,109 +514,108 @@ private:
 	/**
 	 * @brief 絞り込み条件から譜面リストを作る
 	 * @param[out] musiclist 譜面リスト
-	 * @param[in] folder_num 今いるゲーム内フォルダー
 	 * @param[in] view_dif_type 今の難易度表示
 	 * @return なし
 	 */
-	void MakeMusicListDetectMusic(FBDF_music_list_c *musiclist, FBDF_dif_type_ec view_dif_type) {
-		for (int i = 0; i < musiclist->detail.size(); i++) {
+	void MakeMusicListDetectMusic(FBDF_music_list_c &musiclist, FBDF_dif_type_ec view_dif_type) {
+		for (int i = 0; i < musiclist.detail.size(); i++) {
 			bool detect_fg = false;
 			switch (this->folder_stack.top()) {
 			case ALL_MUSIC_FOLDER:
-				detect_fg = (musiclist->detail[i].dif_type == view_dif_type); /* 難易度フィルタのみ */
+				detect_fg = (musiclist.detail[i].dif_type == view_dif_type); /* 難易度フィルタのみ */
 				break;
 			case LEVEL0_MUSIC_FOLDER:
-				detect_fg = (musiclist->detail[i].auto_cal_dif.all < 1);
+				detect_fg = (musiclist.detail[i].auto_cal_dif.all < 1);
 				break;
 			case LEVEL1_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(1, musiclist->detail[i].auto_cal_dif.all, 2));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(1, musiclist.detail[i].auto_cal_dif.all, 2));
 				break;
 			case LEVEL2_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(2, musiclist->detail[i].auto_cal_dif.all, 3));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(2, musiclist.detail[i].auto_cal_dif.all, 3));
 				break;
 			case LEVEL3_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(3, musiclist->detail[i].auto_cal_dif.all, 4));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(3, musiclist.detail[i].auto_cal_dif.all, 4));
 				break;
 			case LEVEL4_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(4, musiclist->detail[i].auto_cal_dif.all, 5));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(4, musiclist.detail[i].auto_cal_dif.all, 5));
 				break;
 			case LEVEL5_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(5, musiclist->detail[i].auto_cal_dif.all, 6));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(5, musiclist.detail[i].auto_cal_dif.all, 6));
 				break;
 			case LEVEL6_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(6, musiclist->detail[i].auto_cal_dif.all, 7));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(6, musiclist.detail[i].auto_cal_dif.all, 7));
 				break;
 			case LEVEL7_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(7, musiclist->detail[i].auto_cal_dif.all, 8));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(7, musiclist.detail[i].auto_cal_dif.all, 8));
 				break;
 			case LEVEL8_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(8, musiclist->detail[i].auto_cal_dif.all, 9));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(8, musiclist.detail[i].auto_cal_dif.all, 9));
 				break;
 			case LEVEL9_MUSIC_FOLDER:
-				detect_fg = (IS_BETWEEN_RIGHT_LESS(9, musiclist->detail[i].auto_cal_dif.all, 10));
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(9, musiclist.detail[i].auto_cal_dif.all, 10));
 				break;
 			case LEVEL10_MUSIC_FOLDER:
-				detect_fg = (10 <= musiclist->detail[i].auto_cal_dif.all);
+				detect_fg = (10 <= musiclist.detail[i].auto_cal_dif.all);
 				break;
 			case SCORE_P_MUSIC_FOLDER:
-				detect_fg = (FBDF_SCORE_RANK_P_BORDER <= musiclist->detail[i].user_highscore.acc);
+				detect_fg = (FBDF_SCORE_RANK_P_BORDER <= musiclist.detail[i].user_highscore.acc);
 				break;
 			case SCORE_XP_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_XP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_P_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_XP_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_P_BORDER);
 				break;
 			case SCORE_X_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_X_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_XP_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_X_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_XP_BORDER);
 				break;
 			case SCORE_SP_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_SP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_X_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_SP_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_X_BORDER);
 				break;
 			case SCORE_S_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_S_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_SP_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_S_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_SP_BORDER);
 				break;
 			case SCORE_AP_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_AP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_S_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_AP_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_S_BORDER);
 				break;
 			case SCORE_A_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_A_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_AP_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_A_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_AP_BORDER);
 				break;
 			case SCORE_B_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_B_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_A_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_B_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_A_BORDER);
 				break;
 			case SCORE_C_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_C_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_B_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_C_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_B_BORDER);
 				break;
 			case SCORE_D_MUSIC_FOLDER:
-				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_D_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_C_BORDER);
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_D_BORDER, musiclist.detail[i].user_highscore.acc, FBDF_SCORE_RANK_C_BORDER);
 				break;
 			case SCORE_F_MUSIC_FOLDER:
-				detect_fg = (musiclist->detail[i].user_highscore.acc < FBDF_SCORE_RANK_D_BORDER);
+				detect_fg = (musiclist.detail[i].user_highscore.acc < FBDF_SCORE_RANK_D_BORDER);
 				break;
 			case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_PERFECT;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_PERFECT;
 				break;
 			case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FULLCOMBO;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FULLCOMBO;
 				break;
 			case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_MISSLESS;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_MISSLESS;
 				break;
 			case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CAKEWALK;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CAKEWALK;
 				break;
 			case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED;
 				break;
 			case CLEARTYPE_FAILED_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED;
 				break;
 			case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_NOPLAY;
+				detect_fg = musiclist.detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_NOPLAY;
 				break;
 			default:
 				return;
 			}
 			if (detect_fg) {
-				musiclist->sort.push_back(i);
+				musiclist.sort.push_back(i);
 			}
 		}
 	}
@@ -711,18 +710,18 @@ public:
 	 * @param[in] view_dif_type 今の難易度表示
 	 * @return なし
 	 */
-	void MakeMusicList(FBDF_music_list_c *musiclist, FBDF_dif_type_ec view_dif_type) {
+	void MakeMusicList(FBDF_music_list_c &musiclist, FBDF_dif_type_ec view_dif_type) {
 		if (this->IsMusicFolderNow()) {
-			musiclist->sort.clear();
+			musiclist.sort.clear();
 			folder_str.clear();
 
 			this->MakeMusicListDetectMusic(musiclist, view_dif_type);
 			this->SortMusicListDif(musiclist);
 
 			/* リスト作成 */
-			for (int is = 0; is < musiclist->sort.size(); is++) {
-				std::string buf = (*musiclist)[is].music_name;
-				switch ((*musiclist)[is].dif_type) {
+			for (int is = 0; is < musiclist.sort.size(); is++) {
+				std::string buf = musiclist[is].music_name;
+				switch (musiclist[is].dif_type) {
 				case FBDF_dif_type_ec::LIGHT:
 					buf += "[light]";
 					break;
@@ -1756,7 +1755,7 @@ static void FBDF_select_KeyCheck(
 	FBDF_Select_MusicFolderManager_c &folder_manager,
 	int &command,
 	FBDF_dif_type_ec &view_dif_type,
-	FBDF_music_list_c *musiclist,
+	FBDF_music_list_c &musiclist,
 	fbdf_cutin_c *cutin
 ) {
 	size_t list_size;
@@ -1765,7 +1764,7 @@ static void FBDF_select_KeyCheck(
 	switch (GetKeyPushOnce()) {
 	case KEY_INPUT_RETURN:
 		if (folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
-			if (!musiclist->sort.empty()) { /* 曲フォルダの中が空じゃない */
+			if (!musiclist.sort.empty()) { /* 曲フォルダの中が空じゃない */
 				cutin->SetIo(CUT_FRAG_IN);
 			}
 		}
@@ -1815,8 +1814,6 @@ static void FBDF_select_KeyCheck(
  * @return view_num_t 次の画面
  */
 view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
-	int keybox[5] = { KEY_INPUT_RETURN, KEY_INPUT_UP, KEY_INPUT_DOWN, KEY_INPUT_LEFT, KEY_INPUT_RIGHT };
-	int hitkey = 0;
 	int keyBlock = 1;
 	int command = 0;
 	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
@@ -1835,7 +1832,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 
-	folder_manager_class.MakeMusicList(&musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
+	folder_manager_class.MakeMusicList(musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
 
 	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
 
@@ -1847,7 +1844,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 		if (cutin.IsEndAnim()) { break; }
 
 		InputAllKeyHold();
-		FBDF_select_KeyCheck(folder_manager_class, command, view_dif_type, &musiclist, &cutin);
+		FBDF_select_KeyCheck(folder_manager_class, command, view_dif_type, musiclist, &cutin);
 
 		if (exit_fg) { break; }
 
