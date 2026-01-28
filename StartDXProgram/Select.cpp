@@ -1703,49 +1703,39 @@ static void FBDF_Select_KeyCheck(
 				switch (command) {
 				case 0:
 					folder_stack.push(LEVEL0_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL0_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 1:
 					folder_stack.push(LEVEL1_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL1_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 2:
 					folder_stack.push(LEVEL2_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL2_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 3:
 					folder_stack.push(LEVEL3_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL3_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 4:
 					folder_stack.push(LEVEL4_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL4_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 5:
 					folder_stack.push(LEVEL5_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL5_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 6:
 					folder_stack.push(LEVEL6_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL6_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 7:
 					folder_stack.push(LEVEL7_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL7_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 8:
 					folder_stack.push(LEVEL8_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL8_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 9:
 					folder_stack.push(LEVEL9_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL9_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 10:
 					folder_stack.push(LEVEL10_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, LEVEL10_MUSIC_FOLDER, view_dif_type);
 					break;
 				}
+				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
 				command = 0;
 				break;
 			case SCORE_SET_MUSIC_FOLDER:
