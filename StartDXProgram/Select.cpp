@@ -318,8 +318,8 @@ std::vector<std::string> clear_folder_str;
 std::vector<std::string> music_folder_str;
 
 /* ‹ÈƒtƒHƒ‹ƒ_‚Å‚ ‚é‚©‚ð•Ô‚· */
-static bool FBDF_Select_IsMusicFolder(const std::stack<FBDF_music_folder_num_t> *folder_stack) {
-	switch (folder_stack->top()) {
+static bool FBDF_Select_IsMusicFolder(FBDF_music_folder_num_t folder_stack) {
+	switch (folder_stack) {
 	case DEFAULT_MUSIC_FOLDER:
 	case LEVEL_SET_MUSIC_FOLDER:
 	case SCORE_SET_MUSIC_FOLDER:
@@ -381,7 +381,7 @@ static size_t FBDF_SelectGetListCount(const std::stack<FBDF_music_folder_num_t> 
 		list_size = clear_folder_str.size();
 		break;
 	default:
-		if (FBDF_Select_IsMusicFolder(folder_stack)) {
+		if (FBDF_Select_IsMusicFolder(folder_stack->top())) {
 			list_size = music_folder_str.size();
 		}
 		break;
@@ -454,7 +454,7 @@ static void FBDF_SelectDrawMusicList(std::stack<FBDF_music_folder_num_t> *folder
 		FBDF_SelectDrawMusicList2(&clear_folder_str, command, view_dif_type, music_ber_pic);
 		break;
 	default:
-		if (FBDF_Select_IsMusicFolder(folder_stack)) {
+		if (FBDF_Select_IsMusicFolder(folder_stack->top())) {
 			FBDF_SelectDrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
 		}
 		break;
@@ -1815,7 +1815,7 @@ static void FBDF_Select_KeyCheck(
 				command = 0;
 				break;
 			default:
-				if (FBDF_Select_IsMusicFolder(&folder_stack)) {
+				if (FBDF_Select_IsMusicFolder(folder_stack.top())) {
 					if (!musiclist->sort.empty()) {
 						cutin->SetIo(CUT_FRAG_IN);
 					}
@@ -1912,7 +1912,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 		back_pic.DrawPic();
 		DrawFormatString(5,  25, 0xffffffff, _T("%d"), command);
 		DrawFormatString(5,  45, 0xffffffff, _T("%d"), keyBlock);
-		if (FBDF_Select_IsMusicFolder(&folder_stack) && !musiclist.sort.empty()) {
+		if (FBDF_Select_IsMusicFolder(folder_stack.top()) && !musiclist.sort.empty()) {
 			DrawFormatString(5,  65, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.notes);
 			DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.color);
 			DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.trick);
