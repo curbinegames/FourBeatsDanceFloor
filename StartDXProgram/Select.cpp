@@ -1406,19 +1406,16 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 #endif /* 譜面リスト読み込み系 */
 
 /**
- * @brief 条件から譜面リストを作る
+ * @brief 絞り込み条件から譜面リストを作る
  * @param[out] musiclist 譜面リスト
  * @param[in] folder_num 今いるゲーム内フォルダー
  * @param[in] view_dif_type 今の難易度表示
  * @return なし
  */
-static void FBDF_Select_MakeMusicList(
+static void FBDF_MakeMusicListDetectMusic(
 	FBDF_music_list_c *musiclist, FBDF_music_folder_num_t folder_num,
 	FBDF_dif_type_ec view_dif_type)
 {
-	musiclist->sort.clear();
-	music_folder_str.clear();
-
 	for (int i = 0; i < musiclist->detail.size(); i++) {
 		bool detect_fg = false;
 		switch (folder_num) {
@@ -1519,14 +1516,16 @@ static void FBDF_Select_MakeMusicList(
 			musiclist->sort.push_back(i);
 		}
 	}
+}
 
-	if (musiclist->sort.empty()) {
-		/* 該当曲なし */
-		return;
-	}
-
-	/* 難易度ソート */
-	for (int is = 0; is < (musiclist->sort.size() - 1); is++) {
+/**
+ * @brief 譜面リストを難易度順に並び替える
+ * @param[out] musiclist 譜面リスト
+ * @return なし
+ */
+static void FBDF_MakeMusicListSortDif(FBDF_music_list_c *musiclist) {
+	if (musiclist->sort.empty()) { return; }
+	for (int is = 0; is + 1 < (musiclist->sort.size()); is++) {
 		for (int ie = is + 1; ie < musiclist->sort.size(); ie++) {
 			if (musiclist->detail[musiclist->sort[is]].auto_cal_dif.all > musiclist->detail[musiclist->sort[ie]].auto_cal_dif.all) {
 				uint temp = musiclist->sort[is];
@@ -1535,6 +1534,24 @@ static void FBDF_Select_MakeMusicList(
 			}
 		}
 	}
+}
+
+/**
+ * @brief 絞り込み/並び替え条件から譜面リストを作る
+ * @param[out] musiclist 譜面リスト
+ * @param[in] folder_num 今いるゲーム内フォルダー
+ * @param[in] view_dif_type 今の難易度表示
+ * @return なし
+ */
+static void FBDF_Select_MakeMusicList(
+	FBDF_music_list_c *musiclist, FBDF_music_folder_num_t folder_num,
+	FBDF_dif_type_ec view_dif_type)
+{
+	musiclist->sort.clear();
+	music_folder_str.clear();
+
+	FBDF_MakeMusicListDetectMusic(musiclist, folder_num, view_dif_type);
+	FBDF_MakeMusicListSortDif(musiclist);
 
 	/* リスト作成 */
 	for (int is = 0; is < musiclist->sort.size(); is++) {
