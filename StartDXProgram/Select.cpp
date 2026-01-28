@@ -311,11 +311,7 @@ public:
 	}
 };
 
-std::vector<std::string> begin_folder_str;
-std::vector<std::string> level_folder_str;
-std::vector<std::string> score_folder_str;
-std::vector<std::string> clear_folder_str;
-std::vector<std::string> music_folder_str;
+static std::vector<std::string> folder_str;
 
 /* 曲フォルダであるかを返す */
 static bool FBDF_Select_IsMusicFolder(FBDF_music_folder_num_t folder_stack) {
@@ -362,34 +358,6 @@ static bool FBDF_Select_IsMusicFolder(FBDF_music_folder_num_t folder_stack) {
 	return false;
 }
 
-static size_t FBDF_SelectGetListCount(const std::stack<FBDF_music_folder_num_t> *folder_stack,
-	const FBDF_music_list_c *musiclist)
-{
-	size_t list_size = 0;
-
-	switch (folder_stack->top()) {
-	case DEFAULT_MUSIC_FOLDER:
-		list_size = begin_folder_str.size();
-		break;
-	case LEVEL_SET_MUSIC_FOLDER:
-		list_size = level_folder_str.size();
-		break;
-	case SCORE_SET_MUSIC_FOLDER:
-		list_size = score_folder_str.size();
-		break;
-	case CLEARTYPE_SET_MUSIC_FOLDER:
-		list_size = clear_folder_str.size();
-		break;
-	default:
-		if (FBDF_Select_IsMusicFolder(folder_stack->top())) {
-			list_size = music_folder_str.size();
-		}
-		break;
-	}
-
-	return list_size;
-}
-
 static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
 	FBDF_music_list_bar_color_t bar_color, const FBDF_music_ber_pic_t *music_ber_pic)
 {
@@ -404,10 +372,10 @@ static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
 	return;
 }
 
-static void FBDF_SelectDrawMusicList2(std::vector<std::string> *list,
-	int command, FBDF_dif_type_ec view_dif_type, const FBDF_music_ber_pic_t *music_ber_pic)
+static void FBDF_SelectDrawMusicList(
+	int command, const FBDF_music_ber_pic_t *music_ber_pic)
 {
-	if (list->empty()) {
+	if (folder_str.empty()) {
 		/* フォルダ内に項目がない。曲フォルダである場合が多い */
 		/* 上下の空きスペースに何か置きたい。イラストとか */
 		FBDF_SelectDrawMusicListOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR, music_ber_pic);
@@ -415,14 +383,14 @@ static void FBDF_SelectDrawMusicList2(std::vector<std::string> *list,
 	}
 
 	/* 選択中 */
-	FBDF_SelectDrawMusicListOne((*list)[command].c_str(), 0, BLUE_MUSIC_LIST_BAR, music_ber_pic);
+	FBDF_SelectDrawMusicListOne(folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR, music_ber_pic);
 	/* 選択から下 */
 	for (int i = 1; ; i++) {
 		int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
 		if (WINDOW_SIZE_Y < DrawY) { break; }
 
-		int DrawT = (command + i) % list->size();
-		FBDF_SelectDrawMusicListOne((*list)[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
+		int DrawT = (command + i) % folder_str.size();
+		FBDF_SelectDrawMusicListOne(folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
 	}
 	/* 選択から上 */
 	for (int i = -1; ; i--) {
@@ -430,37 +398,9 @@ static void FBDF_SelectDrawMusicList2(std::vector<std::string> *list,
 		if (DrawY < 0) { break; }
 
 		int DrawT = command + i;
-		while (DrawT < 0) { DrawT += list->size(); }
-		FBDF_SelectDrawMusicListOne((*list)[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
+		while (DrawT < 0) { DrawT += folder_str.size(); }
+		FBDF_SelectDrawMusicListOne(folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
 	}
-}
-
-static void FBDF_SelectDrawMusicList(std::stack<FBDF_music_folder_num_t> *folder_stack,
-	const FBDF_music_list_c *musiclist, int command, FBDF_dif_type_ec view_dif_type,
-	const FBDF_music_ber_pic_t *music_ber_pic)
-{
-	/* フォルダはグレー色にしたい */
-	switch (folder_stack->top()) {
-	case DEFAULT_MUSIC_FOLDER:
-		FBDF_SelectDrawMusicList2(&begin_folder_str, command, view_dif_type, music_ber_pic);
-		break;
-	case LEVEL_SET_MUSIC_FOLDER: /* レベルフォルダ */
-		FBDF_SelectDrawMusicList2(&level_folder_str, command, view_dif_type, music_ber_pic);
-		break;
-	case SCORE_SET_MUSIC_FOLDER: /* スコアフォルダ */
-		FBDF_SelectDrawMusicList2(&score_folder_str, command, view_dif_type, music_ber_pic);
-		break;
-	case CLEARTYPE_SET_MUSIC_FOLDER: /* クリアタイプフォルダ */
-		FBDF_SelectDrawMusicList2(&clear_folder_str, command, view_dif_type, music_ber_pic);
-		break;
-	default:
-		if (FBDF_Select_IsMusicFolder(folder_stack->top())) {
-			FBDF_SelectDrawMusicList2(&music_folder_str, command, view_dif_type, music_ber_pic);
-		}
-		break;
-	}
-
-	return;
 }
 
 static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t *count) {
@@ -1536,6 +1476,92 @@ static void FBDF_MakeMusicListSortDif(FBDF_music_list_c *musiclist) {
 	}
 }
 
+static void FBDF_select_init_folder_default(void) {
+	std::string buf;
+	folder_str.clear();
+	buf = "all";
+	folder_str.push_back(buf);
+	buf = "level";
+	folder_str.push_back(buf);
+	buf = "score";
+	folder_str.push_back(buf);
+	buf = "clear type";
+	folder_str.push_back(buf);
+}
+
+static void FBDF_select_init_folder_level(void) {
+	std::string buf;
+	folder_str.clear();
+	buf = "level under 0";
+	folder_str.push_back(buf);
+	buf = "level 1";
+	folder_str.push_back(buf);
+	buf = "level 2";
+	folder_str.push_back(buf);
+	buf = "level 3";
+	folder_str.push_back(buf);
+	buf = "level 4";
+	folder_str.push_back(buf);
+	buf = "level 5";
+	folder_str.push_back(buf);
+	buf = "level 6";
+	folder_str.push_back(buf);
+	buf = "level 7";
+	folder_str.push_back(buf);
+	buf = "level 8";
+	folder_str.push_back(buf);
+	buf = "level 9";
+	folder_str.push_back(buf);
+	buf = "level over 10";
+	folder_str.push_back(buf);
+}
+
+static void FBDF_select_init_folder_score(void) {
+	std::string buf;
+	folder_str.clear();
+	buf = "score P";
+	folder_str.push_back(buf);
+	buf = "score X+";
+	folder_str.push_back(buf);
+	buf = "score X";
+	folder_str.push_back(buf);
+	buf = "score S+";
+	folder_str.push_back(buf);
+	buf = "score S";
+	folder_str.push_back(buf);
+	buf = "score A+";
+	folder_str.push_back(buf);
+	buf = "score A";
+	folder_str.push_back(buf);
+	buf = "score B";
+	folder_str.push_back(buf);
+	buf = "score C";
+	folder_str.push_back(buf);
+	buf = "score D";
+	folder_str.push_back(buf);
+	buf = "score F";
+	folder_str.push_back(buf);
+}
+
+static void FBDF_select_init_folder_cleartype(void) {
+	std::string buf;
+	folder_str.clear();
+	buf = "perfect";
+	folder_str.push_back(buf);
+	buf = "full chain";
+	folder_str.push_back(buf);
+	buf = "miss less";
+	folder_str.push_back(buf);
+	buf = "cakewalk";
+	folder_str.push_back(buf);
+	buf = "cleared";
+	folder_str.push_back(buf);
+	buf = "failed";
+	folder_str.push_back(buf);
+	buf = "no play";
+	folder_str.push_back(buf);
+}
+
 /**
  * @brief 絞り込み/並び替え条件から譜面リストを作る
  * @param[out] musiclist 譜面リスト
@@ -1547,116 +1573,50 @@ static void FBDF_Select_MakeMusicList(
 	FBDF_music_list_c *musiclist, FBDF_music_folder_num_t folder_num,
 	FBDF_dif_type_ec view_dif_type)
 {
-	musiclist->sort.clear();
-	music_folder_str.clear();
 
-	FBDF_MakeMusicListDetectMusic(musiclist, folder_num, view_dif_type);
-	FBDF_MakeMusicListSortDif(musiclist);
+	if (FBDF_Select_IsMusicFolder(folder_num)) {
+		musiclist->sort.clear();
+		folder_str.clear();
 
-	/* リスト作成 */
-	for (int is = 0; is < musiclist->sort.size(); is++) {
-		std::string buf = (*musiclist)[is].music_name;
-		switch ((*musiclist)[is].dif_type) {
-		case FBDF_dif_type_ec::LIGHT:
-			buf += "[light]";
+		FBDF_MakeMusicListDetectMusic(musiclist, folder_num, view_dif_type);
+		FBDF_MakeMusicListSortDif(musiclist);
+
+		/* リスト作成 */
+		for (int is = 0; is < musiclist->sort.size(); is++) {
+			std::string buf = (*musiclist)[is].music_name;
+			switch ((*musiclist)[is].dif_type) {
+			case FBDF_dif_type_ec::LIGHT:
+				buf += "[light]";
+				break;
+			case FBDF_dif_type_ec::NORMAL:
+				buf += "[normal]";
+				break;
+			case FBDF_dif_type_ec::HYPER:
+				buf += "[hyper]";
+				break;
+			}
+			folder_str.push_back(buf);
+		}
+	}
+	else {
+		switch (folder_num) {
+		case DEFAULT_MUSIC_FOLDER:
+			FBDF_select_init_folder_default();
 			break;
-		case FBDF_dif_type_ec::NORMAL:
-			buf += "[normal]";
+		case LEVEL_SET_MUSIC_FOLDER:
+			FBDF_select_init_folder_level();
 			break;
-		case FBDF_dif_type_ec::HYPER:
-			buf += "[hyper]";
+		case SCORE_SET_MUSIC_FOLDER:
+			FBDF_select_init_folder_score();
+			break;
+		case CLEARTYPE_SET_MUSIC_FOLDER:
+			FBDF_select_init_folder_cleartype();
+			break;
+		default:
 			break;
 		}
-		music_folder_str.push_back(buf);
 	}
-
 	return;
-}
-
-/**
- * @brief ゲーム内フォルダを用意する
- * @param なし
- * @return なし
- */
-static void FBDF_Select_init_folder(void) {
-	std::string buf;
-	if (begin_folder_str.empty()) {
-		buf = "all";
-		begin_folder_str.push_back(buf);
-		buf = "level";
-		begin_folder_str.push_back(buf);
-		buf = "score";
-		begin_folder_str.push_back(buf);
-		buf = "clear type";
-		begin_folder_str.push_back(buf);
-	}
-
-	if (level_folder_str.empty()) {
-		buf = "level under 0";
-		level_folder_str.push_back(buf);
-		buf = "level 1";
-		level_folder_str.push_back(buf);
-		buf = "level 2";
-		level_folder_str.push_back(buf);
-		buf = "level 3";
-		level_folder_str.push_back(buf);
-		buf = "level 4";
-		level_folder_str.push_back(buf);
-		buf = "level 5";
-		level_folder_str.push_back(buf);
-		buf = "level 6";
-		level_folder_str.push_back(buf);
-		buf = "level 7";
-		level_folder_str.push_back(buf);
-		buf = "level 8";
-		level_folder_str.push_back(buf);
-		buf = "level 9";
-		level_folder_str.push_back(buf);
-		buf = "level over 10";
-		level_folder_str.push_back(buf);
-	}
-
-	if (score_folder_str.empty()) {
-		buf = "score P";
-		score_folder_str.push_back(buf);
-		buf = "score X+";
-		score_folder_str.push_back(buf);
-		buf = "score X";
-		score_folder_str.push_back(buf);
-		buf = "score S+";
-		score_folder_str.push_back(buf);
-		buf = "score S";
-		score_folder_str.push_back(buf);
-		buf = "score A+";
-		score_folder_str.push_back(buf);
-		buf = "score A";
-		score_folder_str.push_back(buf);
-		buf = "score B";
-		score_folder_str.push_back(buf);
-		buf = "score C";
-		score_folder_str.push_back(buf);
-		buf = "score D";
-		score_folder_str.push_back(buf);
-		buf = "score F";
-		score_folder_str.push_back(buf);
-	}
-
-	if (clear_folder_str.empty()) {
-		buf = "perfect";
-		clear_folder_str.push_back(buf);
-		buf = "full chain";
-		clear_folder_str.push_back(buf);
-		buf = "miss less";
-		clear_folder_str.push_back(buf);
-		buf = "cakewalk";
-		clear_folder_str.push_back(buf);
-		buf = "cleared";
-		clear_folder_str.push_back(buf);
-		buf = "failed";
-		clear_folder_str.push_back(buf);
-		buf = "no play";
-		clear_folder_str.push_back(buf);
-	}
 }
 
 /**
@@ -1674,9 +1634,9 @@ static void FBDF_Select_KeyCheck(
 	int &command,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c *musiclist,
-	fbdf_cutin_c *cutin,
-	size_t list_size
+	fbdf_cutin_c *cutin
 ) {
+	size_t list_size = folder_str.size();
 	if (!cutin->IsClosing()) {
 		switch (GetKeyPushOnce()) {
 		case KEY_INPUT_RETURN:
@@ -1685,7 +1645,6 @@ static void FBDF_Select_KeyCheck(
 				switch (command) {
 				case 0:
 					folder_stack.push(ALL_MUSIC_FOLDER);
-					FBDF_Select_MakeMusicList(musiclist, ALL_MUSIC_FOLDER, view_dif_type);
 					break;
 				case 1:
 					folder_stack.push(LEVEL_SET_MUSIC_FOLDER);
@@ -1697,6 +1656,7 @@ static void FBDF_Select_KeyCheck(
 					folder_stack.push(CLEARTYPE_SET_MUSIC_FOLDER);
 					break;
 				}
+				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
 				command = 0;
 				break;
 			case LEVEL_SET_MUSIC_FOLDER:
@@ -1861,8 +1821,6 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 
 	bool exit_fg = false;
 
-	size_t list_size = 0;
-
 	std::stack<FBDF_music_folder_num_t> folder_stack;
 	folder_stack.push(DEFAULT_MUSIC_FOLDER);
 
@@ -1876,7 +1834,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 
-	FBDF_Select_init_folder();
+	FBDF_select_init_folder_default();
 
 	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
 
@@ -1887,10 +1845,8 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
 
-		list_size = FBDF_SelectGetListCount(&folder_stack, &musiclist);
-
 		InputAllKeyHold();
-		FBDF_Select_KeyCheck(folder_stack, command, view_dif_type, &musiclist, &cutin, list_size);
+		FBDF_Select_KeyCheck(folder_stack, command, view_dif_type, &musiclist, &cutin);
 
 		if (exit_fg) { break; }
 
@@ -1912,7 +1868,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 			DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[command].user_highscore.clear_type);
 			FBDF_SelectDrawColorCount(5, 660, &(musiclist[command].color_count));
 		}
-		FBDF_SelectDrawMusicList(&folder_stack, &musiclist, command, view_dif_type, &music_ber_pic);
+		FBDF_SelectDrawMusicList(command, &music_ber_pic);
 
 		cutin.DrawCut();
 
