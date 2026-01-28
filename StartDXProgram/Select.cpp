@@ -313,51 +313,6 @@ public:
 
 static std::vector<std::string> folder_str;
 
-/* 曲フォルダであるかを返す */
-static bool FBDF_Select_IsMusicFolder(FBDF_music_folder_num_t folder_stack) {
-	switch (folder_stack) {
-	case DEFAULT_MUSIC_FOLDER:
-	case LEVEL_SET_MUSIC_FOLDER:
-	case SCORE_SET_MUSIC_FOLDER:
-	case CLEARTYPE_SET_MUSIC_FOLDER:
-		return false;
-		break;
-	case ALL_MUSIC_FOLDER:
-	case LEVEL0_MUSIC_FOLDER:
-	case LEVEL1_MUSIC_FOLDER:
-	case LEVEL2_MUSIC_FOLDER:
-	case LEVEL3_MUSIC_FOLDER:
-	case LEVEL4_MUSIC_FOLDER:
-	case LEVEL5_MUSIC_FOLDER:
-	case LEVEL6_MUSIC_FOLDER:
-	case LEVEL7_MUSIC_FOLDER:
-	case LEVEL8_MUSIC_FOLDER:
-	case LEVEL9_MUSIC_FOLDER:
-	case LEVEL10_MUSIC_FOLDER:
-	case SCORE_P_MUSIC_FOLDER:
-	case SCORE_XP_MUSIC_FOLDER:
-	case SCORE_X_MUSIC_FOLDER:
-	case SCORE_SP_MUSIC_FOLDER:
-	case SCORE_S_MUSIC_FOLDER:
-	case SCORE_AP_MUSIC_FOLDER:
-	case SCORE_A_MUSIC_FOLDER:
-	case SCORE_B_MUSIC_FOLDER:
-	case SCORE_C_MUSIC_FOLDER:
-	case SCORE_D_MUSIC_FOLDER:
-	case SCORE_F_MUSIC_FOLDER:
-	case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-	case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-	case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-	case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-	case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-	case CLEARTYPE_FAILED_MUSIC_FOLDER:
-	case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-		return true;
-		break;
-	}
-	return false;
-}
-
 static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
 	FBDF_music_list_bar_color_t bar_color, const FBDF_music_ber_pic_t *music_ber_pic)
 {
@@ -372,9 +327,7 @@ static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
 	return;
 }
 
-static void FBDF_SelectDrawMusicList(
-	int command, const FBDF_music_ber_pic_t *music_ber_pic)
-{
+static void FBDF_SelectDrawMusicList(int command, const FBDF_music_ber_pic_t *music_ber_pic) {
 	if (folder_str.empty()) {
 		/* フォルダ内に項目がない。曲フォルダである場合が多い */
 		/* 上下の空きスペースに何か置きたい。イラストとか */
@@ -1345,137 +1298,6 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 
 #endif /* 譜面リスト読み込み系 */
 
-/**
- * @brief 絞り込み条件から譜面リストを作る
- * @param[out] musiclist 譜面リスト
- * @param[in] folder_num 今いるゲーム内フォルダー
- * @param[in] view_dif_type 今の難易度表示
- * @return なし
- */
-static void FBDF_MakeMusicListDetectMusic(
-	FBDF_music_list_c *musiclist, FBDF_music_folder_num_t folder_num,
-	FBDF_dif_type_ec view_dif_type)
-{
-	for (int i = 0; i < musiclist->detail.size(); i++) {
-		bool detect_fg = false;
-		switch (folder_num) {
-		case ALL_MUSIC_FOLDER:
-			detect_fg = (musiclist->detail[i].dif_type == view_dif_type); /* 難易度フィルタのみ */
-			break;
-		case LEVEL0_MUSIC_FOLDER:
-			detect_fg = (musiclist->detail[i].auto_cal_dif.all < 1);
-			break;
-		case LEVEL1_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(1, musiclist->detail[i].auto_cal_dif.all, 2));
-			break;
-		case LEVEL2_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(2, musiclist->detail[i].auto_cal_dif.all, 3));
-			break;
-		case LEVEL3_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(3, musiclist->detail[i].auto_cal_dif.all, 4));
-			break;
-		case LEVEL4_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(4, musiclist->detail[i].auto_cal_dif.all, 5));
-			break;
-		case LEVEL5_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(5, musiclist->detail[i].auto_cal_dif.all, 6));
-			break;
-		case LEVEL6_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(6, musiclist->detail[i].auto_cal_dif.all, 7));
-			break;
-		case LEVEL7_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(7, musiclist->detail[i].auto_cal_dif.all, 8));
-			break;
-		case LEVEL8_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(8, musiclist->detail[i].auto_cal_dif.all, 9));
-			break;
-		case LEVEL9_MUSIC_FOLDER:
-			detect_fg = (IS_BETWEEN_RIGHT_LESS(9, musiclist->detail[i].auto_cal_dif.all, 10));
-			break;
-		case LEVEL10_MUSIC_FOLDER:
-			detect_fg = (10 <= musiclist->detail[i].auto_cal_dif.all);
-			break;
-		case SCORE_P_MUSIC_FOLDER:
-			detect_fg = (FBDF_SCORE_RANK_P_BORDER <= musiclist->detail[i].user_highscore.acc);
-			break;
-		case SCORE_XP_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_XP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_P_BORDER);
-			break;
-		case SCORE_X_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_X_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_XP_BORDER);
-			break;
-		case SCORE_SP_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_SP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_X_BORDER);
-			break;
-		case SCORE_S_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_S_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_SP_BORDER);
-			break;
-		case SCORE_AP_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_AP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_S_BORDER);
-			break;
-		case SCORE_A_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_A_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_AP_BORDER);
-			break;
-		case SCORE_B_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_B_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_A_BORDER);
-			break;
-		case SCORE_C_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_C_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_B_BORDER);
-			break;
-		case SCORE_D_MUSIC_FOLDER:
-			detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_D_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_C_BORDER);
-			break;
-		case SCORE_F_MUSIC_FOLDER:
-			detect_fg = (musiclist->detail[i].user_highscore.acc < FBDF_SCORE_RANK_D_BORDER);
-			break;
-		case CLEARTYPE_PERFECT_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_PERFECT;
-			break;
-		case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FULLCOMBO;
-			break;
-		case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_MISSLESS;
-			break;
-		case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CAKEWALK;
-			break;
-		case CLEARTYPE_CLEARED_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED;
-			break;
-		case CLEARTYPE_FAILED_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED;
-			break;
-		case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
-			detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_NOPLAY;
-			break;
-		default:
-			return;
-		}
-		if (detect_fg) {
-			musiclist->sort.push_back(i);
-		}
-	}
-}
-
-/**
- * @brief 譜面リストを難易度順に並び替える
- * @param[out] musiclist 譜面リスト
- * @return なし
- */
-static void FBDF_MakeMusicListSortDif(FBDF_music_list_c *musiclist) {
-	if (musiclist->sort.empty()) { return; }
-	for (int is = 0; is + 1 < (musiclist->sort.size()); is++) {
-		for (int ie = is + 1; ie < musiclist->sort.size(); ie++) {
-			if (musiclist->detail[musiclist->sort[is]].auto_cal_dif.all > musiclist->detail[musiclist->sort[ie]].auto_cal_dif.all) {
-				uint temp = musiclist->sort[is];
-				musiclist->sort[is] = musiclist->sort[ie];
-				musiclist->sort[ie] = temp;
-			}
-		}
-	}
-}
-
 static void FBDF_select_init_folder_default(void) {
 	std::string buf;
 	folder_str.clear();
@@ -1562,255 +1384,468 @@ static void FBDF_select_init_folder_cleartype(void) {
 	folder_str.push_back(buf);
 }
 
-/**
- * @brief 絞り込み/並び替え条件から譜面リストを作る
- * @param[out] musiclist 譜面リスト
- * @param[in] folder_num 今いるゲーム内フォルダー
- * @param[in] view_dif_type 今の難易度表示
- * @return なし
- */
-static void FBDF_Select_MakeMusicList(
-	FBDF_music_list_c *musiclist, FBDF_music_folder_num_t folder_num,
-	FBDF_dif_type_ec view_dif_type)
-{
-
-	if (FBDF_Select_IsMusicFolder(folder_num)) {
-		musiclist->sort.clear();
-		folder_str.clear();
-
-		FBDF_MakeMusicListDetectMusic(musiclist, folder_num, view_dif_type);
-		FBDF_MakeMusicListSortDif(musiclist);
-
-		/* リスト作成 */
-		for (int is = 0; is < musiclist->sort.size(); is++) {
-			std::string buf = (*musiclist)[is].music_name;
-			switch ((*musiclist)[is].dif_type) {
-			case FBDF_dif_type_ec::LIGHT:
-				buf += "[light]";
-				break;
-			case FBDF_dif_type_ec::NORMAL:
-				buf += "[normal]";
-				break;
-			case FBDF_dif_type_ec::HYPER:
-				buf += "[hyper]";
-				break;
+class FBDF_Select_MusicFolderManager_c {
+private:
+	/**
+	* @brief 譜面リストを難易度順に並び替える
+	* @param[out] musiclist 譜面リスト
+	* @return なし
+	*/
+	void SortMusicListDif(FBDF_music_list_c *musiclist) {
+		if (musiclist->sort.empty()) { return; }
+		for (int is = 0; is + 1 < (musiclist->sort.size()); is++) {
+			for (int ie = is + 1; ie < musiclist->sort.size(); ie++) {
+				if (musiclist->detail[musiclist->sort[is]].auto_cal_dif.all > musiclist->detail[musiclist->sort[ie]].auto_cal_dif.all) {
+					uint temp = musiclist->sort[is];
+					musiclist->sort[is] = musiclist->sort[ie];
+					musiclist->sort[ie] = temp;
+				}
 			}
-			folder_str.push_back(buf);
 		}
 	}
-	else {
-		switch (folder_num) {
+
+public:
+	std::stack<FBDF_music_folder_num_t> folder_stack;
+
+	FBDF_Select_MusicFolderManager_c(void) {
+		this->folder_stack.push(DEFAULT_MUSIC_FOLDER);
+	}
+
+	bool IsMusicFolderNow(void) const {
+		switch (this->folder_stack.top()) {
 		case DEFAULT_MUSIC_FOLDER:
-			FBDF_select_init_folder_default();
+		case LEVEL_SET_MUSIC_FOLDER:
+		case SCORE_SET_MUSIC_FOLDER:
+		case CLEARTYPE_SET_MUSIC_FOLDER:
+			return false;
+			break;
+		case ALL_MUSIC_FOLDER:
+		case LEVEL0_MUSIC_FOLDER:
+		case LEVEL1_MUSIC_FOLDER:
+		case LEVEL2_MUSIC_FOLDER:
+		case LEVEL3_MUSIC_FOLDER:
+		case LEVEL4_MUSIC_FOLDER:
+		case LEVEL5_MUSIC_FOLDER:
+		case LEVEL6_MUSIC_FOLDER:
+		case LEVEL7_MUSIC_FOLDER:
+		case LEVEL8_MUSIC_FOLDER:
+		case LEVEL9_MUSIC_FOLDER:
+		case LEVEL10_MUSIC_FOLDER:
+		case SCORE_P_MUSIC_FOLDER:
+		case SCORE_XP_MUSIC_FOLDER:
+		case SCORE_X_MUSIC_FOLDER:
+		case SCORE_SP_MUSIC_FOLDER:
+		case SCORE_S_MUSIC_FOLDER:
+		case SCORE_AP_MUSIC_FOLDER:
+		case SCORE_A_MUSIC_FOLDER:
+		case SCORE_B_MUSIC_FOLDER:
+		case SCORE_C_MUSIC_FOLDER:
+		case SCORE_D_MUSIC_FOLDER:
+		case SCORE_F_MUSIC_FOLDER:
+		case CLEARTYPE_PERFECT_MUSIC_FOLDER:
+		case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
+		case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
+		case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
+		case CLEARTYPE_CLEARED_MUSIC_FOLDER:
+		case CLEARTYPE_FAILED_MUSIC_FOLDER:
+		case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
+			return true;
+			break;
+		}
+		return false;
+	}
+
+	FBDF_music_folder_num_t NowFolder(void) const {
+		return this->folder_stack.top();
+	}
+
+	/**
+	* @return bool true=実行した, false=実行しなかった
+	*/
+	bool PopFolder(void) {
+		if (this->NowFolder() == DEFAULT_MUSIC_FOLDER) { return false; }
+		this->folder_stack.pop();
+		return true;
+	}
+
+#if 1 /* PushFolder系 */
+
+	void PushFolderDefault(int cmd) {
+		switch (cmd) {
+		case 0:
+			this->folder_stack.push(ALL_MUSIC_FOLDER);
+			break;
+		case 1:
+			this->folder_stack.push(LEVEL_SET_MUSIC_FOLDER);
+			break;
+		case 2:
+			this->folder_stack.push(SCORE_SET_MUSIC_FOLDER);
+			break;
+		case 3:
+			this->folder_stack.push(CLEARTYPE_SET_MUSIC_FOLDER);
+			break;
+		}
+	}
+
+	void PushFolderLevel(int cmd) {
+		switch (cmd) {
+		case 0:
+			this->folder_stack.push(LEVEL0_MUSIC_FOLDER);
+			break;
+		case 1:
+			this->folder_stack.push(LEVEL1_MUSIC_FOLDER);
+			break;
+		case 2:
+			this->folder_stack.push(LEVEL2_MUSIC_FOLDER);
+			break;
+		case 3:
+			this->folder_stack.push(LEVEL3_MUSIC_FOLDER);
+			break;
+		case 4:
+			this->folder_stack.push(LEVEL4_MUSIC_FOLDER);
+			break;
+		case 5:
+			this->folder_stack.push(LEVEL5_MUSIC_FOLDER);
+			break;
+		case 6:
+			this->folder_stack.push(LEVEL6_MUSIC_FOLDER);
+			break;
+		case 7:
+			this->folder_stack.push(LEVEL7_MUSIC_FOLDER);
+			break;
+		case 8:
+			this->folder_stack.push(LEVEL8_MUSIC_FOLDER);
+			break;
+		case 9:
+			this->folder_stack.push(LEVEL9_MUSIC_FOLDER);
+			break;
+		case 10:
+			this->folder_stack.push(LEVEL10_MUSIC_FOLDER);
+			break;
+		}
+	}
+
+	void PushFolderScore(int cmd) {
+		switch (cmd) {
+		case 0:
+			this->folder_stack.push(SCORE_P_MUSIC_FOLDER);
+			break;
+		case 1:
+			this->folder_stack.push(SCORE_XP_MUSIC_FOLDER);
+			break;
+		case 2:
+			this->folder_stack.push(SCORE_X_MUSIC_FOLDER);
+			break;
+		case 3:
+			this->folder_stack.push(SCORE_SP_MUSIC_FOLDER);
+			break;
+		case 4:
+			this->folder_stack.push(SCORE_S_MUSIC_FOLDER);
+			break;
+		case 5:
+			this->folder_stack.push(SCORE_AP_MUSIC_FOLDER);
+			break;
+		case 6:
+			this->folder_stack.push(SCORE_A_MUSIC_FOLDER);
+			break;
+		case 7:
+			this->folder_stack.push(SCORE_B_MUSIC_FOLDER);
+			break;
+		case 8:
+			this->folder_stack.push(SCORE_C_MUSIC_FOLDER);
+			break;
+		case 9:
+			this->folder_stack.push(SCORE_D_MUSIC_FOLDER);
+			break;
+		case 10:
+			this->folder_stack.push(SCORE_F_MUSIC_FOLDER);
+			break;
+		}
+	}
+
+	void PushFolderClearType(int cmd) {
+		switch (cmd) {
+		case 0:
+			this->folder_stack.push(CLEARTYPE_PERFECT_MUSIC_FOLDER);
+			break;
+		case 1:
+			this->folder_stack.push(CLEARTYPE_FULLCOMBO_MUSIC_FOLDER);
+			break;
+		case 2:
+			this->folder_stack.push(CLEARTYPE_MISSLESS_MUSIC_FOLDER);
+			break;
+		case 3:
+			this->folder_stack.push(CLEARTYPE_CAKEWALK_MUSIC_FOLDER);
+			break;
+		case 4:
+			this->folder_stack.push(CLEARTYPE_CLEARED_MUSIC_FOLDER);
+			break;
+		case 5:
+			this->folder_stack.push(CLEARTYPE_FAILED_MUSIC_FOLDER);
+			break;
+		case 6:
+			this->folder_stack.push(CLEARTYPE_NOPLAY_MUSIC_FOLDER);
+			break;
+		}
+	}
+
+	void PushFolder(int cmd) {
+		switch (this->folder_stack.top()) {
+		case DEFAULT_MUSIC_FOLDER:
+			this->PushFolderDefault(cmd);
 			break;
 		case LEVEL_SET_MUSIC_FOLDER:
-			FBDF_select_init_folder_level();
+			this->PushFolderLevel(cmd);
 			break;
 		case SCORE_SET_MUSIC_FOLDER:
-			FBDF_select_init_folder_score();
+			this->PushFolderScore(cmd);
 			break;
 		case CLEARTYPE_SET_MUSIC_FOLDER:
-			FBDF_select_init_folder_cleartype();
+			this->PushFolderClearType(cmd);
 			break;
 		default:
 			break;
 		}
 	}
-	return;
-}
+
+#endif /* PushFolder系 */
+
+	/**
+	* @brief 絞り込み条件から譜面リストを作る
+	* @param[out] musiclist 譜面リスト
+	* @param[in] folder_num 今いるゲーム内フォルダー
+	* @param[in] view_dif_type 今の難易度表示
+	* @return なし
+	*/
+	void MakeMusicListDetectMusic(FBDF_music_list_c *musiclist, FBDF_dif_type_ec view_dif_type) {
+		for (int i = 0; i < musiclist->detail.size(); i++) {
+			bool detect_fg = false;
+			switch (this->folder_stack.top()) {
+			case ALL_MUSIC_FOLDER:
+				detect_fg = (musiclist->detail[i].dif_type == view_dif_type); /* 難易度フィルタのみ */
+				break;
+			case LEVEL0_MUSIC_FOLDER:
+				detect_fg = (musiclist->detail[i].auto_cal_dif.all < 1);
+				break;
+			case LEVEL1_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(1, musiclist->detail[i].auto_cal_dif.all, 2));
+				break;
+			case LEVEL2_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(2, musiclist->detail[i].auto_cal_dif.all, 3));
+				break;
+			case LEVEL3_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(3, musiclist->detail[i].auto_cal_dif.all, 4));
+				break;
+			case LEVEL4_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(4, musiclist->detail[i].auto_cal_dif.all, 5));
+				break;
+			case LEVEL5_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(5, musiclist->detail[i].auto_cal_dif.all, 6));
+				break;
+			case LEVEL6_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(6, musiclist->detail[i].auto_cal_dif.all, 7));
+				break;
+			case LEVEL7_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(7, musiclist->detail[i].auto_cal_dif.all, 8));
+				break;
+			case LEVEL8_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(8, musiclist->detail[i].auto_cal_dif.all, 9));
+				break;
+			case LEVEL9_MUSIC_FOLDER:
+				detect_fg = (IS_BETWEEN_RIGHT_LESS(9, musiclist->detail[i].auto_cal_dif.all, 10));
+				break;
+			case LEVEL10_MUSIC_FOLDER:
+				detect_fg = (10 <= musiclist->detail[i].auto_cal_dif.all);
+				break;
+			case SCORE_P_MUSIC_FOLDER:
+				detect_fg = (FBDF_SCORE_RANK_P_BORDER <= musiclist->detail[i].user_highscore.acc);
+				break;
+			case SCORE_XP_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_XP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_P_BORDER);
+				break;
+			case SCORE_X_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_X_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_XP_BORDER);
+				break;
+			case SCORE_SP_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_SP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_X_BORDER);
+				break;
+			case SCORE_S_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_S_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_SP_BORDER);
+				break;
+			case SCORE_AP_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_AP_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_S_BORDER);
+				break;
+			case SCORE_A_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_A_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_AP_BORDER);
+				break;
+			case SCORE_B_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_B_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_A_BORDER);
+				break;
+			case SCORE_C_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_C_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_B_BORDER);
+				break;
+			case SCORE_D_MUSIC_FOLDER:
+				detect_fg = IS_BETWEEN_RIGHT_LESS(FBDF_SCORE_RANK_D_BORDER, musiclist->detail[i].user_highscore.acc, FBDF_SCORE_RANK_C_BORDER);
+				break;
+			case SCORE_F_MUSIC_FOLDER:
+				detect_fg = (musiclist->detail[i].user_highscore.acc < FBDF_SCORE_RANK_D_BORDER);
+				break;
+			case CLEARTYPE_PERFECT_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_PERFECT;
+				break;
+			case CLEARTYPE_FULLCOMBO_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FULLCOMBO;
+				break;
+			case CLEARTYPE_MISSLESS_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_MISSLESS;
+				break;
+			case CLEARTYPE_CAKEWALK_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CAKEWALK;
+				break;
+			case CLEARTYPE_CLEARED_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED;
+				break;
+			case CLEARTYPE_FAILED_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED;
+				break;
+			case CLEARTYPE_NOPLAY_MUSIC_FOLDER:
+				detect_fg = musiclist->detail[i].user_highscore.clear_type == FBDF_CLEAR_TYPE_NOPLAY;
+				break;
+			default:
+				return;
+			}
+			if (detect_fg) {
+				musiclist->sort.push_back(i);
+			}
+		}
+	}
+
+	/**
+	* @brief 絞り込み/並び替え条件から譜面リストを作る
+	* @param[out] musiclist 譜面リスト
+	* @param[in] folder_num 今いるゲーム内フォルダー
+	* @param[in] view_dif_type 今の難易度表示
+	* @return なし
+	*/
+	void MakeMusicList(FBDF_music_list_c *musiclist, FBDF_dif_type_ec view_dif_type) {
+		if (this->IsMusicFolderNow()) {
+			musiclist->sort.clear();
+			folder_str.clear();
+
+			this->MakeMusicListDetectMusic(musiclist, view_dif_type);
+			this->SortMusicListDif(musiclist);
+
+			/* リスト作成 */
+			for (int is = 0; is < musiclist->sort.size(); is++) {
+				std::string buf = (*musiclist)[is].music_name;
+				switch ((*musiclist)[is].dif_type) {
+				case FBDF_dif_type_ec::LIGHT:
+					buf += "[light]";
+					break;
+				case FBDF_dif_type_ec::NORMAL:
+					buf += "[normal]";
+					break;
+				case FBDF_dif_type_ec::HYPER:
+					buf += "[hyper]";
+					break;
+				}
+				folder_str.push_back(buf);
+			}
+		}
+		else {
+			switch (this->folder_stack.top()) {
+			case DEFAULT_MUSIC_FOLDER:
+				FBDF_select_init_folder_default();
+				break;
+			case LEVEL_SET_MUSIC_FOLDER:
+				FBDF_select_init_folder_level();
+				break;
+			case SCORE_SET_MUSIC_FOLDER:
+				FBDF_select_init_folder_score();
+				break;
+			case CLEARTYPE_SET_MUSIC_FOLDER:
+				FBDF_select_init_folder_cleartype();
+				break;
+			default:
+				break;
+			}
+		}
+		return;
+	}
+};
 
 /**
- * @brief セレクト画面のキー入力を管理する
- * @param[out] folder_stack 今いるゲーム内フォルダーのパス
- * @param[out] command 今のカーソル位置
- * @param[out] view_dif_type 今の難易度表示
- * @param[out] musiclist 譜面リスト
- * @param[out] cutin カットイン管理クラス
- * @param[out] list_size 譜面リストのサイズ
- * @return なし
- */
-static void FBDF_Select_KeyCheck(
-	std::stack<FBDF_music_folder_num_t> &folder_stack,
+* @brief セレクト画面のキー入力を管理する
+* @param[out] folder_stack 今いるゲーム内フォルダーのパス
+* @param[out] command 今のカーソル位置
+* @param[out] view_dif_type 今の難易度表示
+* @param[out] musiclist 譜面リスト
+* @param[out] cutin カットイン管理クラス
+* @param[out] list_size 譜面リストのサイズ
+* @return なし
+*/
+static void FBDF_select_KeyCheck(
+	FBDF_Select_MusicFolderManager_c &folder_manager,
 	int &command,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c *musiclist,
 	fbdf_cutin_c *cutin
 ) {
-	size_t list_size = folder_str.size();
-	if (!cutin->IsClosing()) {
-		switch (GetKeyPushOnce()) {
-		case KEY_INPUT_RETURN:
-			switch (folder_stack.top()) {
-			case DEFAULT_MUSIC_FOLDER:
-				switch (command) {
-				case 0:
-					folder_stack.push(ALL_MUSIC_FOLDER);
-					break;
-				case 1:
-					folder_stack.push(LEVEL_SET_MUSIC_FOLDER);
-					break;
-				case 2:
-					folder_stack.push(SCORE_SET_MUSIC_FOLDER);
-					break;
-				case 3:
-					folder_stack.push(CLEARTYPE_SET_MUSIC_FOLDER);
-					break;
-				}
-				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
-				command = 0;
-				break;
-			case LEVEL_SET_MUSIC_FOLDER:
-				switch (command) {
-				case 0:
-					folder_stack.push(LEVEL0_MUSIC_FOLDER);
-					break;
-				case 1:
-					folder_stack.push(LEVEL1_MUSIC_FOLDER);
-					break;
-				case 2:
-					folder_stack.push(LEVEL2_MUSIC_FOLDER);
-					break;
-				case 3:
-					folder_stack.push(LEVEL3_MUSIC_FOLDER);
-					break;
-				case 4:
-					folder_stack.push(LEVEL4_MUSIC_FOLDER);
-					break;
-				case 5:
-					folder_stack.push(LEVEL5_MUSIC_FOLDER);
-					break;
-				case 6:
-					folder_stack.push(LEVEL6_MUSIC_FOLDER);
-					break;
-				case 7:
-					folder_stack.push(LEVEL7_MUSIC_FOLDER);
-					break;
-				case 8:
-					folder_stack.push(LEVEL8_MUSIC_FOLDER);
-					break;
-				case 9:
-					folder_stack.push(LEVEL9_MUSIC_FOLDER);
-					break;
-				case 10:
-					folder_stack.push(LEVEL10_MUSIC_FOLDER);
-					break;
-				}
-				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
-				command = 0;
-				break;
-			case SCORE_SET_MUSIC_FOLDER:
-				switch (command) {
-				case 0:
-					folder_stack.push(SCORE_P_MUSIC_FOLDER);
-					break;
-				case 1:
-					folder_stack.push(SCORE_XP_MUSIC_FOLDER);
-					break;
-				case 2:
-					folder_stack.push(SCORE_X_MUSIC_FOLDER);
-					break;
-				case 3:
-					folder_stack.push(SCORE_SP_MUSIC_FOLDER);
-					break;
-				case 4:
-					folder_stack.push(SCORE_S_MUSIC_FOLDER);
-					break;
-				case 5:
-					folder_stack.push(SCORE_AP_MUSIC_FOLDER);
-					break;
-				case 6:
-					folder_stack.push(SCORE_A_MUSIC_FOLDER);
-					break;
-				case 7:
-					folder_stack.push(SCORE_B_MUSIC_FOLDER);
-					break;
-				case 8:
-					folder_stack.push(SCORE_C_MUSIC_FOLDER);
-					break;
-				case 9:
-					folder_stack.push(SCORE_D_MUSIC_FOLDER);
-					break;
-				case 10:
-					folder_stack.push(SCORE_F_MUSIC_FOLDER);
-					break;
-				}
-				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
-				command = 0;
-				break;
-			case CLEARTYPE_SET_MUSIC_FOLDER:
-				switch (command) {
-				case 0:
-					folder_stack.push(CLEARTYPE_PERFECT_MUSIC_FOLDER);
-					break;
-				case 1:
-					folder_stack.push(CLEARTYPE_FULLCOMBO_MUSIC_FOLDER);
-					break;
-				case 2:
-					folder_stack.push(CLEARTYPE_MISSLESS_MUSIC_FOLDER);
-					break;
-				case 3:
-					folder_stack.push(CLEARTYPE_CAKEWALK_MUSIC_FOLDER);
-					break;
-				case 4:
-					folder_stack.push(CLEARTYPE_CLEARED_MUSIC_FOLDER);
-					break;
-				case 5:
-					folder_stack.push(CLEARTYPE_FAILED_MUSIC_FOLDER);
-					break;
-				case 6:
-					folder_stack.push(CLEARTYPE_NOPLAY_MUSIC_FOLDER);
-					break;
-				}
-				FBDF_Select_MakeMusicList(musiclist, folder_stack.top(), view_dif_type);
-				command = 0;
-				break;
-			default:
-				if (FBDF_Select_IsMusicFolder(folder_stack.top())) {
-					if (!musiclist->sort.empty()) {
-						cutin->SetIo(CUT_FRAG_IN);
-					}
-				}
-				break;
+	size_t list_size;
+	if (cutin->IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
+
+	switch (GetKeyPushOnce()) {
+	case KEY_INPUT_RETURN:
+		if (folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
+			if (!musiclist->sort.empty()) { /* 曲フォルダの中が空じゃない */
+				cutin->SetIo(CUT_FRAG_IN);
 			}
-			break;
-		case KEY_INPUT_BACK:
-			if (folder_stack.top() != DEFAULT_MUSIC_FOLDER) {
-				folder_stack.pop();
-				command = 0;
-			}
-			break;
-		case KEY_INPUT_UP:
-			command = MOD_AVOID_ZERO((command + list_size - 1), list_size, 0);
-			break;
-		case KEY_INPUT_DOWN:
-			command = MOD_AVOID_ZERO((command + 1), list_size, 0);
-			break;
-		case KEY_INPUT_LEFT:
-			command = 0;
-			--view_dif_type;
-			if (folder_stack.top() == ALL_MUSIC_FOLDER) {
-				FBDF_Select_MakeMusicList(musiclist, ALL_MUSIC_FOLDER, view_dif_type);
-			}
-			break;
-		case KEY_INPUT_RIGHT:
-			command = 0;
-			++view_dif_type;
-			if (folder_stack.top() == ALL_MUSIC_FOLDER) {
-				FBDF_Select_MakeMusicList(musiclist, ALL_MUSIC_FOLDER, view_dif_type);
-			}
-			break;
-		case KEY_INPUT_X:
-			//monoFG ^= 1;
-			break;
 		}
+		else { /* サブフォルダである */
+			folder_manager.PushFolder(command);
+			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			command = 0;
+		}
+		break;
+	case KEY_INPUT_BACK:
+		if (folder_manager.PopFolder()) {
+			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			command = 0;
+		}
+		break;
+	case KEY_INPUT_UP:
+		list_size = folder_str.size();
+		command = MOD_AVOID_ZERO((command + list_size - 1), list_size, 0);
+		break;
+	case KEY_INPUT_DOWN:
+		list_size = folder_str.size();
+		command = MOD_AVOID_ZERO((command + 1), list_size, 0);
+		break;
+	case KEY_INPUT_LEFT:
+		--view_dif_type;
+		if (folder_manager.NowFolder() == ALL_MUSIC_FOLDER) {
+			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			command = 0;
+		}
+		break;
+	case KEY_INPUT_RIGHT:
+		++view_dif_type;
+		if (folder_manager.NowFolder() == ALL_MUSIC_FOLDER) {
+			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			command = 0;
+		}
+		break;
+	case KEY_INPUT_X:
+		//monoFG ^= 1;
+		break;
 	}
 }
 
 /**
- * @brief セレクト画面のベース
- * @param[out] nex_music プレイ画面に渡すデータ
- * @return view_num_t 次の画面
- */
+* @brief セレクト画面のベース
+* @param[out] nex_music プレイ画面に渡すデータ
+* @return view_num_t 次の画面
+*/
 view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 	int keybox[5] = { KEY_INPUT_RETURN, KEY_INPUT_UP, KEY_INPUT_DOWN, KEY_INPUT_LEFT, KEY_INPUT_RIGHT };
 	int hitkey = 0;
@@ -1821,8 +1856,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 
 	bool exit_fg = false;
 
-	std::stack<FBDF_music_folder_num_t> folder_stack;
-	folder_stack.push(DEFAULT_MUSIC_FOLDER);
+	FBDF_Select_MusicFolderManager_c folder_manager_class;
 
 	FBDF_music_list_c musiclist;
 
@@ -1834,7 +1868,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 
-	FBDF_select_init_folder_default();
+	folder_manager_class.MakeMusicList(&musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
 
 	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
 
@@ -1846,7 +1880,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 		if (cutin.IsEndAnim()) { break; }
 
 		InputAllKeyHold();
-		FBDF_Select_KeyCheck(folder_stack, command, view_dif_type, &musiclist, &cutin);
+		FBDF_select_KeyCheck(folder_manager_class, command, view_dif_type, &musiclist, &cutin);
 
 		if (exit_fg) { break; }
 
@@ -1858,7 +1892,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 		back_pic.DrawPic();
 		DrawFormatString(5,  25, 0xffffffff, _T("%d"), command);
 		DrawFormatString(5,  45, 0xffffffff, _T("%d"), keyBlock);
-		if (FBDF_Select_IsMusicFolder(folder_stack.top()) && !musiclist.sort.empty()) {
+		if (folder_manager_class.IsMusicFolderNow() && !musiclist.sort.empty()) {
 			DrawFormatString(5,  65, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.notes);
 			DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.color);
 			DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.trick);
