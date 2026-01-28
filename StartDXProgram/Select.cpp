@@ -322,6 +322,7 @@ std::vector<std::string> score_folder_str;
 std::vector<std::string> clear_folder_str;
 std::vector<std::string> music_folder_str;
 
+/* ‹ÈƒtƒHƒ‹ƒ_‚Å‚ ‚é‚©‚ð•Ô‚· */
 static bool IsMusicFolder(const std::stack<music_folder_num_t> *folder_stack) {
 	switch (folder_stack->top()) {
 	case DEFAULT_MUSIC_FOLDER:

@@ -32,6 +32,8 @@ private:
 public:
 	fbdf_cutin_c();
 	~fbdf_cutin_c();
+
+	/* カットイン描画 */
 	void DrawCut() const;
 
 	void SetIo(int val);

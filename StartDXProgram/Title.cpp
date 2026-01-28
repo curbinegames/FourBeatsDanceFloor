@@ -11,9 +11,6 @@
 #define FBDF_TITLE_PART_LIFETIME  4000
 #define FBDF_TITLE_PART_MAX_COUNT 500
 
-/**
- * ライフタイムは4s
- */
 typedef struct FBDF_title_particle_mat_s {
 	DxTime_t STime = 0; /* スタート時間 */
 
@@ -49,6 +46,11 @@ private:
 	int max_count = 500;
 	double simTime = 1.0;
 
+	/**
+	 * @brief 時間切れのパーティクルを削除する
+	 * @param なし
+	 * @return なし
+	 */
 	void dequeue(void) {
 		for (int i = 0; i < particle.size(); i++) {
 			if (FBDF_TITLE_PART_LIFETIME + particle[i].STime < GetNowCount() + this->ATime) {
@@ -58,6 +60,11 @@ private:
 		}
 	}
 
+	/**
+	 * @brief パーティクルを生成する
+	 * @param なし
+	 * @return なし
+	 */
 	void inqueue(void) {
 		for (int i = particle.size(); i < max_count; i++) {
 			FBDF_title_particle_mat_t buf;
@@ -75,23 +82,49 @@ private:
 	}
 
 public:
+	/**
+	 * @brief コンストラクタ
+	 * @param[in] path 画像ファイルのパス
+	 * @return なし
+	 */
 	particle_system_c(const TCHAR *path) {
 		this->pic.reload(path);
 	}
 
+	/**
+	 * @brief パーティクルの大きさを変える
+	 * @param[in] low 最小の大きさ
+	 * @param[in] high 最大の大きさ
+	 * @return なし
+	 */
 	void SetSize(double low, double high) {
 		this->base_Ssize_low  = low;
 		this->base_Ssize_high = high;
 	}
 
+	/**
+	 * @brief パーティクルの最大数を変える
+	 * @param[in] val 最大数
+	 * @return なし
+	 */
 	void SetMaxCount(int val) {
 		this->max_count = val;
 	}
 
+	/**
+	 * @brief 全体の時間の進み具合を変える
+	 * @param[in] val 進む速さ
+	 * @return なし
+	 */
 	void SetSimTime(double val) {
 		this->simTime = val;
 	}
 
+	/**
+	 * @brief パーティクル情報を初期化する (名前startのほうが良い?)
+	 * @param なし
+	 * @return なし
+	 */
 	void init(void) {
 		this->BTime = GetNowCount();
 		this->Next_Gene_time = GetNowCount() + DIV_AVOID_ZERO(FBDF_TITLE_PART_LIFETIME, (double)max_count, 0);
@@ -109,6 +142,11 @@ public:
 		}
 	}
 
+	/**
+	 * @brief パーティクル情報を更新する
+	 * @param なし
+	 * @return なし
+	 */
 	void update(void) {
 		this->dequeue();
 		this->inqueue();
@@ -119,6 +157,11 @@ public:
 		this->BTime = GetNowCount();
 	}
 
+	/**
+	 * @brief パーティクルを描く
+	 * @param なし
+	 * @return なし
+	 */
 	void draw(void) const {
 		for (int i = 0; i < particle.size(); i++) {
 			int    DXpos = pals(      FBDF_TITLE_PART_LIFETIME, particle[i].EXpos, 0,            particle[i].SXpos, GetNowCount() - particle[i].STime + this->ATime);
@@ -133,6 +176,7 @@ public:
 	}
 };
 
+/* 多分使ってない */
 static int CalMusicMovieDiv(int STime, DxPic_t handle) {
 	const int BPM = 150;
 	int music_pos = (GetNowCount() - STime) % (60000 / BPM);
@@ -147,7 +191,11 @@ static int CalMusicMovieDiv(int STime, DxPic_t handle) {
 	return ret;
 }
 
-/* 返り値: 次のシーンの番号 */
+/**
+ * @brief タイトル画面のベース
+ * @param なし
+ * @return view_num_t 次の画面
+ */
 view_num_t FirstTitleView() {
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int hitkey = 0;

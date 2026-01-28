@@ -16,6 +16,12 @@
 
 #define SCORE_FINAL_BAR_XSIZE 15
 
+/**
+ * @brief スコアバーの推移を書く
+ * @param[in] src スコアバーの推移データ
+ * @param[in] rank スコアランク
+ * @return なし
+ */
 void FBDF_result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
 	int all_left  = VIEW_MARGIN;
 	int all_up    = VIEW_MARGIN;
@@ -36,6 +42,11 @@ void FBDF_result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) 
 	return;
 }
 
+/**
+ * @brief 最終精度のバーを書く
+ * @param[in] acc 最終精度
+ * @return なし
+ */
 static void FBDF_result_DrawFinalBar(double acc) {
 	int all_left  = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
 	int all_up    =     VIEW_MARGIN;
@@ -61,6 +72,11 @@ static void FBDF_result_DrawFinalBar(double acc) {
 	);
 }
 
+/**
+ * @brief リザルト画面のベース
+ * @param[in] data プレイデータ
+ * @return view_num_t 次の画面
+ */
 static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int hitkey = 0;
@@ -134,6 +150,8 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 6, COLOR_WHITE, _T("ave: %+.2f")   , data->gap_ave);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 7, COLOR_WHITE, _T("chara: %d")    , data->charaNo);
 
+		/* キャラ描画、イラスト描いてない */
+
 		ScreenFlip(); // 作画エリアここまで
 		if (GetWindowUserCloseFlag(TRUE)) { break; } // 閉じるボタンが押された
 		WaitTimer(10); // ループウェイト
@@ -141,6 +159,11 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t *data) {
 	return VIEW_EXIT;
 }
 
+/**
+ * @brief クリアタイプを計算する
+ * @param[in] data プレイデータ
+ * @return FBDF_clear_type_et クリアタイプ
+ */
 static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *data) {
 	if (data->acc < 70.0) { return FBDF_CLEAR_TYPE_FAILED;    }
 	if (30 < data->drop)  { return FBDF_CLEAR_TYPE_CLEARED;   }
@@ -150,6 +173,11 @@ static FBDF_clear_type_et FBDF_Resule_JudgeClearType(const FBDF_result_data_t *d
 	return FBDF_CLEAR_TYPE_PERFECT;
 }
 
+/**
+ * @brief スコアを保存する
+ * @param[in] data プレイデータ
+ * @return bool true=成功, false=失敗
+ */
 static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
 	FBDF_file_music_score_st this_time_score;
 	this_time_score.acc        = data->acc;
@@ -158,7 +186,11 @@ static void FBDF_Result_SaveMusicScore(const FBDF_result_data_t *data) {
 	FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type);
 }
 
-/* 返り値: 次のシーンの番号 */
+/**
+ * @brief リザルト画面の準備
+ * @param[in] data プレイ画面から渡されたデータ
+ * @return view_num_t 次の画面
+ */
 view_num_t FirstResultView(const FBDF_result_data_t *data) {
 	FBDF_Result_SaveMusicScore(data);
 	return FBDF_Result_View(data);

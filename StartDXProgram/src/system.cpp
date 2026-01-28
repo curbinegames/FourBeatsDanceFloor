@@ -18,7 +18,15 @@
 
 #if 1 /* DrawScoreBar系 */
 
-/* プレイ用、右向き */
+/**
+ * @brief スコアバーを描く。右向き
+ * @param[in] score_bar スコアバーのデータ
+ * @param[in] pos_left  描画左位置
+ * @param[in] pos_up    描画上位置
+ * @param[in] pos_right 描画右位置
+ * @param[in] pos_down  描画下位置
+ * @return なし
+ */
 void FBDF_DrawScoreBarHori(const FBDF_score_bar_st &score_bar, int pos_left, int pos_up, int pos_right, int pos_down) {
     double drawRight = 167;
     /* 70-60 */
@@ -53,7 +61,15 @@ void FBDF_DrawScoreBarHori(const FBDF_score_bar_st &score_bar, int pos_left, int
     DrawBox(pos_left, pos_up, drawRight, pos_down, FBDF_PLAY_SCOREBAR_COLOR_PURPLE100, TRUE);
 }
 
-/* リザルト最終スコア用、上向き */
+/**
+ * @brief スコアバーを描く。上向き
+ * @param[in] score_bar スコアバーのデータ
+ * @param[in] pos_left  描画左位置
+ * @param[in] pos_up    描画上位置
+ * @param[in] pos_right 描画右位置
+ * @param[in] pos_down  描画下位置
+ * @return なし
+ */
 void FBDF_DrawScoreBarVert(const FBDF_score_bar_st &score_bar, int pos_left, int pos_up, int pos_right, int pos_down) {
     const int y_middle = (pos_down + pos_up) / 2;
     int drawUp = 167;
@@ -89,7 +105,16 @@ void FBDF_DrawScoreBarVert(const FBDF_score_bar_st &score_bar, int pos_left, int
     DrawBox(pos_left, drawUp, pos_right, pos_down, FBDF_PLAY_SCOREBAR_COLOR_PURPLE100, TRUE);
 }
 
-/* リザルトグラフ用、上向き、傾斜付き */
+/**
+ * @brief スコアバーを描く。上向き。傾斜付き
+ * @param[in] score_bar1 スコアバーのデータ1個目、左側
+ * @param[in] score_bar2 スコアバーのデータ2個目、右側
+ * @param[in] pos_left  描画左位置
+ * @param[in] pos_up    描画上位置
+ * @param[in] pos_right 描画右位置
+ * @param[in] pos_down  描画下位置
+ * @return なし
+ */
 void FBDF_DrawScoreBarVertQuad(const FBDF_score_bar_st &score_bar1, const FBDF_score_bar_st &score_bar2,
     int pos_left, int pos_up, int pos_right, int pos_down
 ) {

@@ -12,6 +12,23 @@
 
 #define ISNOTE(c) ((c) == '-' || (c) == '.')
 
+typedef struct FBDF_map_enc_s {
+	double now_bpm      = 120;
+	uint   now_block    = 4;
+	uint   now_shutpos  = 0;
+	double now_shuttime = 0;
+	uint   measure      = 4; // tja nps 専用
+	uint   measure_u    = 4; // tja nps 専用
+	double scrool       = 1; // nps 専用
+} FBDF_map_enc_t;
+
+/**
+ * @brief ノーツ情報を読み込む。ブロック版。
+ * @param[out] map 格納先
+ * @param[in] buf 読み込む文字列。ブロック単位
+ * @param[out] option 譜面読み込みのオプション
+ * @return FBDF_mapenc_error_et エラー情報
+ */
 int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 	if (2000 <= map->noteNo) { return 1; }
 	if (option->now_block == 0) { return 1; }
@@ -101,6 +118,13 @@ int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 	return 0;
 }
 
+/**
+ * @brief ノーツ情報を読み込む。文字列版。
+ * @param[out] map 格納先
+ * @param[in] buf 読み込む文字列
+ * @param[out] option 譜面読み込みのオプション
+ * @return FBDF_mapenc_error_et エラー情報
+ */
 int GetNoteLine(FBDF_map_t *map, char *buf, FBDF_map_enc_t *option) {
 	while (GetNoteBlock(map, buf, option) == 0) {
 		strmods(buf, option->now_block);
@@ -108,6 +132,12 @@ int GetNoteLine(FBDF_map_t *map, char *buf, FBDF_map_enc_t *option) {
 	return 0;
 }
 
+/**
+ * @brief 譜面を読み込む
+ * @param[out] map 格納先
+ * @param[in] nex_music 譜面ファイルのパス
+ * @return FBDF_mapenc_error_et エラー情報
+ */
 int MapLoadOne(FBDF_map_t *map, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];

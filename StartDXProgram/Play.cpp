@@ -105,10 +105,17 @@ private:
 	FBDF_judge_pic_t pic;
 
 public:
+	/**
+	 * @brief コンストラクタ、画像データの大きさを取得している
+	 * @param なし
+	 */
 	FBDF_judge_c() {
 		GetGraphSize(this->pic.just, &this->Xsize, &this->Ysize);
 	}
 
+	/**
+	 * @brief デストラクタ、画像データを破棄している
+	 */
 	~FBDF_judge_c() {
 		DeleteGraph(this->pic.just);
 		DeleteGraph(this->pic.good);
@@ -116,6 +123,12 @@ public:
 		DeleteGraph(this->pic.miss);
 	}
 
+	/**
+	 * @brief 判定の描画
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
 	void DrawJudge(int x, int y) {
 		double zoom = 1.0;
 		if (this->Jtime + 750 < GetNowCount()) { return; }
@@ -123,6 +136,11 @@ public:
 		DrawDeformationPic(x, y, zoom, zoom, 0, this->Npic);
 	}
 
+	/**
+	 * @brief 判定をセットする
+	 * @param[in] mat セットする判定
+	 * @return なし
+	 */
 	void SetJudge(FBDF_judge_mat_t mat) {
 		this->Jtime = GetNowCount();
 		this->Jmat = mat;
@@ -144,6 +162,15 @@ public:
 	}
 };
 
+/**
+ * ダンサーを管理するクラス
+ * ステート推移
+ *            最初--------------> idle
+ * anystate --ノーツを叩いた----> dance
+ * anystate --ミスった----------> miss
+ * dance    --一定時間経過した--> idle
+ * miss     --一定時間経過した--> idle
+ */
 class FBDF_dancer_c {
 private:
 	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
@@ -152,6 +179,12 @@ private:
 	 int Stime = 0;
 	uint bpm = 120;
 
+	/**
+	 * @brief デバッグ用、ステート情報を描く
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
 	void DrawDanceString(int x, int y) const {
 		if (this->len == 0) {
 			DrawString(x, y, _T("state: idle"), COLOR_WHITE);
@@ -177,6 +210,12 @@ private:
 		return;
 	}
 
+	/**
+	 * @brief デバッグ用、ウェイト時間を描く
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
 	void DrawDanceWaitTime(int x, int y) const {
 		int drawx2 = x + 100;
 		int drawy2 = y + 10;
@@ -199,6 +238,12 @@ private:
 		return;
 	}
 
+	/**
+	 * @brief デバッグ用、モーション時間を描く
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
 	void DrawDanceMotionTime(int x, int y) const {
 		int drawx2 = x + 100;
 		int drawy2 = y + 10;
@@ -223,6 +268,12 @@ private:
 	}
 
 public:
+	/**
+	 * @brief ダンサー描画
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
 	void DrawDance(int x, int y) const {
 		DrawString(x, y - 20, "ここでダンサーが踊る", COLOR_WHITE);
 		this->DrawDanceString(x, y);
@@ -230,6 +281,11 @@ public:
 		this->DrawDanceMotionTime(x, y + 42);
 	}
 
+	/**
+	 * @brief 内部情報の更新、最低でも描画前に呼んで。
+	 * @param なし
+	 * @return なし
+	 */
 	void UpdateState(void) {
 		/* miss->idle */
 		if (this->len < 0) {
@@ -253,8 +309,12 @@ public:
 	}
 
 	/**
-	 * a_lenに0未満をセットするとmissモーションにできる。
-	 * a_lenに0をセットするとidleモーションにできる。
+	 * @brief ステートを変える
+	 * @param[in] a_btn 押されたボタン
+	 * @param[in] a_len 次のノートまでのブロック数、0未満にするとmissモーション、0にするとidleモーションにできる。
+	 * @param[in] a_mtime モーションの時間
+	 * @return なし
+	 * @details missモーションの時はa_btnとa_mtimeを無視できる。適当に0とか入れといて。
 	 */
 	void SetState(uint a_btn, int a_len, uint a_mtime) {
 		this->btn = a_btn;
@@ -263,6 +323,11 @@ public:
 		this->Stime = GetNowCount();
 	}
 
+	/**
+	 * @brief BPMを変える
+	 * @param[in] val BPM
+	 * @return なし
+	 */
 	void SetBpm(uint val) {
 		this->bpm = val;
 	}
@@ -283,6 +348,11 @@ private:
 	FBDF_score_bar_st graph[FBDF_RESULT_SCORE_GRAPH_COUNT]; /* リザルト用 */
 	int graphNo = 0; /* 次に入れる場所 */
 
+	/**
+	 * @brief 現在のスコアバーの状態をスコア推移データに追加する
+	 * @param なし
+	 * @return なし
+	 */
 	void set_graph(void) {
 		if (this->graphNo >= FBDF_RESULT_SCORE_GRAPH_COUNT) { return; }
 		this->graph[this->graphNo].bar_70 = this->score_70;
@@ -294,6 +364,12 @@ private:
 	}
 
 public:
+	/**
+	 * @brief スコアバーを更新する
+	 * @param[in] score スコア
+	 * @param[in] noteN 今のノート番号
+	 * @return なし
+	 */
 	void update_score(const FBDF_score_t *score, uint noteN) {
 		uint hit_notes = score->crit + score->hit + score->drop;
 		uint remain_notes = noteN - hit_notes;
@@ -305,6 +381,11 @@ public:
 		this->score_ave = DIV_AVOID_ZERO(100 * score->point, hit_notes * CRIT_SCORE, 100.00);
 	}
 
+	/**
+	 * @brief スコアバーの推移データを更新する
+	 * @param[in] Ntime 今の時間。相対時間。[ms]
+	 * @return なし
+	 */
 	void update_graph(int Ntime) {
 		if (this->graphNo >= FBDF_RESULT_SCORE_GRAPH_COUNT) { return; }
 		if (((Etime * this->graphNo + Stime * (FBDF_RESULT_SCORE_GRAPH_COUNT - this->graphNo - 1)) / (FBDF_RESULT_SCORE_GRAPH_COUNT - 1)) < Ntime)
@@ -313,23 +394,47 @@ public:
 		}
 	}
 
+	/**
+	 * @brief 時間をセットする。スコアバーの推移データに必要
+	 * @param[in] Stime 開始時間。相対時間。[ms]
+	 * @param[in] Etime 終了時間。相対時間。[ms]
+	 * @return なし
+	 */
 	void set_time(int Stime, int Etime) {
 		this->Stime = Stime;
 		this->Etime = Etime;
 	}
 
+	/**
+	 * @brief 残りのスコアバーの推移を強制的に埋める。強制終了用。
+	 * @param なし
+	 * @return なし
+	 */
 	void fill_graph_force(void) {
 		for (int i = this->graphNo; i < FBDF_RESULT_SCORE_GRAPH_COUNT; i++) {
 			this->set_graph();
 		}
 	}
 
+	/**
+	 * @brief スコアバーの推移を取得する
+	 * @param[out] dest 格納先
+	 * @return なし
+	 */
 	void get_graph(FBDF_score_bar_st *dest) const {
 		for (int i = 0; i < FBDF_RESULT_SCORE_GRAPH_COUNT; i++) {
 			dest[i] = this->graph[i];
 		}
 	}
 
+	/**
+	 * @brief スコアバーの描画
+	 * @param[in]  left 描画左位置
+	 * @param[in]    up 描画上位置
+	 * @param[in] right 描画右位置
+	 * @param[in]  down 描画下位置
+	 * @return なし
+	 */
 	void draw_bar(int x1, int y1, int x2, int y2) const {
 		FBDF_score_bar_st score_bar;
 		score_bar.bar_70 = this->score_70;
@@ -340,6 +445,11 @@ public:
 		FBDF_DrawScoreBarHori(score_bar, x1, y1, x2, y2);
 	}
 
+	/**
+	 * @brief 精度スコアを取得する
+	 * @param なし
+	 * @return 精度スコア
+	 */
 	double GetScore_ave(void) const {
 		return this->score_ave;
 	}
@@ -356,6 +466,14 @@ private:
 	int count = 0;
 
 public:
+	/**
+	 * @brief ギャップバーの描画
+	 * @param[in]  left 描画左位置
+	 * @param[in]    up 描画上位置
+	 * @param[in] right 描画右位置
+	 * @param[in]  down 描画下位置
+	 * @return なし
+	 */
 	void DrawBar(int x1, int y1, int x2, int y2) const {
 		int Yborder = (y1 + y2) / 2;
 		DrawLine(x1, Yborder, x2, Yborder, COLOR_RED);
@@ -367,6 +485,11 @@ public:
 		}
 	}
 
+	/**
+	 * @brief データを追加する
+	 * @param[in] val 追加するデータ
+	 * @return なし
+	 */
 	void SetVal(int val) {
 		this->queue.push_back(val);
 		if (50 <= this->queue.size()) {
@@ -392,11 +515,17 @@ public:
 		return;
 	}
 
+	/**
+	 * @brief 全データの平均を取得する。this->max_countに関わらず、今までのデータすべてが対象。データがないときは0を返す。
+	 * @param なし
+	 * @return 全データの平均
+	 */
 	double GetAve(void) const {
 		return DIV_AVOID_ZERO(this->sum, this->count, 0);
 	}
 };
 
+/* プレイ画面に関するクラスをまとめたもの */
 typedef struct FBDF_play_class_set_s {
 	FBDF_judge_c judge_class;
 	FBDF_dancer_c dancer_class;
@@ -406,6 +535,11 @@ typedef struct FBDF_play_class_set_s {
 
 #if 1 /* Draw系 */
 
+/**
+ * @brief ノーツの描画
+ * @param[in] map マップデータ
+ * @return なし
+ */
 static void DrawNotes(const FBDF_map_t *map) {
 	for (int in = map->noteNo; in < map->noteN; in++) {
 		int BaseYpos = 0;
@@ -430,6 +564,11 @@ static void DrawNotes(const FBDF_map_t *map) {
 	return;
 }
 
+/**
+ * @brief 押しキーランプの描画
+ * @param[in] pkey キー入力情報
+ * @return なし
+ */
 static void DrawLamp(const FBDF_push_key_t *pkey) {
 	static const int baseX = 165;
 	static const int baseY = 575;
@@ -453,7 +592,13 @@ static void DrawLamp(const FBDF_push_key_t *pkey) {
 
 #endif
 
-/* キー押し検出後の1ノーツ判定 */
+/**
+ * @brief キー押し検出後の1ノーツ判定
+ * @param[out] buf 判定イベント格納先
+ * @param[out] key_detect キー検出。falseに書き換えられることがある
+ * @param[out] map マップデータ
+ * @return なし
+ */
 static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_t &buf, bool &key_detect, const FBDF_map_t *map) {
 	if (key_detect) {
 		key_detect = false;
@@ -480,6 +625,15 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_t &buf, bool &
 	return;
 }
 
+/**
+ * @brief ノーツの判定
+ * @param[out] play_class プレイクラス
+ * @param[out] score スコア
+ * @param[out] map マップデータ
+ * @param[in] pkey キー入力情報
+ * @param[in] se 効果音情報
+ * @return なし
+ */
 static void NoteJudge(
 	FBDF_play_class_set_t *play_class, FBDF_score_t *score, FBDF_map_t *map,
 	const FBDF_push_key_t *pkey, const FBDT_hit_snd_t *se)
@@ -599,7 +753,13 @@ static void NoteJudge(
 	return;
 }
 
-/* 残っているすべてのノーツをdropにする */
+/**
+ * @brief 残っているすべてのノーツをdropにする。強制終了した時用
+ * @param[out] play_class プレイクラス
+ * @param[out] score スコア
+ * @param[out] map マップデータ
+ * @return なし
+ */
 static void NoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_t *score, FBDF_map_t *map) {
 	size_t remain_notes = 0;
 	FBDF_judge_c     *judge_class     = &play_class->judge_class;
@@ -623,7 +783,15 @@ static void NoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_t *score, FB
 	return;
 }
 
-/* リザルト用のデータを作成 */
+/**
+ * @brief リザルト用のデータを作成
+ * @param[out] result_data 格納先
+ * @param[in] nex_music セレクト画面から渡されたデータ
+ * @param[in] map マップデータ
+ * @param[in] score スコア
+ * @param[in] play_class プレイクラス
+ * @return なし
+ */
 static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music,
 	const FBDF_map_t &map, const FBDF_score_t &score, const FBDF_play_class_set_t &play_class
 ) {
@@ -644,7 +812,12 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	return;
 }
 
-/* 譜面を読み込む */
+/**
+ * @brief 譜面を読み込む
+ * @param[in] folder_name フォルダ名
+ * @param[in] map_file_name 譜面のファイル名
+ * @return bool true=成功, false=失敗
+ */
 static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const TCHAR *map_file_name) {
 	std::string path = "music/";
 	path += folder_name;
@@ -656,7 +829,12 @@ static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const T
 	return true;
 }
 
-/* 曲の音声ファイルを読み込む */
+/**
+ * @brief 曲の音声ファイルを読み込む
+ * @param[in] folder_name フォルダ名
+ * @param[in] music_file_name 曲のファイル名
+ * @return DxSnd_t 曲ハンドル
+ */
 static DxSnd_t FBDF_Play_Loadmusic(const TCHAR *folder_name, const TCHAR *music_file_name) {
 	std::string path = "music/";
 	path += folder_name;
@@ -665,7 +843,16 @@ static DxSnd_t FBDF_Play_Loadmusic(const TCHAR *folder_name, const TCHAR *music_
 	return LoadSoundMem(path.c_str());
 }
 
-/* キー入力関係 */
+/**
+ * @brief キー入力関係
+ * @param[out] pkey キー入力情報
+ * @param[out] play_class プレイクラス、クローズが押された時の処理用
+ * @param[out] score スコア、クローズが押された時の処理用
+ * @param[out] map マップデータ、クローズが押された時とオートプレイ時のキー判定用
+ * @param[in] auto_fg オートフラグ、trueならオートプレイ用の処理になる
+ * @param[out] cutin カットインクラス、クローズが押された時の判定と処理用
+ * @return なし
+ */
 static void FBDF_Play_KeyCheck(
 	FBDF_push_key_t &pkey, FBDF_play_class_set_t &play_class,
 	FBDF_score_t &score, FBDF_map_t &map, bool auto_fg, fbdf_cutin_c &cutin
@@ -730,7 +917,12 @@ static void FBDF_Play_KeyCheck(
 	return;
 }
 
-/* 返り値: 次のシーンの番号 */
+/**
+ * @brief プレイ画面のベース
+ * @param[out] result_data リザルト画面に渡すデータ
+ * @param[in] nex_music セレクト画面から渡されたデータ
+ * @return view_num_t 次の画面
+ */
 view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music) {
 	FBDF_map_t map;
 	FBDF_score_t score;
@@ -775,9 +967,10 @@ view_num_t FirstPlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 		}
 
 		NoteJudge(&play_class, &score, &map, &pkey, &se);
+
+		/* update系 */
 		play_class.dancer_class.UpdateState();
 		play_class.score_bar_class.update_graph(map.Ntime);
-
 		cutin.update();
 
 		ClearDrawScreen(); /* 作画エリアここから */ {

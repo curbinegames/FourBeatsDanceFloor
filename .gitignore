@@ -13,6 +13,7 @@ StartDXProgram.sln
 *.wav
 
 .vs/
+.vscode/
 x64/
 
 StartDXProgram/font

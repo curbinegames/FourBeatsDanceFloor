@@ -5,6 +5,7 @@
 
 #include <save.h>
 
+/* 前置インクリメントの定義 */
 FBDF_dif_type_ec &operator++(FBDF_dif_type_ec &val) {
     switch (val) {
     case FBDF_dif_type_ec::NONE: /* 例外 */
@@ -19,6 +20,7 @@ FBDF_dif_type_ec &operator++(FBDF_dif_type_ec &val) {
     return val;
 }
 
+/* 前置デクリメントの定義 */
 FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
     switch (val) {
     case FBDF_dif_type_ec::NONE: /* 例外 */
@@ -33,6 +35,12 @@ FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
     return val;
 }
 
+/**
+ * @brief ユーザースコアデータを全部の難易度分読み込む
+ * @param[out] dest 格納先、配列数は3
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_ReadScoreAllDif(FBDF_file_music_score_st dest[], const TCHAR *music_folder_name) {
     std::string save_path;
     FILE *fp;
@@ -49,6 +57,12 @@ bool FBDF_Save_ReadScoreAllDif(FBDF_file_music_score_st dest[], const TCHAR *mus
     return true;
 }
 
+/**
+ * @brief ユーザースコアデータを全部の難易度分書き込む。すべてを上書きするので注意
+ * @param[in] src 保存するデータ、配列数は3
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_WriteScoreAllDif(const FBDF_file_music_score_st src[], const TCHAR *music_folder_name) {
     std::string save_path;
     FILE *fp;
@@ -65,17 +79,15 @@ bool FBDF_Save_WriteScoreAllDif(const FBDF_file_music_score_st src[], const TCHA
     return true;
 }
 
+/**
+ * @brief ユーザースコアデータを指定した難易度だけ読み込む
+ * @param[out] dest 格納先
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @param[in] dif_type 難易度タイプ
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_ReadScoreOneDif(FBDF_file_music_score_st *dest, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf[3];
-    buf[0].acc = 0.0;
-    buf[0].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[0].score = 0;
-    buf[1].acc = 0.0;
-    buf[1].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[1].score = 0;
-    buf[2].acc = 0.0;
-    buf[2].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[2].score = 0;
     if (FBDF_Save_ReadScoreAllDif(buf, music_folder_name) != true) { return false; }
     switch (dif_type) {
     case FBDF_dif_type_ec::LIGHT:
@@ -91,17 +103,15 @@ bool FBDF_Save_ReadScoreOneDif(FBDF_file_music_score_st *dest, const TCHAR *musi
     return true;
 }
 
+/**
+ * @brief ユーザースコアデータを指定した難易度だけ書き込む。上書きするので注意
+ * @param[in] src 保存するデータ
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @param[in] dif_type 難易度タイプ
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_WriteScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf[3];
-    buf[0].acc = 0.0;
-    buf[0].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[0].score = 0;
-    buf[1].acc = 0.0;
-    buf[1].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[1].score = 0;
-    buf[2].acc = 0.0;
-    buf[2].clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf[2].score = 0;
     FBDF_Save_ReadScoreAllDif(buf, music_folder_name); /* readできてなくても良い */
     switch (dif_type) {
     case FBDF_dif_type_ec::LIGHT:
@@ -117,11 +127,15 @@ bool FBDF_Save_WriteScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR
     return FBDF_Save_WriteScoreAllDif(buf, music_folder_name);
 }
 
+/**
+ * @brief ユーザースコアデータを指定した難易度だけ書き込む。良い成績だけを書き込む
+ * @param[in] src 保存するデータ
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @param[in] dif_type 難易度タイプ
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf;
-    buf.acc = 0.0;
-    buf.clear_type = FBDF_CLEAR_TYPE_NOPLAY;
-    buf.score = 0;
     FBDF_Save_ReadScoreOneDif(&buf, music_folder_name, dif_type); /* readできてなくても良い */
 
     if (buf.acc        < src->acc       ) { buf.acc        = src->acc;        }
