@@ -1771,13 +1771,13 @@ static void FBDF_select_KeyCheck(
 		else { /* サブフォルダである */
 			folder_manager.PushFolder(command);
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0;
+			command = 0; /* 曲検索いる */
 		}
 		break;
 	case KEY_INPUT_BACK:
 		if (folder_manager.PopFolder()) {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0;
+			command = 0; /* 曲検索いる */
 		}
 		break;
 	case KEY_INPUT_UP:
@@ -1792,14 +1792,14 @@ static void FBDF_select_KeyCheck(
 		--view_dif_type;
 		if (folder_manager.NowFolder() == ALL_MUSIC_FOLDER) {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0;
+			command = 0; /* 曲検索いる */
 		}
 		break;
 	case KEY_INPUT_RIGHT:
 		++view_dif_type;
 		if (folder_manager.NowFolder() == ALL_MUSIC_FOLDER) {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0;
+			command = 0; /* 曲検索いる */
 		}
 		break;
 	case KEY_INPUT_X:

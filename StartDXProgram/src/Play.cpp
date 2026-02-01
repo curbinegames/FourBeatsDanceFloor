@@ -79,6 +79,13 @@ typedef struct FBDF_judge_pic_s {
 	DxPic_t miss = LoadGraph(_T("pic/judge-miss.png"));
 } FBDF_judge_pic_t;
 
+typedef struct FBDF_Play_note_pic_s {
+	dxcur_pic_c one   = dxcur_pic_c("pic/play/NoteOne.png");
+	dxcur_pic_c two   = dxcur_pic_c("pic/play/NoteTwo.png");
+	dxcur_pic_c three = dxcur_pic_c("pic/play/NoteThree.png");
+	dxcur_pic_c four  = dxcur_pic_c("pic/play/NoteFour.png");
+} FBDF_Play_note_pic_st;
+
 typedef struct FBDT_hit_snd_s {
 	int SE1Data = LoadSoundMem(_T("SE/SE1.wav"));
 	int SE2Data = LoadSoundMem(_T("SE/SE2.wav"));
@@ -531,26 +538,27 @@ typedef struct FBDF_play_class_set_s {
  * @param[in] map マップデータ
  * @return なし
  */
-static void FBDF_PlayDrawNotes(const FBDF_map_t *map) {
+static void FBDF_PlayDrawNotes(const FBDF_map_t *map, const FBDF_Play_note_pic_st &pic) {
+	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
 	for (int in = map->noteNo; in < map->noteN; in++) {
 		int BaseYpos = 0;
 		uint cr = 0xffffffff;
 		switch (map->note[in].btn) {
 		case 1:
-			cr = NOTE_COLOR_1;
+			Npic = pic.one.handle();
 			break;
 		case 2:
-			cr = NOTE_COLOR_2;
+			Npic = pic.two.handle();
 			break;
 		case 3:
-			cr = NOTE_COLOR_3;
+			Npic = pic.three.handle();
 			break;
 		case 4:
-			cr = NOTE_COLOR_4;
+			Npic = pic.four.handle();
 			break;
 		}
 		BaseYpos = 570 - NOTE_HEIGHT - ((sint)map->note[in].time - (sint)map->Ntime - 16) * (sint)map->bpm * NOTE_SPEED / 950;
-		DrawBox(42, NOTE_HEIGHT + BaseYpos, 42 + 110, BaseYpos, cr, TRUE);
+		DrawExtendGraph(42, NOTE_HEIGHT + BaseYpos, 42 + 110, BaseYpos, Npic, TRUE);
 	}
 	return;
 }
@@ -923,7 +931,9 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	fbdf_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	int backPic = LoadGraph(_T("pic/PlayBack.png"));
+	int backPic = LoadGraph(_T("pic/play/PlayBack.png"));
+	int lanePic = LoadGraph(_T("pic/play/PlayLane.png"));
+	FBDF_Play_note_pic_st note_pic;
 
 	DxSnd_t musicData = 0;
 	FBDT_hit_snd_t se;
@@ -973,8 +983,9 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 			DrawFormatString(400,  85, COLOR_WHITE, _T("%d"), score.save);
 			DrawFormatString(400, 105, COLOR_WHITE, _T("%d"), score.drop);
 			
+			DrawGraph(0, 0, lanePic, TRUE);
 			FBDF_PlayDrawLamp(&pkey);
-			FBDF_PlayDrawNotes(&map);
+			FBDF_PlayDrawNotes(&map, note_pic);
 			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
 			play_class.judge_class.DrawJudge(230, 530);
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
