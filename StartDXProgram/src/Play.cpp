@@ -73,10 +73,10 @@ typedef struct FBDF_judge_event_s {
 } FBDF_judge_event_st;
 
 typedef struct FBDF_judge_pic_s {
-	DxPic_t just = LoadGraph(_T("pic/judge-just.png"));
-	DxPic_t good = LoadGraph(_T("pic/judge-good.png"));
-	DxPic_t safe = LoadGraph(_T("pic/judge-safe.png"));
-	DxPic_t miss = LoadGraph(_T("pic/judge-miss.png"));
+	DxPic_t crit = LoadGraph(_T("pic/play/JudgeCrit.png"));
+	DxPic_t  hit = LoadGraph(_T("pic/play/JudgeHit.png"));
+	DxPic_t save = LoadGraph(_T("pic/play/JudgeSave.png"));
+	DxPic_t drop = LoadGraph(_T("pic/play/JudgeDrop.png"));
 } FBDF_judge_pic_t;
 
 typedef struct FBDF_Play_note_pic_s {
@@ -108,17 +108,17 @@ public:
 	 * @param なし
 	 */
 	FBDF_judge_c() {
-		GetGraphSize(this->pic.just, &this->Xsize, &this->Ysize);
+		GetGraphSize(this->pic.crit, &this->Xsize, &this->Ysize);
 	}
 
 	/**
 	 * @brief デストラクタ、画像データを破棄している
 	 */
 	~FBDF_judge_c() {
-		DeleteGraph(this->pic.just);
-		DeleteGraph(this->pic.good);
-		DeleteGraph(this->pic.safe);
-		DeleteGraph(this->pic.miss);
+		DeleteGraph(this->pic.crit);
+		DeleteGraph(this->pic.hit);
+		DeleteGraph(this->pic.save);
+		DeleteGraph(this->pic.drop);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public:
 	void DrawJudge(int x, int y) {
 		double zoom = 1.0;
 		if (this->Jtime + 750 < GetNowCount()) { return; }
-		zoom = lins(0, 1.25, 100, 1.0, betweens(0, GetNowCount() - this->Jtime, 100));
+		zoom = lins(0, 1.25, 100, 1.0, betweens(0, GetNowCount() - this->Jtime, 100)) * 0.8;
 		DrawDeformationPic(x, y, zoom, zoom, 0, this->Npic);
 	}
 
@@ -144,16 +144,16 @@ public:
 		this->Jmat = mat;
 		switch (this->Jmat) {
 		case JUDGE_CRIT:
-			this->Npic = this->pic.just;
+			this->Npic = this->pic.crit;
 			break;
 		case JUDGE_HIT:
-			this->Npic = this->pic.good;
+			this->Npic = this->pic.hit;
 			break;
 		case JUDGE_SAVE:
-			this->Npic = this->pic.safe;
+			this->Npic = this->pic.save;
 			break;
 		case JUDGE_MISS:
-			this->Npic = this->pic.miss;
+			this->Npic = this->pic.drop;
 			break;
 		}
 		return;
@@ -987,7 +987,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 			FBDF_PlayDrawLamp(&pkey);
 			FBDF_PlayDrawNotes(&map, note_pic);
 			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
-			play_class.judge_class.DrawJudge(230, 530);
+			play_class.judge_class.DrawJudge(270, 530);
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
 			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
 			play_class.dancer_class.DrawDance(500, 300);
