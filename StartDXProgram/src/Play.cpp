@@ -311,19 +311,19 @@ private:
 		}
 		else if (this->len < 0) { /* ミスモーション */
 			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
+				return lins_scale(5000, 0, 5500, 120, GetNowCount() - this->Stime);
 			}
 			else {
 				return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
 			}
 		}
 		else { /* 待機モーション */
-			double loop_time = 2 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
+			double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
 			int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
 			int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
 			int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
 			if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-			return (int)lins(0, 0, loop_time, 120, in_time) % 120;
+			return (int)lins(0, 0, loop_time, 240, in_time) % 240;
 		}
 		return 0; /* 通らないけど一応明記 */
 	}
@@ -648,6 +648,7 @@ public:
 	 * @return なし
 	 */
 	void UpdateState(void) {
+		if (this->len < 0) { return; } /* missは自動解消されない */
 		/* long->idle */
 		if (4 < this->len) {
 			if (1000 + this->Stime <= GetNowCount()) {
@@ -1334,7 +1335,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 
 		map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
 
-		FBDF_Play_KeyCheck(pkey, play_class, score, map, true, cutin); /* autoにしたいなら5番目をtrueに */
+		FBDF_Play_KeyCheck(pkey, play_class, score, map, false, cutin); /* autoにしたいなら5番目をtrueに */
 
 		/* ノーツ全処理判定 */
 		if ((FinishTime == 0) && (map.noteN == map.noteNo)) { FinishTime = map.Ntime; }
