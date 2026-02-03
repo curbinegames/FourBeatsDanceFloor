@@ -1,9 +1,25 @@
-#move1:
-#image:upper.png
-#type:4,8
-#next:
+;画像版
 
-#move2:
-#image:rool.png
-#type:1,4
-#next:
+;0
+IMAGE:upper.png
+TYPE:48
+DANAIN
+
+;1
+IMAGE:rool.png
+TYPE:14u
+NEXT:0
+DANAIN
+
+
+;3D版
+;0を待機、1をミス、2をミス放置モーションとして扱う
+
+;0 (内部では3扱い)
+TYPE:48
+DANAIN
+
+;1 (内部では4扱い)
+TYPE:14u
+NEXT:0 (モーション3をnextとして登録する)
+DANAIN

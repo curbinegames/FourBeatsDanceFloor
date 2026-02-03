@@ -1,0 +1,21 @@
+;3D版
+;0を待機、1をミス、2をミス放置モーションとして扱う
+
+;0 (内部では3扱い)
+TYPE:12348
+DATAIN
+
+;1 (内部では4扱い)
+TYPE:12348
+NEXT:0
+DATAIN
+
+;2
+TYPE:12348
+NEXT:0,1
+DATAIN
+
+;3
+TYPE:48u
+NEXT:0,2
+DATAIN

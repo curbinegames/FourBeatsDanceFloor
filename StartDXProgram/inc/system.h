@@ -1,5 +1,7 @@
 #pragma once
 
+#define FBDF_DANCER_MAT_TYPE 1 /* 0:‰æ‘œ, 1:3D */
+
 typedef struct FBDF_score_bar_s {
 	double bar_70 = 70.0;
 	double bar_90 = 90.0;
