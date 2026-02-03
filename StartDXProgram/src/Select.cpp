@@ -430,7 +430,7 @@ public:
 		return this->folder_manager_class.NowFolder()->is_music_folder;
 	}
 
-	FBDF_music_folder_node_st *NowFolder(void) const {
+	const FBDF_music_folder_node_st *NowFolder(void) const {
 		return this->folder_manager_class.NowFolder();
 	}
 
@@ -439,10 +439,22 @@ public:
 	}
 
 	/**
+	 * @param[out] pop 取り出されたコマンド番号
 	 * @return bool true=実行した, false=実行しなかった
 	 */
-	bool PopFolder(void) {
-		return this->folder_manager_class.PopFolder();
+	bool PopFolder(size_t &pop) {
+		const FBDF_music_folder_node_st *buf = this->NowFolder();
+		bool ret = this->folder_manager_class.PopFolder();
+		if (ret) {
+			pop = 0;
+			for (size_t i = 0; i < this->NowFolder()->children.size(); i++) {
+				if (this->NowFolder()->children[i] == buf) {
+					pop = i;
+					break;
+				}
+			}
+		}
+		return ret;
 	}
 
 	/**
@@ -787,6 +799,7 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 /**
  * @brief セレクト画面のキー入力を管理する
  * @param[out] folder_manager フォルダーマネージャークラス
+ * @param[out] now_misic 選択中の曲名
  * @param[out] command 今のカーソル位置
  * @param[out] view_dif_type 今の難易度表示
  * @param[out] musiclist 譜面リスト
@@ -795,12 +808,14 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
  */
 static void FBDF_select_KeyCheck(
 	FBDF_Select_MusicFolderManager_c &folder_manager,
+	std::string &now_music,
 	int &command,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c &musiclist,
 	fbdf_cutin_c *cutin
 ) {
-	size_t list_size;
+	size_t list_size = 0;
+	size_t poped_cmd = 0;
 	if (cutin->IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
 
 	switch (GetKeyPushOnce()) {
@@ -813,35 +828,64 @@ static void FBDF_select_KeyCheck(
 		else { /* サブフォルダである */
 			folder_manager.PushFolder(command);
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0; /* 曲検索いる */
+			command = 0;
+			if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
+				for (size_t i = 0; i < musiclist.sort.size(); i++) {
+					if (musiclist[i].music_name == now_music) {
+						command = i;
+						break;
+					}
+				}
+				now_music = musiclist[command].music_name;
+			}
 		}
 		break;
 	case KEY_INPUT_BACK:
-		if (folder_manager.PopFolder()) {
+		if (folder_manager.PopFolder(poped_cmd)) {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0; /* 曲検索いる */
+			command = poped_cmd;
 		}
 		break;
 	case KEY_INPUT_UP:
 		list_size = folder_str.size();
 		command = MOD_AVOID_ZERO((command + list_size - 1), list_size, 0);
+		if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
+			now_music = musiclist[command].music_name;
+		}
 		break;
 	case KEY_INPUT_DOWN:
 		list_size = folder_str.size();
 		command = MOD_AVOID_ZERO((command + 1), list_size, 0);
+		if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
+			now_music = musiclist[command].music_name;
+		}
 		break;
 	case KEY_INPUT_LEFT:
 		--view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0; /* 曲検索いる */
+			command = 0;
+			for (size_t i = 0; i < musiclist.sort.size(); i++) {
+				if (musiclist[i].music_name == now_music) {
+					command = i;
+					break;
+				}
+			}
+			now_music = musiclist[command].music_name;
 		}
 		break;
 	case KEY_INPUT_RIGHT:
 		++view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
 			folder_manager.MakeMusicList(musiclist, view_dif_type);
-			command = 0; /* 曲検索いる */
+			command = 0;
+			for (size_t i = 0; i < musiclist.sort.size(); i++) {
+				if (musiclist[i].music_name == now_music) {
+					command = i;
+					break;
+				}
+			}
+			now_music = musiclist[command].music_name;
 		}
 		break;
 	case KEY_INPUT_X:
@@ -862,6 +906,8 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 	//int monoFG = 0;
 
 	bool exit_fg = false;
+
+	std::string now_music;
 
 	FBDF_Select_MusicFolderManager_c folder_manager_class;
 	FBDF_music_list_c musiclist;
@@ -886,7 +932,7 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 		if (cutin.IsEndAnim()) { break; }
 
 		InputAllKeyHold();
-		FBDF_select_KeyCheck(folder_manager_class, command, view_dif_type, musiclist, &cutin);
+		FBDF_select_KeyCheck(folder_manager_class, now_music, command, view_dif_type, musiclist, &cutin);
 
 		if (exit_fg) { break; }
 
