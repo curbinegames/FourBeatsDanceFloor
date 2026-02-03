@@ -590,32 +590,36 @@ private:
 
 		if (this->len == 0) { /* 待機モーション */
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 			MV1DrawModel(this->n3Dmodel_handle);
 		}
 		else if (this->len < 0) { /* ミスモーション */
 			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   motion_frameNo);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   1);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 				MV1DrawModel(this->n3Dmodel_handle);
 			}
 			else {
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
 				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 				MV1DrawModel(this->n3Dmodel_handle);
 			}
 		}
 		else { /* ダンスモーション */
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
 				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
+				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
 			MV1DrawModel(this->n3Dmodel_handle);
 		}
 	}
@@ -1321,6 +1325,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	map.Stime = GetNowCount();
 
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
+	play_class.dancer_class.SetBpm(map.bpm);
 
 	cutin.SetIo(CUT_FRAG_OUT);
 
