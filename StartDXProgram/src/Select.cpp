@@ -596,7 +596,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	map_path += '/';
 	map_path += file;
 
-	if (MapLoadOne(&map, map_path.c_str()) == -1) { return; }
+	if (MapLoadOne(&map, map_path.c_str()) != FDF_MAPENC_ERROR_NONE) { return; }
 
 	buf.folder_name        = d_name;
 	buf.music_name         = d_name;
