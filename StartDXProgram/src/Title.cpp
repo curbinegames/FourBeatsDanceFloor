@@ -196,7 +196,7 @@ view_num_t FBDF_TitleView(void) {
 	particle_system_c particle_pent(_T("pic/titlePent.png"));
 	particle_system_c particle_dot(_T("pic/titleDot.png"));
 
-	fbdf_cutin_c cutin;
+	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	intro_bgm.PlaySound();

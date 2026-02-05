@@ -1271,7 +1271,7 @@ static DxSnd_t FBDF_Play_Loadmusic(const TCHAR *folder_name, const TCHAR *music_
  */
 static void FBDF_Play_KeyCheck(
 	FBDF_push_key_st &pkey, FBDF_play_class_set_t &play_class,
-	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, fbdf_cutin_c &cutin
+	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 
@@ -1345,7 +1345,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 	FBDF_push_key_st pkey;
 
 	FBDF_play_class_set_t play_class;
-	fbdf_cutin_c cutin;
+	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	int backPic = LoadGraph(_T("pic/play/PlayBack.png"));

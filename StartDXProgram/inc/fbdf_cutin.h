@@ -12,7 +12,7 @@ typedef enum cutin_tips_e {
 	CUTIN_TIPS_SONG,
 } cutin_tips_e;
 
-class fbdf_cutin_c {
+class FBDF_cutin_c {
 private:
 	dxcur_pic_c leftpic;
 	dxcur_pic_c rightpic;
@@ -30,8 +30,8 @@ private:
 	bool acs_sound = false;
 
 public:
-	fbdf_cutin_c();
-	~fbdf_cutin_c();
+	FBDF_cutin_c();
+	~FBDF_cutin_c();
 
 	/* カットイン描画 */
 	void DrawCut() const;

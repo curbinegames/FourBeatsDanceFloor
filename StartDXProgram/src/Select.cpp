@@ -813,7 +813,7 @@ static void FBDF_select_KeyCheck(
 	int &command,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c &musiclist,
-	fbdf_cutin_c *cutin
+	FBDF_cutin_c *cutin
 ) {
 	size_t list_size = 0;
 	size_t poped_cmd = 0;
@@ -917,7 +917,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	FBDF_music_ber_pic_t music_ber_pic;
 	FBDF_select_back_pic_c back_pic;
 
-	fbdf_cutin_c cutin;
+	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
