@@ -14,13 +14,11 @@
 #define FBDF_PLAY_SCOREBAR_COLOR_PURPLE99  0xFFA349A4 /* 99  -100 */
 #define FBDF_PLAY_SCOREBAR_COLOR_PURPLE100 0xFFEA3FF7 /* 99.5-100 */
 
-namespace FBDF {
-	typedef struct play_choose_music_s {
-		std::string folder_name;
-		std::string music_name;
-		std::string map_file_name;
-		FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
-	} play_choose_music_st;
-}
+typedef struct play_choose_music_s {
+	std::string folder_name;
+	std::string music_name;
+	std::string map_file_name;
+	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
+} FBDF_play_choose_music_st;
 
-extern view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *next);
+extern view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *next);

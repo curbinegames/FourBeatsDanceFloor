@@ -218,7 +218,8 @@ view_num_t FBDF_TitleView(void) {
 	intro_bgm.PlaySound();
 
 	while (CheckSoundMem(intro_bgm.handle()) == 1) {
-		;
+		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; } // 閉じるボタンが押された
+		WaitTimer(1000 / 30); // ループウェイト
 	}
 
 	loop_bgm.PlaySound(true);

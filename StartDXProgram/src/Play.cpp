@@ -1209,7 +1209,7 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st 
  * @param[in] play_class プレイクラス
  * @return なし
  */
-static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music,
+static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *nex_music,
 	const FBDF_map_t &map, const FBDF_score_st &score, const FBDF_play_class_set_t &play_class
 ) {
 	result_data->name        = nex_music->folder_name;
@@ -1339,7 +1339,7 @@ static void FBDF_Play_KeyCheck(
  * @param[in] nex_music セレクト画面から渡されたデータ
  * @return view_num_t 次の画面
  */
-view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choose_music_st *nex_music) {
+view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *nex_music) {
 	FBDF_map_t map;
 	FBDF_score_st score;
 	FBDF_push_key_st pkey;

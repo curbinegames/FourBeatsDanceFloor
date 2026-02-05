@@ -901,7 +901,7 @@ static void FBDF_select_KeyCheck(
  * @param[out] nex_music プレイ画面に渡すデータ
  * @return view_num_t 次の画面
  */
-view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
+view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	int keyBlock = 1;
 	int command = 0;
 	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;

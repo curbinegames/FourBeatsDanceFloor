@@ -16,7 +16,7 @@
 int FBDF_font_DSEG7Modern = -1;
 
 static void GameMain() {
-	FBDF::play_choose_music_st next_music;
+	FBDF_play_choose_music_st next_music;
 	view_num_t next = VIEW_TITLE;
 	FBDF_result_data_t result;
 
