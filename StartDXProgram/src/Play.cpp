@@ -703,11 +703,7 @@ public:
 
 class FBDF_score_bar_c {
 private:
-	double score_70  =  70.0;
-	double score_90  =  90.0;
-	double score_96  =  96.0;
-	double score_98  =  98.5;
-	double score_99  =  99.1;
+	FBDF_score_bar_st score_bar;
 	double score_ave = 100.0;
 
 	int Stime = 0;
@@ -723,11 +719,7 @@ private:
 	 */
 	void set_graph(void) {
 		if (this->graphNo >= FBDF_RESULT_SCORE_GRAPH_COUNT) { return; }
-		this->graph[this->graphNo].bar_70 = this->score_70;
-		this->graph[this->graphNo].bar_90 = this->score_90;
-		this->graph[this->graphNo].bar_96 = this->score_96;
-		this->graph[this->graphNo].bar_98 = this->score_98;
-		this->graph[this->graphNo].bar_99 = this->score_99;
+		this->graph[this->graphNo] = this->score_bar;
 		this->graphNo++;
 	}
 
@@ -741,11 +733,11 @@ public:
 	void update_score(const FBDF_score_st *score, uint noteN) {
 		uint hit_notes = score->crit + score->hit + score->drop;
 		uint remain_notes = noteN - hit_notes;
-		this->score_70 = 100 * (score->point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_90 = 100 * (score->point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_96 = 100 * (score->point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_98 = 100 * (score->point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_99 = 100 * (score->point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_70 = 100 * (score->point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_90 = 100 * (score->point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_96 = 100 * (score->point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_98 = 100 * (score->point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_99 = 100 * (score->point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
 		this->score_ave = DIV_AVOID_ZERO(100 * score->point, hit_notes * CRIT_SCORE, 100.00);
 	}
 
@@ -804,13 +796,7 @@ public:
 	 * @return ‚È‚µ
 	 */
 	void draw_bar(int x1, int y1, int x2, int y2) const {
-		FBDF_score_bar_st score_bar;
-		score_bar.bar_70 = this->score_70;
-		score_bar.bar_90 = this->score_90;
-		score_bar.bar_96 = this->score_96;
-		score_bar.bar_98 = this->score_98;
-		score_bar.bar_99 = this->score_99;
-		FBDF_DrawScoreBarHori(score_bar, x1, y1, x2, y2);
+		FBDF_DrawScoreBarHori(this->score_bar, x1, y1, x2, y2);
 	}
 
 	/**
