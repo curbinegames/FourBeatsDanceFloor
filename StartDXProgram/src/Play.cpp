@@ -74,10 +74,10 @@ typedef struct FBDF_judge_event_s {
 } FBDF_judge_event_st;
 
 typedef struct FBDF_judge_pic_s {
-	DxPic_t crit = LoadGraph(_T("pic/play/JudgeCrit.png"));
-	DxPic_t  hit = LoadGraph(_T("pic/play/JudgeHit.png"));
-	DxPic_t save = LoadGraph(_T("pic/play/JudgeSave.png"));
-	DxPic_t drop = LoadGraph(_T("pic/play/JudgeDrop.png"));
+	dxcur_pic_c crit = dxcur_pic_c(_T("pic/play/JudgeCrit.png"));
+	dxcur_pic_c  hit = dxcur_pic_c(_T("pic/play/JudgeHit.png"));
+	dxcur_pic_c save = dxcur_pic_c(_T("pic/play/JudgeSave.png"));
+	dxcur_pic_c drop = dxcur_pic_c(_T("pic/play/JudgeDrop.png"));
 } FBDF_judge_pic_t;
 
 typedef struct FBDF_Play_note_pic_s {
@@ -88,8 +88,8 @@ typedef struct FBDF_Play_note_pic_s {
 } FBDF_Play_note_pic_st;
 
 typedef struct FBDT_hit_snd_s {
-	int SE1Data = LoadSoundMem(_T("SE/SE1.wav"));
-	int SE2Data = LoadSoundMem(_T("SE/SE2.wav"));
+	dxcur_snd_c SE1Data = dxcur_snd_c(_T("SE/SE1.wav"));
+	dxcur_snd_c SE2Data = dxcur_snd_c(_T("SE/SE2.wav"));
 } FBDT_hit_snd_t;
 
 #endif
@@ -109,17 +109,7 @@ public:
 	 * @param なし
 	 */
 	FBDF_judge_c() {
-		GetGraphSize(this->pic.crit, &this->Xsize, &this->Ysize);
-	}
-
-	/**
-	 * @brief デストラクタ、画像データを破棄している
-	 */
-	~FBDF_judge_c() {
-		DeleteGraph(this->pic.crit);
-		DeleteGraph(this->pic.hit);
-		DeleteGraph(this->pic.save);
-		DeleteGraph(this->pic.drop);
+		GetGraphSize(this->pic.crit.handle(), &this->Xsize, &this->Ysize);
 	}
 
 	/**
@@ -145,16 +135,16 @@ public:
 		this->Jmat = mat;
 		switch (this->Jmat) {
 		case JUDGE_CRIT:
-			this->Npic = this->pic.crit;
+			this->Npic = this->pic.crit.handle();
 			break;
 		case JUDGE_HIT:
-			this->Npic = this->pic.hit;
+			this->Npic = this->pic.hit.handle();
 			break;
 		case JUDGE_SAVE:
-			this->Npic = this->pic.save;
+			this->Npic = this->pic.save.handle();
 			break;
 		case JUDGE_MISS:
-			this->Npic = this->pic.drop;
+			this->Npic = this->pic.drop.handle();
 			break;
 		}
 		return;
@@ -1132,12 +1122,12 @@ static void FBDF_PlayNoteJudge(
 		if (buf.mat != JUDGE_MISS) {
 			switch (buf.tip) {
 			case 1:
-				PlaySoundMem(se->SE1Data, DX_PLAYTYPE_BACK);
+				PlaySoundMem(se->SE1Data.handle(), DX_PLAYTYPE_BACK);
 				break;
 			case 2:
 			case 3:
 			case 4:
-				PlaySoundMem(se->SE2Data, DX_PLAYTYPE_BACK);
+				PlaySoundMem(se->SE2Data.handle(), DX_PLAYTYPE_BACK);
 				break;
 			}
 		}
@@ -1348,8 +1338,8 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	int backPic = LoadGraph(_T("pic/play/PlayBack.png"));
-	int lanePic = LoadGraph(_T("pic/play/PlayLane.png"));
+	dxcur_pic_c backPic(_T("pic/play/PlayBack.png"));
+	dxcur_pic_c lanePic(_T("pic/play/PlayLane.png"));
 	FBDF_Play_note_pic_st note_pic;
 
 	DxSnd_t musicData = 0;
@@ -1393,7 +1383,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		cutin.update();
 
 		ClearDrawScreen(); /* 作画エリアここから */ {
-			DrawGraph(0, 0, backPic, TRUE);
+			DrawGraph(0, 0, backPic.handle(), TRUE);
 			DrawFormatString(400,   5, COLOR_WHITE, _T("%d"), map.note.size());
 			DrawFormatString(400,  25, COLOR_WHITE, _T("%d"), map.note.nowNo());
 			DrawFormatString(400,  45, COLOR_WHITE, _T("%d"), score.crit);
@@ -1401,7 +1391,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 			DrawFormatString(400,  85, COLOR_WHITE, _T("%d"), score.save);
 			DrawFormatString(400, 105, COLOR_WHITE, _T("%d"), score.drop);
 			
-			DrawGraph(0, 0, lanePic, TRUE);
+			DrawGraph(0, 0, lanePic.handle(), TRUE);
 			FBDF_PlayDrawLamp(&pkey);
 			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
