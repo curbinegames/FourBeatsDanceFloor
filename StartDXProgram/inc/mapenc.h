@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <sancur.h>
+#include <datacur.h>
 
 typedef enum FBDF_Play_note_button_e {
 	FBDF_PLAY_NOTE_BTN_NONE,
@@ -33,10 +34,8 @@ typedef struct FBDF_note_s {
 } FBDF_note_t;
 
 typedef struct FBDF_map_s {
-	std::vector<FBDF_note_t>note;
+	datacur_cursor_vector<FBDF_note_t>note;
 	std::string artist;
-	uint   noteNo  = 0; /* 今見ているノート番号 */
-	uint   noteN   = 0; /* ノートの数。note.sizeで取れそうな気が…… */
 	uint   blockNo = 0;
 	double bpm     = 120;
 	int    offset  = 2000; /* 譜面スタート時間。相対時間 */

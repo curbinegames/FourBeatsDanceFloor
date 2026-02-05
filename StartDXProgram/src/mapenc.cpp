@@ -6,6 +6,7 @@
 
 #include <sancur.h>
 #include <strcur.h>
+#include <datacur.h>
 #include <UTF8_conv.h>
 
 #include <system.h>
@@ -32,7 +33,7 @@ typedef struct FBDF_map_enc_s {
  * @return FBDF_mapenc_error_et エラー情報
  */
 int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
-	if (2000 <= map->noteNo) { return 1; }
+	if (map->note.isfull()) { return 1; }
 	if (option->now_block == 0) { return 1; }
 	for (int ic = 0; ic < option->now_block; ic++) {
 		if (!ISNOTE(buf[ic])) {
@@ -98,20 +99,25 @@ int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 				break;
 			}
 			buf_note.len = 99;
-			if (map->noteNo != 0) {
-				map->note[map->note.size() - 1].len = buf_note.pos - map->note[map->note.size() - 1].pos;
+			if (!map->note.empty()) {
+				FBDF_note_t before_note = map->note.lastData();
+				map->note.pop_back();
+				before_note.len = buf_note.pos - before_note.pos;
+				map->note.push_back(before_note);
 			}
 			buf_note.time = option->now_shuttime + 60000 * 4 * ic / (option->now_bpm * option->scrool * option->measure_u * option->now_block) + game_option.note_offset_timing;
 			buf_note.mtime = 0;
-			if (map->noteNo != 0) {
-				map->note[map->note.size() - 1].mtime = buf_note.time - map->note[map->note.size() - 1].time;
+			if (!map->note.empty()) {
+				FBDF_note_t before_note = map->note.lastData();
+				map->note.pop_back();
+				before_note.mtime = buf_note.time - before_note.time;
+				map->note.push_back(before_note);
 			}
 			buf_note.bpm = option->now_bpm;
 			map->note.push_back(buf_note);
 			map->Etime = buf_note.time;
-			map->noteNo++;
-			map->noteN++;
-			if (2000 <= map->noteNo) { return 1; }
+			map->note.stepNo();
+			if (map->note.isfull()) { return 1; }
 		}
 	}
 	option->now_shutpos += option->now_block;

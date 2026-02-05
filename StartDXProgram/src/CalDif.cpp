@@ -1,6 +1,7 @@
 
 #include <dxcur.h>
 
+#include <datacur.h>
 #include <mapenc.h>
 
 #include <CalDif.h>

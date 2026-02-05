@@ -303,11 +303,14 @@ private:
 			size_t end = start + 30;
 			return lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
 		}
-		else if (IS_BETWEEN(3, this->len, 4)) { /* ダンスモーション3/4 */
+		else if (this->len == 3) { /* ダンスモーション3 */
 			return lins_scale(0, 0, this->mtime, 45, GetNowCount() - this->Stime);
 		}
+		else if (this->len == 4) { /* ダンスモーション4 */
+			return lins_scale(0, 0, this->mtime, 60, GetNowCount() - this->Stime);
+		}
 		else if (5 <= this->len) { /* ロングモーション */
-			return lins_scale(0, 0, 750, 120, GetNowCount() - this->Stime);
+			return lins_scale(0, 0, min(this->mtime, 1000), 120, GetNowCount() - this->Stime);
 		}
 		else if (this->len < 0) { /* ミスモーション */
 			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
@@ -927,7 +930,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 	int DrawRight = BaseRight;
 	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
 
-	for (int in = map->noteNo; in < map->noteN; in++) {
+	for (int in = map->note.nowNo(); in < map->note.size(); in++) {
 		if (game_option.play_style == 0) { /* assist */
 			switch (map->note[in].btn) {
 			case 1:
@@ -1016,7 +1019,7 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_st *pkey) {
 static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool &key_detect, const FBDF_map_t *map) {
 	if (key_detect) {
 		key_detect = false;
-		buf.gap = map->note[map->noteNo].time - map->Ntime;
+		buf.gap = map->note.nowData().time - map->Ntime;
 		if (buf.gap <= 0) {
 			buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
 		}
@@ -1066,14 +1069,14 @@ static void FBDF_PlayNoteJudge(
 	bool key_detect_k = (pkey->K == 1);
 
 	if (1 <= pkey->alltap) {
-		while (map->note[map->noteNo].time != 0 &&
-			map->note[map->noteNo].time - JUDGE_WIDTH < map->Ntime &&
+		while (map->note.nowData().time != 0 &&
+			map->note.nowData().time - JUDGE_WIDTH < map->Ntime &&
 			(key_detect_d || key_detect_f || key_detect_j || key_detect_k))
 		{
-			buf.tip = map->note[map->noteNo].btn;
-			buf.len = map->note[map->noteNo].len;
-			buf.mtime = map->note[map->noteNo].mtime;
-			switch (map->note[map->noteNo].btn) {
+			buf.tip = map->note.nowData().btn;
+			buf.len = map->note.nowData().len;
+			buf.mtime = map->note.nowData().mtime;
+			switch (map->note.nowData().btn) {
 			case FBDF_PLAY_NOTE_BTN_1:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
 				break;
@@ -1088,16 +1091,16 @@ static void FBDF_PlayNoteJudge(
 				break;
 			}
 			judge_event.push(buf);
-			if (buf.mat != JUDGE_NONE) { map->noteNo++; }
+			if (buf.mat != JUDGE_NONE) { map->note.stepNo(); }
 		}
 	}
 
-	if (map->note[map->noteNo].time != 0 &&
-		map->note[map->noteNo].time + JUDGE_WIDTH < map->Ntime)
+	if (map->note.nowData().time != 0 &&
+		map->note.nowData().time + JUDGE_WIDTH < map->Ntime)
 	{
 		buf.mat = JUDGE_MISS;
 		judge_event.push(buf);
-		map->noteNo++;
+		map->note.stepNo();
 	}
 
 	bool note_judged = !judge_event.empty();
@@ -1161,7 +1164,7 @@ static void FBDF_PlayNoteJudge(
 	}
 
 	if (note_judged) {
-		score_bar_class->update_score(score, map->noteN);
+		score_bar_class->update_score(score, map->note.size());
 	}
 
 	return;
@@ -1182,16 +1185,16 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st 
 
 	FBDF_judge_event_st buf;
 
-	while (map->note[map->noteNo].time != 0) {
+	while (map->note.nowData().time != 0) {
 		remain_notes++;
-		map->noteNo++;
+		map->note.stepNo();
 	}
 
 	if (0 < remain_notes) {
 		judge_class->SetJudge(JUDGE_MISS);
 		score->drop += remain_notes;
 		dancer_class->SetMissState();
-		score_bar_class->update_score(score, map->noteN);
+		score_bar_class->update_score(score, map->note.size());
 	}
 
 	return;
@@ -1237,7 +1240,7 @@ static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const T
 	path += '/';
 	path += map_file_name;
 	if (MapLoadOne(&map, path.c_str()) != 0) { return false; }
-	map.noteNo = 0;
+	map.note.resetNo();
 	map.Stime = GetNowCount();
 	return true;
 }
@@ -1286,8 +1289,8 @@ static void FBDF_Play_KeyCheck(
 		pkey.J = (IS_BETWEEN(1, pkey.J, 5)) ? (pkey.J + 1) : (0);
 		pkey.K = (IS_BETWEEN(1, pkey.K, 5)) ? (pkey.K + 1) : (0);
 
-		if (map.note[map.noteNo].time <= 8 + map.Ntime) {
-			switch (map.note[map.noteNo].btn) {
+		if (map.note.nowData().time <= 8 + map.Ntime) {
+			switch (map.note.nowData().btn) {
 			case FBDF_PLAY_NOTE_BTN_1:
 				pkey.D = 1;
 				pkey.F = 0;
@@ -1359,7 +1362,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 	musicData = FBDF_Play_Loadmusic(nex_music->folder_name.c_str(), map.music_file);
 	PlaySoundMem(musicData, DX_PLAYTYPE_BACK);
 
-	map.noteNo = 0;
+	map.note.resetNo();
 	map.Stime = GetNowCount();
 
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
@@ -1375,7 +1378,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 		FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
 
 		/* ノーツ全処理判定 */
-		if ((FinishTime == 0) && (map.noteN == map.noteNo)) { FinishTime = map.Ntime; }
+		if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
 
 		/* 譜面終了判定 */
 		if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(musicData))) {
@@ -1391,8 +1394,8 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 
 		ClearDrawScreen(); /* 作画エリアここから */ {
 			DrawGraph(0, 0, backPic, TRUE);
-			DrawFormatString(400,   5, COLOR_WHITE, _T("%d"), map.noteN);
-			DrawFormatString(400,  25, COLOR_WHITE, _T("%d"), map.noteNo);
+			DrawFormatString(400,   5, COLOR_WHITE, _T("%d"), map.note.size());
+			DrawFormatString(400,  25, COLOR_WHITE, _T("%d"), map.note.nowNo());
 			DrawFormatString(400,  45, COLOR_WHITE, _T("%d"), score.crit);
 			DrawFormatString(400,  65, COLOR_WHITE, _T("%d"), score.hit);
 			DrawFormatString(400,  85, COLOR_WHITE, _T("%d"), score.save);
