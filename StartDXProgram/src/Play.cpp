@@ -912,30 +912,68 @@ typedef struct FBDF_play_class_set_s {
 
 /**
  * @brief ノーツの描画
- * @param[in] map マップデータ
+ * @param[in] left  描画左位置
+ * @param[in] right 描画右位置
+ * @param[in] down  描画下位置
+ * @param[in] map   マップデーター
  * @return なし
+ * @details 描画上位置は0固定
  */
-static void FBDF_PlayDrawNotes(const FBDF_map_t *map, const FBDF_Play_note_pic_st &pic) {
+static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *map, const FBDF_Play_note_pic_st &pic) {
+	int BaseLeft  = left;
+	int BaseRight = right;
+	int DrawYpos  = 0;
+	int DrawLeft  = BaseLeft;
+	int DrawRight = BaseRight;
 	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
+
 	for (int in = map->noteNo; in < map->noteN; in++) {
-		int BaseYpos = 0;
-		uint cr = 0xffffffff;
-		switch (map->note[in].btn) {
-		case 1:
-			Npic = pic.one.handle();
-			break;
-		case 2:
-			Npic = pic.two.handle();
-			break;
-		case 3:
-			Npic = pic.three.handle();
-			break;
-		case 4:
-			Npic = pic.four.handle();
-			break;
+		if (game_option.play_style == 0) { /* assist */
+			switch (map->note[in].btn) {
+			case 1:
+				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 0);
+				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+				break;
+			case 2:
+				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+				break;
+			case 3:
+				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+				break;
+			case 4:
+				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 4);
+				break;
+			}
 		}
-		BaseYpos = 570 - NOTE_HEIGHT - ((sint)map->note[in].time - (sint)map->Ntime - 16) * (sint)map->bpm * NOTE_SPEED / 950;
-		DrawExtendGraph(42, NOTE_HEIGHT + BaseYpos, 42 + 110, BaseYpos, Npic, TRUE);
+		else {
+			DrawLeft  = BaseLeft;
+			DrawRight = BaseRight;
+		}
+
+		if (game_option.play_style == 2) { /* mono */
+			Npic = pic.one.handle(); /* TODO: 白にする */
+		}
+		else {
+			switch (map->note[in].btn) {
+			case 1:
+				Npic = pic.one.handle();
+				break;
+			case 2:
+				Npic = pic.two.handle();
+				break;
+			case 3:
+				Npic = pic.three.handle();
+				break;
+			case 4:
+				Npic = pic.four.handle();
+				break;
+			}
+		}
+		DrawYpos = down - NOTE_HEIGHT - ((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) * (sint)map->bpm * NOTE_SPEED * game_option.lane_speed / 9500;
+		DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 	}
 	return;
 }
@@ -1182,7 +1220,6 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	result_data->save        = score.save;
 	result_data->drop        = score.drop;
 	result_data->gap_ave     = play_class.gap_bar_class.GetAve();
-	result_data->charaNo     = 0; /* まだなんもイラスト描いてない */
 	play_class.score_bar_class.get_graph(result_data->score_graph);
 	result_data->dif_type    = nex_music->dif_type;
 	return;
@@ -1335,7 +1372,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 
 		map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
 
-		FBDF_Play_KeyCheck(pkey, play_class, score, map, false, cutin); /* autoにしたいなら5番目をtrueに */
+		FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
 
 		/* ノーツ全処理判定 */
 		if ((FinishTime == 0) && (map.noteN == map.noteNo)) { FinishTime = map.Ntime; }
@@ -1363,9 +1400,9 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 			
 			DrawGraph(0, 0, lanePic, TRUE);
 			FBDF_PlayDrawLamp(&pkey);
-			FBDF_PlayDrawNotes(&map, note_pic);
+			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
-			play_class.judge_class.DrawJudge(270, 530);
+			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
 			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
 			play_class.dancer_class.DrawDance(500, 300);
@@ -1385,6 +1422,8 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF::play_choos
 
 	StopSoundMem(musicData);
 	DeleteSoundMem(musicData);
+
+	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
 	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);
 

@@ -818,6 +818,7 @@ static void FBDF_select_KeyCheck(
 	size_t poped_cmd = 0;
 	if (cutin->IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
 
+	InputAllKeyHold();
 	switch (GetKeyPushOnce()) {
 	case KEY_INPUT_RETURN:
 		if (folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
@@ -931,7 +932,6 @@ view_num_t FBDF_SelectView(FBDF::play_choose_music_st *nex_music) {
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
 
-		InputAllKeyHold();
 		FBDF_select_KeyCheck(folder_manager_class, now_music, command, view_dif_type, musiclist, &cutin);
 
 		if (exit_fg) { break; }

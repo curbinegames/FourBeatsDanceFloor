@@ -20,7 +20,6 @@ typedef struct FBDF_result_data_s {
 	uint save = 0;
 	uint drop = 0;
 	double gap_ave = 0;
-	uint charaNo = 0;
 	FBDF_score_bar_st score_graph[FBDF_RESULT_SCORE_GRAPH_COUNT];
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
 } FBDF_result_data_t;

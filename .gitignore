@@ -18,6 +18,7 @@ StartDXProgram.sln
 .vscode/
 x64/
 
+StartDXProgram/dancer/sample
 StartDXProgram/font
 StartDXProgram/music
 StartDXProgram/music_old

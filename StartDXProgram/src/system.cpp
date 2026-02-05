@@ -16,6 +16,8 @@
 #define FBDF_PLAY_SCOREBAR_COLOR_PURPLE99  0xFFA349A4 /* 99  -100 */
 #define FBDF_PLAY_SCOREBAR_COLOR_PURPLE100 0xFFEA3FF7 /* 99.5-100 */
 
+FBDF_game_option_st game_option; /* ゲームオプション、option.cpp以外で変更されない、他の場所では読み込み専用 */
+
 #if 1 /* DrawScoreBar系 */
 
 /**

@@ -8,6 +8,8 @@
 #include <strcur.h>
 #include <UTF8_conv.h>
 
+#include <system.h>
+
 #include <mapenc.h>
 
 #define ISNOTE(c) ((c) == '-' || (c) == '.')
@@ -99,7 +101,7 @@ int GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 			if (map->noteNo != 0) {
 				map->note[map->note.size() - 1].len = buf_note.pos - map->note[map->note.size() - 1].pos;
 			}
-			buf_note.time = option->now_shuttime + 60000 * 4 * ic / (option->now_bpm * option->scrool * option->measure_u * option->now_block);
+			buf_note.time = option->now_shuttime + 60000 * 4 * ic / (option->now_bpm * option->scrool * option->measure_u * option->now_block) + game_option.note_offset_timing;
 			buf_note.mtime = 0;
 			if (map->noteNo != 0) {
 				map->note[map->note.size() - 1].mtime = buf_note.time - map->note[map->note.size() - 1].time;

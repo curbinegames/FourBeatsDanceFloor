@@ -2,6 +2,19 @@
 
 #define FBDF_DANCER_MAT_TYPE 1 /* 0:画像, 1:3D */
 
+typedef struct FBDF_game_option_s {
+	uint chara      = 0; /* enum化予定 */
+	uint play_style = 1; /* enum化予定 */
+	bool auto_en    = false;
+	uint lane_speed = 10;
+	 int note_offset_timing = 0;
+	 int note_offset_draw   = 0;
+	bool hit_effect_en = true;
+	bool judge_draw_en = true;
+	bool fast_slow_en  = false;
+	bool chain_draw_en = true;
+} FBDF_game_option_st;
+
 typedef struct FBDF_score_bar_s {
 	double bar_70 = 70.0;
 	double bar_90 = 90.0;
@@ -9,6 +22,8 @@ typedef struct FBDF_score_bar_s {
 	double bar_98 = 98.5;
 	double bar_99 = 99.1;
 } FBDF_score_bar_st;
+
+extern FBDF_game_option_st game_option; /* ゲームオプション、option.cpp以外で変更されない、他の場所では読み込み専用 */
 
 /* プレイ用、右向き */
 extern void FBDF_DrawScoreBarHori(const FBDF_score_bar_st &score_bar, int x1, int y1, int x2, int y2);
