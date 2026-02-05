@@ -11,23 +11,6 @@
 #include <fbdf_cutin.h>
 
 /**
- * @brief コンストラクタ、画像と音声を用意している
- * @param なし
- */
-FBDF_cutin_c::FBDF_cutin_c() {
-	this->leftpic.reload(_T("pic/cutinLeft.png"));
-	this->rightpic.reload(_T("pic/cutinRight.png"));
-	this->sound = LoadSoundMem(_T("SE/cutin.wav"));
-}
-
-/**
- * @brief デストラクタ、音声を破棄している(画像はdxcur_pic_c内で破棄するから大丈夫)
- */
-FBDF_cutin_c::~FBDF_cutin_c() {
-	DeleteSoundMem(this->sound);
-}
-
-/**
  * @brief カットイン描画
  * @param なし
  * @return なし
@@ -81,7 +64,7 @@ void FBDF_cutin_c::update() {
 		this->sequence = lins_scale(0, 1000, 500, 0, GetNowCount() - this->cutStime);
 	}
 	if (this->acs_sound && (this->cutIoFg == CUT_FRAG_IN) && (this->sequence == 1000)) {
-		PlaySoundMem(this->sound, DX_PLAYTYPE_BACK);
+		PlaySoundMem(this->sound.handle(), DX_PLAYTYPE_BACK);
 		this->acs_sound = false;
 	}
 	return;

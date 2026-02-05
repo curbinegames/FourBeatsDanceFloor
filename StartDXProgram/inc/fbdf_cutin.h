@@ -14,10 +14,9 @@ typedef enum cutin_tips_e {
 
 class FBDF_cutin_c {
 private:
-	dxcur_pic_c leftpic;
-	dxcur_pic_c rightpic;
-
-	int sound = 0;
+	dxcur_pic_c leftpic  = dxcur_pic_c(_T("pic/cutinLeft.png"));
+	dxcur_pic_c rightpic = dxcur_pic_c(_T("pic/cutinRight.png"));
+	dxcur_snd_c sound    = dxcur_snd_c(_T("SE/cutin.wav"));
 
 	int sequence = 0; /* 0で全開、1000で封鎖 */
 
@@ -30,8 +29,6 @@ private:
 	bool acs_sound = false;
 
 public:
-	FBDF_cutin_c();
-	~FBDF_cutin_c();
 
 	/* カットイン描画 */
 	void DrawCut() const;

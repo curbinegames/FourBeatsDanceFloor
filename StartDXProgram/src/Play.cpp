@@ -1239,14 +1239,15 @@ static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const T
  * @brief 曲の音声ファイルを読み込む
  * @param[in] folder_name フォルダ名
  * @param[in] music_file_name 曲のファイル名
- * @return DxSnd_t 曲ハンドル
+ * @return なし
  */
-static DxSnd_t FBDF_Play_Loadmusic(const TCHAR *folder_name, const TCHAR *music_file_name) {
+static void FBDF_Play_Loadmusic(dxcur_snd_c &dest, const TCHAR *folder_name, const TCHAR *music_file_name) {
 	std::string path = "music/";
 	path += folder_name;
 	path += '/';
 	path += music_file_name;
-	return LoadSoundMem(path.c_str());
+	dest.reload(path.c_str());
+	return;
 }
 
 /**
@@ -1342,15 +1343,15 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 	dxcur_pic_c lanePic(_T("pic/play/PlayLane.png"));
 	FBDF_Play_note_pic_st note_pic;
 
-	DxSnd_t musicData = 0;
+	dxcur_snd_c musicData;
 	FBDT_hit_snd_t se;
 
 	DxTime_t FinishTime = 0;
 
 	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
 
-	musicData = FBDF_Play_Loadmusic(nex_music->folder_name.c_str(), map.music_file);
-	PlaySoundMem(musicData, DX_PLAYTYPE_BACK);
+	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
+	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
 
 	map.note.resetNo();
 	map.Stime = GetNowCount();
@@ -1371,7 +1372,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
 
 		/* 譜面終了判定 */
-		if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(musicData))) {
+		if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(musicData.handle()))) {
 			cutin.SetIo(CUT_FRAG_IN);
 		}
 
@@ -1406,15 +1407,13 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		} ScreenFlip(); /* 作画エリアここまで */
 
 		if (GetWindowUserCloseFlag(TRUE)) { // 閉じるボタンが押された
-			StopSoundMem(musicData);
-			DeleteSoundMem(musicData);
+			StopSoundMem(musicData.handle());
 			return VIEW_EXIT;
 		}
 		WaitTimer(10); // ループウェイト
 	}
 
-	StopSoundMem(musicData);
-	DeleteSoundMem(musicData);
+	StopSoundMem(musicData.handle());
 
 	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
