@@ -176,21 +176,6 @@ public:
 	}
 };
 
-/* 多分使ってない */
-static int CalMusicMovieDiv(int STime, DxPic_t handle) {
-	const int BPM = 150;
-	int music_pos = (GetNowCount() - STime) % (60000 / BPM);
-	int movie_pos = TellMovieToGraph(handle) % (60000 / BPM);
-	int ret = movie_pos - music_pos;
-	if ((30000 / BPM) < ret) {
-		ret = movie_pos - (music_pos + (60000 / BPM));
-	}
-	if (ret < -(30000 / BPM)) {
-		ret = (movie_pos + (60000 / BPM)) - music_pos;
-	}
-	return ret;
-}
-
 /**
  * @brief タイトル画面のベース
  * @param なし
@@ -205,7 +190,6 @@ view_num_t FBDF_TitleView(void) {
 	int seek_count = 0;
 	dxcur_pic_c title_pic(_T("pic/title.png"));
 	dxcur_pic_c ring_pic(_T("pic/white_ring.png"));
-	dxcur_pic_c movie(_T("pic/titleMovie.mp4"));
 	dxcur_snd_c intro_bgm(_T("SE/Midsummer Philosophy/intro.mp3"));
 	dxcur_snd_c loop_bgm(_T("SE/Midsummer Philosophy/loop.mp3"));
 
@@ -245,22 +229,6 @@ view_num_t FBDF_TitleView(void) {
 				break;
 			default:
 				break;
-			}
-		}
-
-		if (GetMovieStateToGraph(movie.handle()) == 0) {
-			SeekMovieToGraph(movie.handle(), 0);
-			PlayMovieToGraph(movie.handle());
-		}
-		else {
-			int div = CalMusicMovieDiv(STime, movie.handle());
-			if (div <= -(15000 / BPM)) {
-				SeekMovieToGraph(movie.handle(), TellMovieToGraph(movie.handle()) - div + 50);
-				seek_count++;
-			}
-			else if ((15000 / BPM) <= div) {
-				SeekMovieToGraph(movie.handle(), TellMovieToGraph(movie.handle()) - div - 50);
-				seek_count++;
 			}
 		}
 
