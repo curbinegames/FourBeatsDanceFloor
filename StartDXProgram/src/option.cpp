@@ -1,117 +1,516 @@
 
+#include <string>
 #include <DxLib.h>
-
 #include <dxcur.h>
-
 #include <system.h>
+#include <option.h>
 
-void FBDF_Option_KeyAction(int &cmd) {
+typedef enum FBDF_param_type_e {
+    FBDF_PARAM_TYPE_BOOL,
+    FBDF_PARAM_TYPE_UINT,
+    FBDF_PARAM_TYPE_INT
+} FBDF_param_type_et;
+
+#if 1 /* class */
+
+/* 継承前提、テンプレートは実装できなかった */
+class FBDF_option_item_base_c {
+protected:
+    FBDF_param_type_et param_type = FBDF_PARAM_TYPE_BOOL;
+    bool is_loop_param = false; /* is_bool_paramがtrueだったら無効 */
+    int  lower_limit   = 0;     /* is_bool_paramがtrueだったら無効、is_loop_paramがtrueだったら0固定 */
+    int  upper_limit   = 0;     /* is_bool_paramがtrueだったら無効 */
+    void *option_p     = &game_option.empty_val;
+    dxcur_pic_c base_pic = dxcur_pic_c();
+
+public:
+    std::string item_name = "";
+    std::string item_detail = "";
+
+    void CmdUp(void) {
+        switch (this->param_type) {
+        case FBDF_PARAM_TYPE_BOOL:
+            *(bool *)(this->option_p) = !(*(bool *)(this->option_p));
+            break;
+        case FBDF_PARAM_TYPE_UINT:
+            if (this->is_loop_param) {
+                *(uint *)(this->option_p) = LOOP_ADD(*(uint *)(this->option_p), this->upper_limit + 1);
+            }
+            else {
+                *(uint *)(this->option_p) = min(*(uint *)(this->option_p) + 1, this->upper_limit);
+            }
+            break;
+        case FBDF_PARAM_TYPE_INT:
+            if (this->is_loop_param) {
+                *(int *)(this->option_p) = LOOP_ADD(*(int *)(this->option_p), this->upper_limit + 1);
+            }
+            else {
+                *(int *)(this->option_p) = min(*(int *)(this->option_p) + 1, this->upper_limit);
+            }
+            break;
+        }
+    }
+
+    void CmdDown(void) {
+        switch (this->param_type) {
+        case FBDF_PARAM_TYPE_BOOL:
+            *(bool *)(this->option_p) = !(*(bool *)(this->option_p));
+            break;
+        case FBDF_PARAM_TYPE_UINT:
+            if (this->is_loop_param) {
+                *(uint *)(this->option_p) = LOOP_SUB(*(uint *)(this->option_p), this->upper_limit + 1);
+            }
+            else {
+                *(uint *)(this->option_p) = max(this->lower_limit, *(uint *)(this->option_p) - 1);
+            }
+            break;
+        case FBDF_PARAM_TYPE_INT:
+            if (this->is_loop_param) {
+                *(int *)(this->option_p) = LOOP_SUB(*(int *)(this->option_p), this->upper_limit + 1);
+            }
+            else {
+                *(int *)(this->option_p) = max(this->lower_limit, *(int *)(this->option_p) - 1);
+            }
+            break;
+        }
+    }
+
+    void ChangeBool(void) {
+        if (this->param_type == FBDF_PARAM_TYPE_BOOL) {
+            this->CmdUp();
+        }
+    }
+
+    virtual std::string GetParamName(void) const {
+        std::string s = "";
+        return s;
+    }
+
+    virtual std::string GetParamDetail(void) const {
+        std::string s = "";
+        return s;
+    }
+
+    virtual DxPic_t GetPicHandle(void) const {
+        return this->base_pic.handle();
+    }
+
+    virtual void ReloadPic(void) {}
+};
+
+class FBDF_option_item_chara_c : public FBDF_option_item_base_c {
+private:
+    dxcur_pic_c pic[5];
+
+public:
+    FBDF_option_item_chara_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_UINT;
+        this->is_loop_param = true;
+        this->upper_limit   = 3;
+        this->option_p      = &game_option.chara;
+        this->item_name     = "ダンサー";
+        this->item_detail   = "使用するダンサーを選びます。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s;
+        switch (*(uint *)(this->option_p)) {
+        case 0:
+            s = LANGUAGE_CHOOSE("ユニオ", "uniow");
+            break;
+        case 1:
+            s = LANGUAGE_CHOOSE("ニーダ", "neida");
+            break;
+        case 2:
+            s = LANGUAGE_CHOOSE("トリンバ", "trimba");
+            break;
+        case 3:
+            s = LANGUAGE_CHOOSE("クアトロ", "quattro");
+            break;
+        }
+        return s;
+    }
+
+    DxPic_t GetPicHandle(void) const override {
+        return this->pic[*(uint *)(this->option_p)].handle();
+    }
+
+    void ReloadPic(void) override {
+        this->pic[0].reload(_T(""));
+        this->pic[1].reload(_T(""));
+        this->pic[2].reload(_T(""));
+        this->pic[3].reload(_T(""));
+        this->pic[4].reload(_T(""));
+    }
+};
+
+class FBDF_option_item_playstyle_c : public FBDF_option_item_base_c {
+private:
+    dxcur_pic_c pic[3];
+
+public:
+    FBDF_option_item_playstyle_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_UINT;
+        this->is_loop_param = true;
+        this->upper_limit   = 2;
+        this->option_p      = &game_option.play_style;
+        this->item_name     = "プレイスタイル";
+        this->item_detail   = "プレイスタイルを選びます。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(uint *)(this->option_p)) {
+        case 0:
+            s = "assist";
+            break;
+        case 1:
+            s = "normal";
+            break;
+        case 2:
+            s = "blanc";
+            break;
+        }
+        return s;
+    }
+
+    std::string GetParamDetail(void) const override {
+        std::string s = "";
+        switch (*(uint *)(this->option_p)) {
+        case 0:
+            s = "ボタン位置のアシストが付きますが、その代わり得られるスコアが減ります。";
+            break;
+        case 1:
+            s = "通常のモードです。";
+            break;
+        case 2:
+            s = "色が分からなくなりますが、その代わり得られるスコアがちょっとだけ増えます。";
+            break;
+        }
+        return s;
+    }
+
+    DxPic_t GetPicHandle(void) const override {
+        return this->pic[*(uint *)(this->option_p)].handle();
+    }
+
+    void ReloadPic(void) override {
+        this->pic[0].reload(_T(""));
+        this->pic[1].reload(_T(""));
+        this->pic[2].reload(_T(""));
+    }
+};
+
+class FBDF_option_item_autoen_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_autoen_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_BOOL;
+        this->option_p      = &game_option.auto_en;
+        this->item_name     = "オート";
+        this->item_detail   = "自動演奏モードの切り替えをします。\n有効にすると記録は保存されません。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(bool *)(this->option_p)) {
+        case false:
+            s = "OFF";
+            break;
+        case true:
+            s = "ON";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_lanespeed_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_lanespeed_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_UINT;
+        this->is_loop_param = false;
+        this->lower_limit   = 1;
+        this->upper_limit   = 100;
+        this->option_p      = &game_option.lane_speed;
+        this->item_name     = "ノーツ速度";
+        this->item_detail   = "ノーツの速度を変更します。増やすと速くなります。";
+    }
+
+    std::string GetParamName(void) const override {
+        return std::to_string(*(uint *)(this->option_p) / 10.0);
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_noteoffset_time_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_noteoffset_time_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_INT;
+        this->is_loop_param = false;
+        this->lower_limit   = -10000;
+        this->upper_limit   =  10000;
+        this->option_p      = &game_option.note_offset_timing;
+        this->item_name     = "ノーツタイミング";
+        this->item_detail   = "ノーツが来るタイミングをずらします。\nfast多いなら減らして、slow多いなら増やしてください。";
+    }
+
+    std::string GetParamName(void) const override {
+        return std::to_string(*(int *)(this->option_p)) + "ms";
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_noteoffset_draw_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_noteoffset_draw_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_INT;
+        this->is_loop_param = false;
+        this->lower_limit   = -10000;
+        this->upper_limit   =  10000;
+        this->option_p      = &game_option.note_offset_draw;
+        this->item_name     = "ノーツ描画位置";
+        this->item_detail   = "ノーツを描く位置をずらします。\n増やすと上に、減らすと下にずれます。";
+    }
+
+    std::string GetParamName(void) const override {
+        return std::to_string(*(int *)(this->option_p)) + "ms";
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_hiteffecten_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_hiteffecten_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_BOOL;
+        this->option_p      = &game_option.hit_effect_en;
+        this->item_name     = "ノーツエフェクト";
+        this->item_detail   = "ノーツを叩いた時のエフェクトの表示切替をします。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(bool *)(this->option_p)) {
+        case false:
+            s = "OFF";
+            break;
+        case true:
+            s = "ON";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_judgedrawen_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_judgedrawen_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_BOOL;
+        this->option_p      = &game_option.judge_draw_en;
+        this->item_name     = "判定表示";
+        this->item_detail   = "ノーツの判定表示を切り替えます。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(bool *)(this->option_p)) {
+        case false:
+            s = "OFF";
+            break;
+        case true:
+            s = "ON";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_fastslowen_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_fastslowen_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_BOOL;
+        this->option_p      = &game_option.fast_slow_en;
+        this->item_name     = "判定詳細表示";
+        this->item_detail   = "ノーツを叩いたタイミングの詳細判定の表示を切り替えます。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(bool *)(this->option_p)) {
+        case false:
+            s = "OFF";
+            break;
+        case true:
+            s = "ON";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_chaindrawen_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_chaindrawen_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_BOOL;
+        this->option_p      = &game_option.chain_draw_en;
+        this->item_name     = "チェイン数表示";
+        this->item_detail   = "チェイン数の表示を切り替えます。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(bool *)(this->option_p)) {
+        case false:
+            s = "OFF";
+            break;
+        case true:
+            s = "ON";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+class FBDF_option_item_language_c : public FBDF_option_item_base_c {
+public:
+    FBDF_option_item_language_c (void) {
+        this->param_type    = FBDF_PARAM_TYPE_UINT;
+        this->is_loop_param = true;
+        this->upper_limit   = 1;
+        this->option_p      = &game_option.language;
+        this->item_name     = "言語";
+        this->item_detail   = "ゲーム内で使用する言語を選択します。";
+    }
+
+    std::string GetParamName(void) const override {
+        std::string s = "";
+        switch (*(uint *)(this->option_p)) {
+        case 0:
+            s = "Japanese";
+            break;
+        case 1:
+            s = "English";
+            break;
+        }
+        return s;
+    }
+
+    std::string GetParamDetail(void) const override {
+        std::string s = "";
+        switch (*(uint *)(this->option_p)) {
+        case 0:
+            s = "";
+            break;
+        case 1:
+            s = "※すべてに対応していない可能性があります。";
+            break;
+        }
+        return s;
+    }
+
+    void ReloadPic(void) override {
+        this->base_pic.reload(_T(""));
+    }
+};
+
+#endif /* class */
+
+static std::vector<FBDF_option_item_base_c *> s_op_list = {
+    new FBDF_option_item_chara_c(),
+    new FBDF_option_item_playstyle_c(),
+    new FBDF_option_item_autoen_c(),
+    new FBDF_option_item_lanespeed_c(),
+    new FBDF_option_item_noteoffset_time_c(),
+    new FBDF_option_item_noteoffset_draw_c(),
+    new FBDF_option_item_hiteffecten_c(),
+    new FBDF_option_item_judgedrawen_c(),
+    new FBDF_option_item_fastslowen_c(),
+    new FBDF_option_item_chaindrawen_c(),
+    new FBDF_option_item_language_c()
+};
+
+static void FBDF_Option_DrawItemOne(int no, int x, int y, const FBDF_option_pic_st &pic) {
+    DrawFormatString(x, y,      COLOR_WHITE, _T("%s"), s_op_list.at(no)->item_name.c_str());
+    DrawFormatString(x, y + 20, COLOR_WHITE, _T("%s"), s_op_list.at(no)->GetParamName().c_str());
+}
+
+/**
+ * @brief オプションで使う画像のリロード。必ず1回は行うこと。
+ * @param なし
+ * @return なし
+ */
+void FBDF_Option_ReloadPic(void) {
+    for (size_t i = 0; i < s_op_list.size(); i++) {
+        s_op_list.at(i)->ReloadPic();
+    }
+}
+
+void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
 	InputAllKeyHold();
     switch (GetKeyPushOnce()) {
     case KEY_INPUT_RETURN: /* bool項目の切り替え */
-        switch (cmd) {
-        case 2:
-            game_option.auto_en = !game_option.auto_en;
-            break;
-        case 6:
-            game_option.hit_effect_en = !game_option.hit_effect_en;
-            break;
-        case 7:
-            game_option.judge_draw_en = !game_option.judge_draw_en;
-            break;
-        case 8:
-            game_option.fast_slow_en = !game_option.fast_slow_en;
-            break;
-        case 9:
-            game_option.chain_draw_en = !game_option.chain_draw_en;
-            break;
-        default:
-            break;
-        }
+        s_op_list.at(cmd)->ChangeBool();
         break;
     case KEY_INPUT_BACK: /* セレクトに戻る */
+        option_fg = false;
         break;
-    case KEY_INPUT_UP: /* 項目選択 */
-		cmd = MOD_AVOID_ZERO((cmd + 10 - 1), 10, 0);
+    case KEY_INPUT_UP:   /* 項目選択 */
+		cmd = LOOP_SUB(cmd, s_op_list.size());
         break;
     case KEY_INPUT_DOWN: /* 項目選択 */
-		cmd = MOD_AVOID_ZERO((cmd + 1), 10, 0);
+		cmd = LOOP_ADD(cmd, s_op_list.size());
         break;
     case KEY_INPUT_LEFT: /* 項目操作 */
-        switch (cmd) {
-        case 0:
-            game_option.chara = MOD_AVOID_ZERO((game_option.chara + 4 - 1), 4, 0);
-            break;
-        case 1:
-            game_option.play_style = MOD_AVOID_ZERO((game_option.play_style + 3 - 1), 3, 0);
-            break;
-        case 2:
-            game_option.auto_en = !game_option.auto_en;
-            break;
-        case 3:
-            game_option.lane_speed = max(1, game_option.lane_speed);
-            break;
-        case 4:
-            game_option.note_offset_timing--;
-            break;
-        case 5:
-            game_option.note_offset_draw--;
-            break;
-        case 6:
-            game_option.hit_effect_en = !game_option.hit_effect_en;
-            break;
-        case 7:
-            game_option.judge_draw_en = !game_option.judge_draw_en;
-            break;
-        case 8:
-            game_option.fast_slow_en = !game_option.fast_slow_en;
-            break;
-        case 9:
-            game_option.chain_draw_en = !game_option.chain_draw_en;
-            break;
-        default:
-            break;
-        }
+        s_op_list.at(cmd)->CmdDown();
         break;
     case KEY_INPUT_RIGHT: /* 項目操作 */
-        switch (cmd) {
-        case 0:
-            game_option.chara = MOD_AVOID_ZERO((game_option.chara + 1), 4, 0);
-            break;
-        case 1:
-            game_option.play_style = MOD_AVOID_ZERO((game_option.play_style + 1), 3, 0);
-            break;
-        case 2:
-            game_option.auto_en = !game_option.auto_en;
-            break;
-        case 3:
-            game_option.lane_speed = min(game_option.lane_speed, 100);
-            break;
-        case 4:
-            game_option.note_offset_timing++;
-            break;
-        case 5:
-            game_option.note_offset_draw++;
-            break;
-        case 6:
-            game_option.hit_effect_en = !game_option.hit_effect_en;
-            break;
-        case 7:
-            game_option.judge_draw_en = !game_option.judge_draw_en;
-            break;
-        case 8:
-            game_option.fast_slow_en = !game_option.fast_slow_en;
-            break;
-        case 9:
-            game_option.chain_draw_en = !game_option.chain_draw_en;
-            break;
-        default:
-            break;
-        }
+        s_op_list.at(cmd)->CmdUp();
         break;
     }
 }
 
-void FBDF_Option_Draw(void) {
-    DrawString(5, 5, _T("OPTION NOW"), COLOR_WHITE);
+/**
+ * @brief オプション画面を描く。セレクト画面の上に直書きするイメージ。
+ * @param[in] cmd コマンド
+ */
+void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic) {
+    /* 後ろの選曲画面を暗くする */
+    DrawGraph(0, 0, pic.back.handle(), TRUE);
+    /* 項目を描く */
+    // FBDF_Option_DrawItemOne(cmd - 1, 5 - 20, 5);
+    FBDF_Option_DrawItemOne(cmd, 15, 15, pic);
+    // FBDF_Option_DrawItemOne(cmd + 1, 5 + 20, 5);
+    /* 説明の画像を描く */
+    DrawGraph(0, 0, s_op_list.at(cmd)->GetPicHandle(), TRUE);
+    /* 詳細を描く */
+    DrawFormatString(5,  5, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
+    DrawFormatString(5, 25, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
 }

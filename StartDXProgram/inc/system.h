@@ -2,7 +2,10 @@
 
 #define FBDF_DANCER_MAT_TYPE 1 /* 0:‰æ‘œ, 1:3D */
 
+#define LANGUAGE_CHOOSE(jp, en) ((game_option.language == 0) ? (jp) : (en))
+
 typedef struct FBDF_game_option_s {
+	 int empty_val  = 0; /* nullptr‚Ì‘ã‚í‚è */
 	uint chara      = 0; /* enum‰»—\’è */
 	uint play_style = 1; /* enum‰»—\’è */
 	bool auto_en    = false;
@@ -13,6 +16,7 @@ typedef struct FBDF_game_option_s {
 	bool judge_draw_en = true;
 	bool fast_slow_en  = false;
 	bool chain_draw_en = true;
+	uint language      = 0; /* 0=“ú–{Œê, 1=‰pŒê */
 } FBDF_game_option_st;
 
 typedef struct FBDF_score_bar_s {

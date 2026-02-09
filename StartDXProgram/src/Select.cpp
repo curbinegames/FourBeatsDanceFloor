@@ -16,6 +16,7 @@
 #include <fbdf_cutin.h>
 #include <mapenc.h>
 #include <CalDif.h>
+#include <option.h>
 
 #include <Play.h>
 
@@ -802,6 +803,7 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
  * @param[out] folder_manager フォルダーマネージャークラス
  * @param[out] now_misic 選択中の曲名
  * @param[out] command 今のカーソル位置
+ * @param[out] option_fg オプション画面のフラグ
  * @param[out] view_dif_type 今の難易度表示
  * @param[out] musiclist 譜面リスト
  * @param[out] cutin カットイン管理クラス
@@ -811,6 +813,7 @@ static void FBDF_select_KeyCheck(
 	FBDF_Select_MusicFolderManager_c &folder_manager,
 	std::string &now_music,
 	int &command,
+	bool &option_fg,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c &musiclist,
 	FBDF_cutin_c *cutin
@@ -890,10 +893,29 @@ static void FBDF_select_KeyCheck(
 			now_music = musiclist[command].music_name;
 		}
 		break;
-	case KEY_INPUT_X:
-		//monoFG ^= 1;
+	case KEY_INPUT_Z:
+		option_fg = true;
 		break;
 	}
+}
+
+static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_manager_class,
+	const FBDF_music_list_c &musiclist, int cmd, const FBDF_select_back_pic_c &back_pic,
+	const FBDF_music_ber_pic_t &music_ber_pic)
+{
+	back_pic.DrawPic();
+	DrawFormatString(5,  25, 0xffffffff, _T("%d"), cmd);
+	if (folder_manager_class.IsMusicFolderNow() && !musiclist.sort.empty()) {
+		DrawFormatString(5,  65, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.notes);
+		DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.color);
+		DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.trick);
+		DrawFormatString(5, 125, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.all);
+		DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[cmd].user_highscore.score);
+		DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[cmd].user_highscore.acc);
+		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[cmd].user_highscore.clear_type);
+		FBDF_SelectDrawColorCount(5, 660, &(musiclist[cmd].color_count));
+	}
+	FBDF_SelectDrawMusicList(cmd, &music_ber_pic);
 }
 
 /**
@@ -902,67 +924,50 @@ static void FBDF_select_KeyCheck(
  * @return view_num_t 次の画面
  */
 view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
-	int keyBlock = 1;
+	bool option_fg = false;
 	int command = 0;
-	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
-	//int monoFG = 0;
+	int option_cmd = 0;
 
-	bool exit_fg = false;
+	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
 
 	std::string now_music;
 
 	FBDF_Select_MusicFolderManager_c folder_manager_class;
 	FBDF_music_list_c musiclist;
-
 	FBDF_music_ber_pic_t music_ber_pic;
 	FBDF_select_back_pic_c back_pic;
+	FBDF_option_pic_st option_pic;
 
 	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 
+	FBDF_Option_ReloadPic();
 	folder_manager_class.MakeMusicList(musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
-
 	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
-
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
-
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (1) {
+		if (option_fg) {
+			FBDF_Option_KeyAction(option_cmd, option_fg);
+		}
+		else {
+			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, &cutin);
+		}
+
+		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; }
 		if (cutin.IsEndAnim()) { break; }
 
-		FBDF_select_KeyCheck(folder_manager_class, now_music, command, view_dif_type, musiclist, &cutin);
-
-		if (exit_fg) { break; }
-
 		back_pic.UpdateState();
-
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから
-		back_pic.DrawPic();
-		DrawFormatString(5,  25, 0xffffffff, _T("%d"), command);
-		DrawFormatString(5,  45, 0xffffffff, _T("%d"), keyBlock);
-		if (folder_manager_class.IsMusicFolderNow() && !musiclist.sort.empty()) {
-			DrawFormatString(5,  65, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.notes);
-			DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.color);
-			DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.trick);
-			DrawFormatString(5, 125, 0xffffffff, _T("%3.2f"), musiclist[command].auto_cal_dif.all);
-			DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[command].user_highscore.score);
-			DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[command].user_highscore.acc);
-			DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[command].user_highscore.clear_type);
-			FBDF_SelectDrawColorCount(5, 660, &(musiclist[command].color_count));
-		}
-		FBDF_SelectDrawMusicList(command, &music_ber_pic);
-
+		FBDF_Select_Draw(folder_manager_class, musiclist, command, back_pic, music_ber_pic);
+		if (option_fg) { FBDF_Option_Draw(option_cmd, option_pic); }
 		cutin.DrawCut();
-
 		ScreenFlip(); // 作画エリアここまで
-		if (GetWindowUserCloseFlag(TRUE)) { // 閉じるボタンが押された
-			return VIEW_EXIT;
-		}
 		WaitTimer(10); // ループウェイト
 	}
 
