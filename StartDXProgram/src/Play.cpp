@@ -44,6 +44,17 @@ typedef enum FBDF_judge_mat_e {
 	JUDGE_NONE,
 } FBDF_judge_mat_et;
 
+typedef enum FBDF_dancer_state_e {
+	FBDF_DANCER_STATE_IDLE,
+	FBDF_DANCER_STATE_MISS,
+	FBDF_DANCER_STATE_AFK,
+	FBDF_DANCER_STATE_DANCING_1,
+	FBDF_DANCER_STATE_DANCING_2,
+	FBDF_DANCER_STATE_DANCING_3,
+	FBDF_DANCER_STATE_DANCING_4,
+	FBDF_DANCER_STATE_DANCING_LONG,
+} FBDF_dancer_state_et;
+
 #if 1 /* struct */
 
 typedef struct FBDF_push_key_s {
@@ -169,6 +180,7 @@ private:
 	 int offset = 0; /* 待機ステップ開始時間 */
 	size_t Nmotion_picNo = 0; /* 今のダンスモーション番号 */
 	double bpm = 120;
+	FBDF_dancer_state_et Nstate = FBDF_DANCER_STATE_IDLE;
 
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 	dxcur_divpic_c idle_pic;
@@ -281,44 +293,66 @@ private:
 		return 0; /* 通らないけど一応明記 */
 	}
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	/* モーションのフレーム番号を取得する */
 	size_t GetMotionAnimNo(void) const {
-		if (this->len == 1) { /* ダンスモーション1 */
-			size_t start = (this->btn - 1) * 15;
-			size_t end = start + 15;
-			return lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
-		}
-		else if (this->len == 2) { /* ダンスモーション2 */
-			size_t start = (int)((this->btn - 1) / 2) * 30;
-			size_t end = start + 30;
-			return lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
-		}
-		else if (this->len == 3) { /* ダンスモーション3 */
-			return lins_scale(0, 0, this->mtime, 45, GetNowCount() - this->Stime);
-		}
-		else if (this->len == 4) { /* ダンスモーション4 */
-			return lins_scale(0, 0, this->mtime, 60, GetNowCount() - this->Stime);
-		}
-		else if (5 <= this->len) { /* ロングモーション */
-			return lins_scale(0, 0, min(this->mtime, 1000), 120, GetNowCount() - this->Stime);
-		}
-		else if (this->len < 0) { /* ミスモーション */
-			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				return lins_scale(5000, 0, 5500, 120, GetNowCount() - this->Stime);
+		size_t retval = 0;
+		size_t start = 0;
+		size_t end = 60;
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_DANCING_1:
+			switch (this->btn) {
+			case FBDF_PLAY_NOTE_BTN_1:
+				start = 0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_2:
+				start = 30;
+				break;
+			case FBDF_PLAY_NOTE_BTN_3:
+				start = 60;
+				break;
+			case FBDF_PLAY_NOTE_BTN_4:
+				start = 90;
+				break;
 			}
-			else {
-				return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
+			end = start + 30;
+			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_DANCING_2:
+			switch (this->btn) {
+			case FBDF_PLAY_NOTE_BTN_1:
+			case FBDF_PLAY_NOTE_BTN_2:
+				start = 0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_3:
+			case FBDF_PLAY_NOTE_BTN_4:
+				start = 60;
+				break;
 			}
-		}
-		else { /* 待機モーション */
+			end = start + 60;
+			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+			retval = lins_scale(0, 0, this->mtime, 120, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
+			retval = lins_scale(0, 0, 750, 120, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_AFK:
+			retval = lins_scale(5000, 0, 5500, 120, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+			return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_IDLE:
 			double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
 			int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
 			int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
 			int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
 			if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-			return (int)lins(0, 0, loop_time, 240, in_time) % 240;
+			retval = (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+			break;
 		}
-		return 0; /* 通らないけど一応明記 */
+		return retval;
 	}
 #endif /* 3Dモデル */
 
@@ -330,27 +364,30 @@ private:
 	 * @return なし
 	 */
 	void DrawDebugDanceString(int x, int y) const {
-		if (this->len == 0) {
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
 			DrawString(x, y, _T("state: idle"), COLOR_WHITE);
-			return;
-		}
-		if (this->len <= -1) {
+			break;
+		case FBDF_DANCER_STATE_MISS:
 			DrawString(x, y, _T("state: miss"), COLOR_WHITE);
-			return;
-		}
-		if (5 <= this->len) {
+			break;
+		case FBDF_DANCER_STATE_AFK:
+			DrawString(x, y, _T("state: afk"), COLOR_WHITE);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
 			DrawFormatString(x, y, COLOR_WHITE, _T("state: long(%d)"), this->len);
-			return;
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+			DrawFormatString(x, y, COLOR_WHITE, _T("state: move 1-%d"), static_cast<int>(this->btn));
+			break;
+		case FBDF_DANCER_STATE_DANCING_2:
+			DrawFormatString(x, y, COLOR_WHITE, _T("state: move 2-%d"), (int)(static_cast<int>(this->btn - 1) / 2) + 1);
+			break;
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+			DrawFormatString(x, y, COLOR_WHITE, _T("state: move %d"), this->len);
+			break;
 		}
-		if (this->len == 1) {
-			DrawFormatString(x, y, COLOR_WHITE, _T("state: move 1-%d"), this->btn);
-			return;
-		}
-		if (this->len == 2) {
-			DrawFormatString(x, y, COLOR_WHITE, _T("state: move 2-%d"), (int)((this->btn - 1) / 2) + 1);
-			return;
-		}
-		DrawFormatString(x, y, COLOR_WHITE, _T("state: move %d"), this->len);
 		return;
 	}
 
@@ -364,21 +401,35 @@ private:
 		int drawx2 = x + 100;
 		int drawy2 = y + 10;
 		DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, FALSE);
-		if (this->len == 0) {
-			return;
-		}
-		if (this->len < 0) {
-			drawx2 = lins_scale(0, drawx2, 100, x, GetNowCount() - this->Stime);
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
+			/* nothing */
+			break;
+		case FBDF_DANCER_STATE_MISS:
+			if (GetNowCount() - this->Stime < 500) { /* モーション中 */
+				drawx2 = lins_scale(0, drawx2, 500, x, GetNowCount() - this->Stime);
+			}
+			else if (GetNowCount() - this->Stime < 5000) { /* afkまでの待機 */
+				drawx2 = lins_scale(5000, drawx2, 500, x, GetNowCount() - this->Stime);
+			}
 			DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, TRUE);
-			return;
-		}
-		if (5 <= this->len) {
+			break;
+		case FBDF_DANCER_STATE_AFK:
+			drawx2 = lins_scale(5000, drawx2, 5500, x, GetNowCount() - this->Stime);
+			DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, TRUE);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
 			drawx2 = lins_scale(0, drawx2, 750, x, GetNowCount() - this->Stime);
 			DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, TRUE);
-			return;
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+			drawx2 = lins_scale(this->mtime, drawx2, this->mtime + JUDGE_WIDTH, x, GetNowCount() - this->Stime);
+			DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, TRUE);
+			break;
 		}
-		drawx2 = lins_scale(this->mtime, drawx2, this->mtime + JUDGE_WIDTH, x, GetNowCount() - this->Stime);
-		DrawBox(x, y, drawx2, drawy2, COLOR_WHITE, TRUE);
 		return;
 	}
 
@@ -580,41 +631,41 @@ private:
 	 */
 	void DrawDancerGraph(int x, int y) const {
 		size_t motion_frameNo = this->GetMotionAnimNo();
-
-		if (this->len == 0) { /* 待機モーション */
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			MV1DrawModel(this->n3Dmodel_handle);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_AFK:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   motion_frameNo);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+		case FBDF_DANCER_STATE_DANCING_LONG:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
+			break;
 		}
-		else if (this->len < 0) { /* ミスモーション */
-			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   motion_frameNo);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   1);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-				MV1DrawModel(this->n3Dmodel_handle);
-			}
-			else {
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-				MV1DrawModel(this->n3Dmodel_handle);
-			}
-		}
-		else { /* ダンスモーション */
-				MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-				MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
-			MV1DrawModel(this->n3Dmodel_handle);
-		}
+		MV1DrawModel(this->n3Dmodel_handle);
 	}
 #endif /* 3Dモデル */
 
@@ -652,6 +703,34 @@ public:
 		/* motion->idle */
 		if (this->mtime + JUDGE_WIDTH + this->Stime <= GetNowCount()) {
 			this->len = 0;
+		}
+
+		/* ステートの取得 */
+		if (this->len == 0) { /* 待機モーション */
+			this->Nstate = FBDF_DANCER_STATE_IDLE;
+		}
+		else if (this->len < 0) { /* ミスモーション */
+			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
+				this->Nstate = FBDF_DANCER_STATE_AFK;
+			}
+			else {
+				this->Nstate = FBDF_DANCER_STATE_MISS;
+			}
+		}
+		else if (this->len == 1) { /* ダンスモーション */
+			this->Nstate = FBDF_DANCER_STATE_DANCING_1;
+		}
+		else if (this->len == 2) {
+			this->Nstate = FBDF_DANCER_STATE_DANCING_2;
+		}
+		else if (this->len == 3) {
+			this->Nstate = FBDF_DANCER_STATE_DANCING_3;
+		}
+		else if (this->len == 4) {
+			this->Nstate = FBDF_DANCER_STATE_DANCING_4;
+		}
+		else if (5 <= this->len) {
+			this->Nstate = FBDF_DANCER_STATE_DANCING_LONG;
 		}
 		return;
 	}
@@ -951,7 +1030,9 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 				break;
 			}
 		}
-		DrawYpos = down - NOTE_HEIGHT - ((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) * (sint)map->bpm * NOTE_SPEED * game_option.lane_speed / 9500;
+		DrawYpos = down - NOTE_HEIGHT -
+			((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) *
+			NOTE_SPEED * game_option.lane_speed / 150;
 		DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 	}
 	return;

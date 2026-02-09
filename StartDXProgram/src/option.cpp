@@ -241,7 +241,8 @@ public:
     }
 
     std::string GetParamName(void) const override {
-        return std::to_string(*(uint *)(this->option_p) / 10.0);
+        std::string s;
+        return std::to_string((int)(*(uint *)(this->option_p) / 10)) + '.' + std::to_string(*(uint *)(this->option_p) % 10);
     }
 
     void ReloadPic(void) override {
@@ -479,6 +480,7 @@ void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
     case KEY_INPUT_RETURN: /* bool€–Ú‚ÌØ‚è‘Ö‚¦ */
         s_op_list.at(cmd)->ChangeBool();
         break;
+    case KEY_INPUT_Z:
     case KEY_INPUT_BACK: /* ƒZƒŒƒNƒg‚É–ß‚é */
         option_fg = false;
         break;
