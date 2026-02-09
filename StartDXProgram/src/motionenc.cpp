@@ -54,25 +54,33 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 			}
 		}
 #endif /* ‰æ‘œ */
+		else if (strands(buf, "LEN:")) {
+			strmods(buf, 4);
+			while (buf[0] != '\0') {
+				switch (buf[0]) {
+				case '1':
+					motion_buf.len_1 = true;
+					break;
+				case '2':
+					motion_buf.len_2 = true;
+					break;
+				case '3':
+					motion_buf.len_3 = true;
+					break;
+				case '4':
+					motion_buf.len_4 = true;
+					break;
+				case '8':
+					motion_buf.len_8 = true;
+					break;
+				}
+				strmods(buf, 1);
+			}
+		}
 		else if (strands(buf, "TYPE:")) {
 			strmods(buf, 5);
 			while (buf[0] != '\0') {
 				switch (buf[0]) {
-				case '1':
-					motion_buf.type_1 = true;
-					break;
-				case '2':
-					motion_buf.type_2 = true;
-					break;
-				case '3':
-					motion_buf.type_3 = true;
-					break;
-				case '4':
-					motion_buf.type_4 = true;
-					break;
-				case '8':
-					motion_buf.type_8 = true;
-					break;
 				case 'u':
 					motion_buf.type_u = true;
 					break;
@@ -90,6 +98,24 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 					break;
 				case 'b':
 					motion_buf.type_b = true;
+					break;
+				case 'j':
+					motion_buf.type_b = true;
+					break;
+				case 'c':
+					motion_buf.type_b = true;
+					break;
+				case '1':
+					motion_buf.type_1 = true;
+					break;
+				case '2':
+					motion_buf.type_2 = true;
+					break;
+				case '3':
+					motion_buf.type_3 = true;
+					break;
+				case '4':
+					motion_buf.type_4 = true;
 					break;
 				}
 				strmods(buf, 1);
@@ -130,17 +156,23 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 			motion_buf.pic.clear();
 #endif /* ‰æ‘œ */
 			motion_buf.next.clear();
-			motion_buf.type_1 = false;
-			motion_buf.type_2 = false;
-			motion_buf.type_3 = false;
-			motion_buf.type_4 = false;
-			motion_buf.type_8 = false;
+			motion_buf.len_1 = false;
+			motion_buf.len_2 = false;
+			motion_buf.len_3 = false;
+			motion_buf.len_4 = false;
+			motion_buf.len_8 = false;
 			motion_buf.type_u = false;
 			motion_buf.type_d = false;
 			motion_buf.type_l = false;
 			motion_buf.type_r = false;
 			motion_buf.type_f = false;
 			motion_buf.type_b = false;
+			motion_buf.type_j = false;
+			motion_buf.type_c = false;
+			motion_buf.type_1 = false;
+			motion_buf.type_2 = false;
+			motion_buf.type_3 = false;
+			motion_buf.type_4 = false;
 		}
 	}
 	fclose(fp);

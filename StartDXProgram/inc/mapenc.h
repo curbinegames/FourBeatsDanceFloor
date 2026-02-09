@@ -24,6 +24,22 @@ typedef enum FBDF_mapenc_error_e {
 	FDF_MAPENC_ERROR_INVALID_NOTE_CHAR, /* ノーツに変な文字が混ざってた */
 } FBDF_mapenc_error_et;
 
+typedef enum FBDF_note_motion_assign_e {
+	FBDF_NOTE_MOTION_ASSIGN_NONE,
+	FBDF_NOTE_MOTION_ASSIGN_UP,
+	FBDF_NOTE_MOTION_ASSIGN_DOWN,
+	FBDF_NOTE_MOTION_ASSIGN_LEFT,
+	FBDF_NOTE_MOTION_ASSIGN_RIGHT,
+	FBDF_NOTE_MOTION_ASSIGN_FRONT,
+	FBDF_NOTE_MOTION_ASSIGN_BACK,
+	FBDF_NOTE_MOTION_ASSIGN_JUMP,
+	FBDF_NOTE_MOTION_ASSIGN_CLAP,
+	FBDF_NOTE_MOTION_ASSIGN_1,
+	FBDF_NOTE_MOTION_ASSIGN_2,
+	FBDF_NOTE_MOTION_ASSIGN_3,
+	FBDF_NOTE_MOTION_ASSIGN_4,
+} FBDF_note_motion_assign_et;
+
 typedef struct FBDF_note_s {
 	uint time = 0; /* 押すタイミング 0: none, [ms] */
 	uint pos = 0; /* %4 */
@@ -31,6 +47,7 @@ typedef struct FBDF_note_s {
 	uint len = 99;
 	uint mtime = 0; /* ダンスの長さ[ms] */
 	uint bpm = 120;
+	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
 } FBDF_note_t;
 
 typedef struct FBDF_map_s {

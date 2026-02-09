@@ -13,7 +13,22 @@
 
 #include <mapenc.h>
 
-#define ISNOTE(c) ((c) == '-' || (c) == '.')
+#define ISNOTE(c) ( \
+	(c) == '-' ||   \
+	(c) == '.' ||   \
+	(c) == 'u' ||   \
+	(c) == 'd' ||   \
+	(c) == 'l' ||   \
+	(c) == 'r' ||   \
+	(c) == 'f' ||   \
+	(c) == 'b' ||   \
+	(c) == 'j' ||   \
+	(c) == 'c' ||   \
+	(c) == '1' ||   \
+	(c) == '2' ||   \
+	(c) == '3' ||   \
+	(c) == '4'      \
+)
 
 typedef struct FBDF_map_enc_s {
 	double now_bpm      = 120;
@@ -43,7 +58,45 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
 
 	for (int ic = 0; ic < option->now_block; ic++) {
 		FBDF_note_t buf_note;
-		if (buf[ic] == '-') {
+		if (buf[ic] != '.') {
+			switch (buf[ic]) {
+			case 'u':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_UP;
+				break;
+			case 'd':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_DOWN;
+				break;
+			case 'l':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_LEFT;
+				break;
+			case 'r':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_RIGHT;
+				break;
+			case 'f':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_FRONT;
+				break;
+			case 'b':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_BACK;
+				break;
+			case 'j':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_JUMP;
+				break;
+			case 'c':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_CLAP;
+				break;
+			case '1':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_1;
+				break;
+			case '2':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_2;
+				break;
+			case '3':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_3;
+				break;
+			case '4':
+				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_4;
+				break;
+			}
 			buf_note.pos = option->now_shutpos + ic;
 			switch (option->now_block) {
 			case 2:

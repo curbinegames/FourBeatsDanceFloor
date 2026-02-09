@@ -82,6 +82,7 @@ typedef struct FBDF_judge_event_s {
 	uint len = 4;
 	uint mtime = 0;
 	uint score = 0;
+	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
 } FBDF_judge_event_st;
 
 typedef struct FBDF_judge_pic_s {
@@ -470,51 +471,69 @@ private:
 	 * @brief srcがしたい下条件に合うかどうかを返す
 	 * @param[in] src モーションデータ
 	 * @param[in] next_len ブロック数
-	 * @param[in] allow 方向
+	 * @param[in] motion モーション指定
 	 * @return bool 合ってたらtrue、違ったらfalse
 	 */
-	bool IsMatchMotion(const FBDF_Play_motion_st &src, int next_len, int allow) const {
+	bool IsMatchMotion(const FBDF_Play_motion_st &src, int next_len, FBDF_note_motion_assign_et motion) const {
 		if (next_len <= 0) { return false; } /* ダンスモーションちゃうぞ */
 
 		switch (next_len) {
 		case 1:
-			if (!src.type_1) { return false; }
+			if (!src.len_1) { return false; }
 			break;
 		case 2:
-			if (!src.type_2) { return false; }
+			if (!src.len_2) { return false; }
 			break;
 		case 3:
-			if (!src.type_3) { return false; }
+			if (!src.len_3) { return false; }
 			break;
 		case 4:
-			if (!src.type_4) { return false; }
+			if (!src.len_4) { return false; }
 			break;
 		default: /* 5以上を想定 */
-			if (!src.type_8) { return false; }
+			if (!src.len_8) { return false; }
 			break;
 		}
 
-		switch (allow) {
-		case 1:
+		switch (motion) {
+		case FBDF_NOTE_MOTION_ASSIGN_UP:
 			if (!src.type_u) { return false; }
 			break;
-		case 2:
+		case FBDF_NOTE_MOTION_ASSIGN_DOWN:
 			if (!src.type_d) { return false; }
 			break;
-		case 3:
+		case FBDF_NOTE_MOTION_ASSIGN_LEFT:
 			if (!src.type_l) { return false; }
 			break;
-		case 4:
+		case FBDF_NOTE_MOTION_ASSIGN_RIGHT:
 			if (!src.type_r) { return false; }
 			break;
-		case 5:
+		case FBDF_NOTE_MOTION_ASSIGN_FRONT:
 			if (!src.type_f) { return false; }
 			break;
-		case 6:
+		case FBDF_NOTE_MOTION_ASSIGN_BACK:
 			if (!src.type_b) { return false; }
 			break;
+		case FBDF_NOTE_MOTION_ASSIGN_JUMP:
+			if (!src.type_j) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_CLAP:
+			if (!src.type_c) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_1:
+			if (!src.type_1) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_2:
+			if (!src.type_2) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_3:
+			if (!src.type_3) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_4:
+			if (!src.type_4) { return false; }
+			break;
 		default:
-			/* 方向は無指定と見なして処理 */
+			/* 無指定と見なして処理 */
 			break;
 		}
 
@@ -524,13 +543,13 @@ private:
 	/**
 	 * @brief 条件に合うダンスモーションを検索してsearched_motionに入れる。
 	 * @param[in] next_len ブロック数
-	 * @param[in] allow 方向
+	 * @param[in] motion モーション指定
 	 * @return size_t 見つけた数
 	 */
-	size_t SearchMotion(int next_len, int allow) {
+	size_t SearchMotion(int next_len, FBDF_note_motion_assign_et motion) {
 		this->searched_motion.clear();
 		for (size_t i = 0; i < motion_data.size(); i++) {
-			if (IsMatchMotion(motion_data[i], next_len, allow)) { searched_motion.push_back(i); }
+			if (IsMatchMotion(motion_data[i], next_len, motion)) { searched_motion.push_back(i); }
 		}
 		return this->searched_motion.size();
 	}
@@ -538,16 +557,16 @@ private:
 	/**
 	 * @brief nextの中から条件に合うダンスモーションを検索してsearched_motionに入れる。
 	 * @param[in] next_len ブロック数
-	 * @param[in] allow 方向
+	 * @param[in] motion モーション指定
 	 * @param[in] next_list ネクストリスト
 	 * @return size_t 見つけた数
 	 */
-	size_t SearchMotionWithNext(int next_len, int allow, std::vector<size_t> next_list) {
+	size_t SearchMotionWithNext(int next_len, FBDF_note_motion_assign_et motion, std::vector<size_t> next_list) {
 		this->searched_motion.clear();
 		if (next_list.size() == 0) { return 0; }
 		for (size_t i = 0; i < next_list.size(); i++) {
 			if (next_list[i] < motion_data.size()) {
-				if (IsMatchMotion(motion_data[next_list[i]], next_len, allow)) {
+				if (IsMatchMotion(motion_data[next_list[i]], next_len, motion)) {
 					searched_motion.push_back(i);
 				}
 			}
@@ -568,25 +587,25 @@ private:
 	/**
 	 * @brief ダンスモーションを更新する。
 	 * @param[in] next_len 次のモーションのブロック数
-	 * @param[in] allow 方向
+	 * @param[in] motion モーション指定
 	 * @return なし
 	 */
-	void SetDanceMotionNo(int next_len, int allow) {
+	void SetDanceMotionNo(int next_len, FBDF_note_motion_assign_et motion) {
 		if (this->len <= 0) { /* idle or miss */
-			SearchMotion(next_len, allow);
+			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
 			return;
 		}
 
 		if (GetRand(99) + 1 < 30) { /* 30%にヒット */
-			SearchMotion(next_len, allow);
+			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
 			return;
 		}
 
-		if (SearchMotionWithNext(next_len, allow, this->motion_data[this->Nmotion_picNo].next) == 0) {
+		if (SearchMotionWithNext(next_len, motion, this->motion_data[this->Nmotion_picNo].next) == 0) {
 			/* nextの中に条件に合うモーションがない */
-			SearchMotion(next_len, allow);
+			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
 			return;
 		}
@@ -752,12 +771,12 @@ public:
 	 * @param[in] a_btn 押されたボタン
 	 * @param[in] a_len 次のノートまでのブロック数、0未満にするとmissモーション、0にするとidleモーションにできる。
 	 * @param[in] a_mtime モーションの時間
-	 * @param[in] allow 方向指定、0=なし, 1=上, 2=下, 3=左, 4=右, 5=前, 6=後ろ、TODO:enumにしたいね
+	 * @param[in] motion モーション指定
 	 * @return なし
 	 * @details 裏技、a_lenを0未満にするとmissモーション、0にするとidleモーションにできる。
 	 * その時はa_btnとa_mtimeとallowを無視できる。適当に0とか入れといて。
 	 */
-	void SetState(uint a_btn, int a_len, uint a_mtime, int allow) {
+	void SetState(uint a_btn, int a_len, uint a_mtime, FBDF_note_motion_assign_et motion) {
 		if (a_len < 0) { /* a_lenに0未満指定はミスモーションとして扱うので、専用関数呼んで終わり */
 			this->SetMissState();
 			return;
@@ -767,7 +786,7 @@ public:
 		this->len = a_len;
 		this->mtime = a_mtime;
 		this->Stime = GetNowCount();
-		if (1 <= a_len) { this->SetDanceMotionNo(this->len, allow); }
+		if (1 <= a_len) { this->SetDanceMotionNo(this->len, motion); }
 	}
 
 	/**
@@ -1133,6 +1152,7 @@ static void FBDF_PlayNoteJudge(
 			buf.tip = map->note.nowData().btn;
 			buf.len = map->note.nowData().len;
 			buf.mtime = map->note.nowData().mtime;
+			buf.motion = map->note.nowData().motion;
 			switch (map->note.nowData().btn) {
 			case FBDF_PLAY_NOTE_BTN_1:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
@@ -1211,7 +1231,7 @@ static void FBDF_PlayNoteJudge(
 			dancer_class->SetMissState();
 		}
 		else {
-			dancer_class->SetState(buf.tip, buf.len, buf.mtime, 0); /* TODO: allow無指定のままになってる */
+			dancer_class->SetState(buf.tip, buf.len, buf.mtime, buf.motion);
 		}
 
 		/* gap追加 */
