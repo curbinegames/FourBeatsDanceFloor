@@ -330,6 +330,10 @@ static bool FBDF_Select_FolderFiltetClearTypeCleared(const FBDF_music_detail_t &
 	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED);
 }
 
+static bool FBDF_Select_FolderFiltetClearTypeAssist(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
+	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_ASSIST);
+}
+
 static bool FBDF_Select_FolderFiltetClearTypeFailed(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
 	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED);
 }
@@ -349,12 +353,13 @@ private:
 
 	FBDF_music_folder_node_st fol_cleartype_noplay{   "No Play",     true, FBDF_Select_FolderFiltetClearTypeNoPlay,    {}};
 	FBDF_music_folder_node_st fol_cleartype_failed{   "Failed",      true, FBDF_Select_FolderFiltetClearTypeFailed,    {}};
+	FBDF_music_folder_node_st fol_cleartype_assist{   "Assist",      true, FBDF_Select_FolderFiltetClearTypeAssist,    {}};
 	FBDF_music_folder_node_st fol_cleartype_cleared{  "Cleared",     true, FBDF_Select_FolderFiltetClearTypeCleared,   {}};
 	FBDF_music_folder_node_st fol_cleartype_cakewalk{ "Cakewalk",    true, FBDF_Select_FolderFiltetClearTypeCakewalk,  {}};
 	FBDF_music_folder_node_st fol_cleartype_missless{ "Miss Less",   true, FBDF_Select_FolderFiltetClearTypeMissLess,  {}};
 	FBDF_music_folder_node_st fol_cleartype_fullchain{"Full Chain",  true, FBDF_Select_FolderFiltetClearTypeFullChain, {}};
 	FBDF_music_folder_node_st fol_cleartype_perfect{  "Perfect",     true, FBDF_Select_FolderFiltetClearTypePerfect,   {}};
-	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_failed, &fol_cleartype_noplay}};
+	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_assist, &fol_cleartype_failed, &fol_cleartype_noplay}};
 
 	FBDF_music_folder_node_st fol_score_f{  "Score F",   true, FBDF_Select_FolderFiltetScoreF,  {}};
 	FBDF_music_folder_node_st fol_score_d{  "Score D",   true, FBDF_Select_FolderFiltetScoreD,  {}};

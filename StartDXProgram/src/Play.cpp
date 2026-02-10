@@ -711,17 +711,21 @@ public:
 	 * @return なし
 	 */
 	void UpdateState(void) {
-		if (this->len < 0) { return; } /* missは自動解消されない */
-		/* long->idle */
-		if (4 < this->len) {
-			if (1000 + this->Stime <= GetNowCount()) {
-				this->len = 0;
+		/* missは自動解消されない */
+		if (0 <= this->len) {
+			/* long->idle */
+			if (4 < this->len) {
+				if (1000 + this->Stime <= GetNowCount()) {
+					this->len = 0;
+				}
+				return;
 			}
-			return;
-		}
-		/* motion->idle */
-		if (this->mtime + JUDGE_WIDTH + this->Stime <= GetNowCount()) {
-			this->len = 0;
+			else {
+				/* motion->idle */
+				if (this->mtime + JUDGE_WIDTH + this->Stime <= GetNowCount()) {
+					this->len = 0;
+				}
+			}
 		}
 
 		/* ステートの取得 */
@@ -1048,7 +1052,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 				Npic = pic.four.handle();
 				break;
 			}
-		}
+		} /* 表示バグあり、判定ライン超えたノーツが表示されない。 */
 		DrawYpos = down - NOTE_HEIGHT -
 			((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) *
 			NOTE_SPEED * game_option.lane_speed / 150;

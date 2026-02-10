@@ -83,7 +83,7 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
 
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
 
-	std::string score_rank_char = "D";
+	std::string score_rank_char = "F";
 
 #if 1 /* ランク実装 */
 	if (data->acc >= 100) {
@@ -165,11 +165,12 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
  * @return FBDF_clear_type_et クリアタイプ
  */
 static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t *data) {
-	if (data->acc < 70.0) { return FBDF_CLEAR_TYPE_FAILED;    }
-	if (30 < data->drop)  { return FBDF_CLEAR_TYPE_CLEARED;   }
-	if ( 5 < data->drop)  { return FBDF_CLEAR_TYPE_CAKEWALK;  }
-	if ( 0 < data->drop)  { return FBDF_CLEAR_TYPE_MISSLESS;  }
-	if ( 0 < data->save)  { return FBDF_CLEAR_TYPE_FULLCOMBO; }
+	if (data->acc < 70.0)            { return FBDF_CLEAR_TYPE_FAILED;    }
+	if (game_option.play_style == 0) { return FBDF_CLEAR_TYPE_ASSIST;    }
+	if (30 < data->drop)             { return FBDF_CLEAR_TYPE_CLEARED;   }
+	if ( 5 < data->drop)             { return FBDF_CLEAR_TYPE_CAKEWALK;  }
+	if ( 0 < data->drop)             { return FBDF_CLEAR_TYPE_MISSLESS;  }
+	if ( 0 < data->save)             { return FBDF_CLEAR_TYPE_FULLCOMBO; }
 	return FBDF_CLEAR_TYPE_PERFECT;
 }
 
