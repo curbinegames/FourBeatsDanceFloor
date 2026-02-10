@@ -1010,6 +1010,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
 
 	for (int in = map->note.nowNo(); in < map->note.size(); in++) {
+		if (map->note[in].time <= 10) { break; }
 		if (game_option.play_style == 0) { /* assist */
 			switch (map->note[in].btn) {
 			case 1:
@@ -1053,10 +1054,14 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 				Npic = pic.four.handle();
 				break;
 			}
-		} /* 表示バグあり、判定ライン超えたノーツが表示されない。 */
-		DrawYpos = down - NOTE_HEIGHT -
-			((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) *
-			NOTE_SPEED * game_option.lane_speed / 150;
+		}
+		{
+			int time_gap = map->note[in].time - map->Ntime;
+			DrawYpos = down - NOTE_HEIGHT -
+				(int)((time_gap - 16 + game_option.note_offset_draw) *
+				game_option.lane_speed) / 50;
+		}
+		if (NOTE_HEIGHT + DrawYpos < 0) { break; } /* 画面外break */
 		DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 	}
 	return;
