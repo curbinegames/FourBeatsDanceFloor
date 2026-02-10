@@ -1123,6 +1123,91 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 }
 
 /**
+ * @brief ノートイベントを処理する
+ * @param[in] judge_event 予約されたノートイベント。関数を抜けた後は空っぽになる。
+ * @param[out] play_class プレイクラス
+ * @param[out] score スコアデータ
+ * @param[in] noteN ノーツ数
+ * @param[in] se 効果音データ
+ */
+static void FBDF_Play_NoteJudgeEventAntion(std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t *play_class,
+	FBDF_score_st *score, size_t noteN, const FBDT_hit_snd_t *se
+) {
+	bool note_judged = !judge_event.empty();
+	FBDF_judge_event_st buf;
+
+	FBDF_judge_c     *judge_class     = &play_class->judge_class;
+	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
+	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
+	FBDF_gap_bar_c   *gap_bar_class   = &play_class->gap_bar_class;
+
+	while (!judge_event.empty()) {
+		buf = judge_event.front();
+		judge_event.pop();
+
+		if (buf.mat == JUDGE_NONE) { continue; }
+
+		judge_class->SetJudge(buf.mat);
+
+		/* 判定数追加 */
+		switch (buf.mat) {
+		case JUDGE_CRIT:
+			score->crit++;
+			break;
+		case JUDGE_HIT:
+			score->hit++;
+			break;
+		case JUDGE_SAVE:
+			score->save++;
+			break;
+		case JUDGE_MISS:
+			score->drop++;
+			break;
+		}
+
+		/* 効果音再生 */
+		if (buf.mat != JUDGE_MISS) {
+			switch (buf.tip) {
+			case 1:
+				PlaySoundMem(se->SE1Data.handle(), DX_PLAYTYPE_BACK);
+				break;
+			case 2:
+			case 3:
+			case 4:
+				PlaySoundMem(se->SE2Data.handle(), DX_PLAYTYPE_BACK);
+				break;
+			}
+		}
+
+		/* コンボ計算 */
+		if (buf.mat != JUDGE_MISS) { score->chain++; }
+
+		/* スコア計算 */
+		score->point += buf.score;
+		score->chain_point += score->chain;
+
+		/* キャラモーション変更 */
+		if (buf.mat == JUDGE_MISS) {
+			dancer_class->SetMissState();
+		}
+		else {
+			dancer_class->SetState(buf.tip, buf.len, buf.mtime, buf.motion);
+		}
+
+		/* gap追加 */
+		if (buf.mat != JUDGE_MISS) {
+			gap_bar_class->SetVal(buf.gap);
+		}
+	}
+
+	if (note_judged) {
+		score_bar_class->update_score(score, noteN);
+	}
+
+	return;
+}
+
+/**
  * @brief ノーツの判定
  * @param[out] play_class プレイクラス
  * @param[out] score スコア
@@ -1184,70 +1269,7 @@ static void FBDF_PlayNoteJudge(
 		map->note.stepNo();
 	}
 
-	bool note_judged = !judge_event.empty();
-	while (!judge_event.empty()) {
-		buf = judge_event.front();
-		judge_event.pop();
-
-		if (buf.mat == JUDGE_NONE) { continue; }
-
-		judge_class->SetJudge(buf.mat);
-
-		/* 判定数追加 */
-		switch (buf.mat) {
-		case JUDGE_CRIT:
-			score->crit++;
-			break;
-		case JUDGE_HIT:
-			score->hit++;
-			break;
-		case JUDGE_SAVE:
-			score->save++;
-			break;
-		case JUDGE_MISS:
-			score->drop++;
-			break;
-		}
-
-		/* 効果音再生 */
-		if (buf.mat != JUDGE_MISS) {
-			switch (buf.tip) {
-			case 1:
-				PlaySoundMem(se->SE1Data.handle(), DX_PLAYTYPE_BACK);
-				break;
-			case 2:
-			case 3:
-			case 4:
-				PlaySoundMem(se->SE2Data.handle(), DX_PLAYTYPE_BACK);
-				break;
-			}
-		}
-
-		/* コンボ計算 */
-		if (buf.mat != JUDGE_MISS) { score->chain++; }
-
-		/* スコア計算 */
-		score->point += buf.score;
-		score->chain_point += score->chain;
-
-		/* キャラモーション変更 */
-		if (buf.mat == JUDGE_MISS) {
-			dancer_class->SetMissState();
-		}
-		else {
-			dancer_class->SetState(buf.tip, buf.len, buf.mtime, buf.motion);
-		}
-
-		/* gap追加 */
-		if (buf.mat != JUDGE_MISS) {
-			gap_bar_class->SetVal(buf.gap);
-		}
-	}
-
-	if (note_judged) {
-		score_bar_class->update_score(score, map->note.size());
-	}
-
+	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map->note.size(), se);
 	return;
 }
 
