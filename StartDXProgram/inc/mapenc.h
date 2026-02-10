@@ -17,11 +17,11 @@ typedef enum FBDF_Play_note_button_e {
 } FBDF_Play_note_btn_et;
 
 typedef enum FBDF_mapenc_error_e {
-	FDF_MAPENC_ERROR_NONE = 0,
-	FDF_MAPENC_ERROR_FILE = 1, /* ファイルを読み込めなかった */
-	FDF_MAPENC_ERROR_NOTE_FULL, /* ノーツ数が多すぎる */
-	FDF_MAPENC_ERROR_OPTION, /* オプションに変な数が入ってた */
-	FDF_MAPENC_ERROR_INVALID_NOTE_CHAR, /* ノーツに変な文字が混ざってた */
+	FBDF_MAPENC_ERROR_NONE = 0,
+	FBDF_MAPENC_ERROR_FILE = 1, /* ファイルを読み込めなかった */
+	FBDF_MAPENC_ERROR_NOTE_FULL, /* ノーツ数が多すぎる */
+	FBDF_MAPENC_ERROR_OPTION, /* オプションに変な数が入ってた */
+	FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR, /* ノーツに変な文字が混ざってた */
 } FBDF_mapenc_error_et;
 
 typedef enum FBDF_note_motion_assign_e {
