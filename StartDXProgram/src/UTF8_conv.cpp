@@ -1,10 +1,15 @@
 ﻿
 #include <string>
 
+//#define LIGHT_MODE
+
 typedef unsigned char uchar;
 typedef unsigned int  uint;
 
 std::string UTF8_converter(std::string src) {
+#ifdef LIGHT_MODE
+	return src;
+#else
 	std::string string_buf = src.substr(0, 2);
 	for (int ic = 2; ic < src.size(); ic++) {
 		switch (((uint)(uchar)src[ic - 2] << 16) +
@@ -42307,4 +42312,5 @@ std::string UTF8_converter(std::string src) {
 		}
 	}
 	return string_buf;
+#endif
 }

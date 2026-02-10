@@ -79,7 +79,6 @@ static void FBDF_ResultDrawFinalBar(double acc) {
  */
 static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
-	int hitkey = 0;
 
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
 
@@ -122,7 +121,7 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
 #endif /* ÉâÉìÉNé¿ëï */
 
 	while (1) {
-		switch (keycur(keybox, 1)) {
+		switch (keycur(keybox, 1)) { /* Ç±ÇÍÇÕå√Ç¢é¿ëïÅAé°Ç∑ */
 		case KEY_INPUT_RETURN:
 			return VIEW_SELECT;
 			break;

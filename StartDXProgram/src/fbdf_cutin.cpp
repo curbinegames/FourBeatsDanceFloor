@@ -17,8 +17,6 @@
  */
 void FBDF_cutin_c::DrawCut() const {
 	if (this->sequence == 0) { return; }
-	int Ntime = GetNowCount();
-	int EffTime = Ntime - this->cutStime;
 	int Xoffset = lins(0, 600, 1000, 0, this->sequence);
 	DrawExtendGraph(-Xoffset, 0, -Xoffset + this->x_window_size, this->y_window_size, this->leftpic.handle() , TRUE);
 	DrawExtendGraph( Xoffset, 0,  Xoffset + this->x_window_size, this->y_window_size, this->rightpic.handle(), TRUE);

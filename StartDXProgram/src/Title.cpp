@@ -183,11 +183,9 @@ public:
  */
 view_num_t FBDF_TitleView(void) {
 	int keybox[1] = { KEY_INPUT_RETURN };
-	int hitkey = 0;
 	int STime = 0;
 	const int BPM = 150;
 
-	int seek_count = 0;
 	dxcur_pic_c title_pic(_T("pic/title.png"));
 	dxcur_pic_c ring_pic(_T("pic/white_ring.png"));
 	dxcur_snd_c intro_bgm(_T("SE/Midsummer Philosophy/intro.mp3"));
@@ -223,7 +221,7 @@ view_num_t FBDF_TitleView(void) {
 		if (cutin.IsEndAnim()) { return VIEW_SELECT; }
 
 		if (!cutin.IsClosing()) {
-			switch (keycur(keybox, 1)) {
+			switch (keycur(keybox, 1)) { /* Ç±ÇÍÇÕå√Ç¢é¿ëïÅAé°Ç∑ */
 			case KEY_INPUT_RETURN:
 				cutin.SetIo(CUT_FRAG_IN);
 				break;

@@ -50,13 +50,13 @@ typedef struct FBDF_map_enc_s {
 static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
 	if (map->note.isfull()) { return FBDF_MAPENC_ERROR_NOTE_FULL; } /* ノーツ数が2000に達していたらこれ以上読み込まない */
 	if (option->now_block == 0) { return FBDF_MAPENC_ERROR_OPTION; } /* ブロック数0とか意味わからんもの定義してないからダメ */
-	for (int ic = 0; ic < option->now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
+	for (size_t ic = 0; ic < option->now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
 
-	for (int ic = 0; ic < option->now_block; ic++) {
+	for (size_t ic = 0; ic < option->now_block; ic++) {
 		FBDF_note_t buf_note;
 		if (buf[ic] != '.') {
 			switch (buf[ic]) {

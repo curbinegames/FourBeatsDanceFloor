@@ -31,8 +31,6 @@
 
 #define ISNOTE(c) ((c) == '-' || (c) == '.')
 
-#define IS_NUMBER_CHAR(x) ((x)==_T('0')||(x)==_T('1')||(x)==_T('2')||(x)==_T('3')||(x)==_T('4')||(x)==_T('5')||(x)==_T('6')||(x)==_T('7')||(x)==_T('8')||(x)==_T('9'))
-
 #define NOTE_HEIGHT 15
 #define NOTE_SPEED   4
 
@@ -176,7 +174,7 @@ class FBDF_dancer_c {
 private:
 	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
 	uint btn = 1; // 1-4
-	uint mtime = 0; /* モーション長さ */
+	DxTime_t mtime = 0; /* モーション長さ */
 	 int Stime = 0; /* モーションスタート絶対時間 */
 	 int offset = 0; /* 待機ステップ開始時間 */
 	size_t Nmotion_picNo = 0; /* 今のダンスモーション番号 */
@@ -206,7 +204,6 @@ public: /* コンストラクタ系 */
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 		std::string image_path;
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		int n3Dmodel_handle = -1;
 		std::string n3Dmodel_path;
 #endif /* 3Dモデル */
 
@@ -648,7 +645,7 @@ private:
 	 * @param[in] y 描画縦位置
 	 * @return なし
 	 */
-	void DrawDancerGraph(int x, int y) const {
+	void DrawDancerGraph(void) const {
 		size_t motion_frameNo = this->GetMotionAnimNo();
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_IDLE:
@@ -702,7 +699,11 @@ public:
 		this->DrawDebugDanceWaitTime(x, y + 22);
 		this->DrawDebugDanceMotionTime(x, y + 42);
 #endif
+#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 		this->DrawDancerGraph(x, y);
+#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
+		this->DrawDancerGraph();
+#endif /* 3Dモデル */
 	}
 
 	/**
@@ -1220,11 +1221,6 @@ static void FBDF_PlayNoteJudge(
 	FBDF_play_class_set_t *play_class, FBDF_score_st *score, FBDF_map_t *map,
 	const FBDF_push_key_st *pkey, const FBDT_hit_snd_t *se)
 {
-	FBDF_judge_c     *judge_class     = &play_class->judge_class;
-	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
-	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
-	FBDF_gap_bar_c   *gap_bar_class   = &play_class->gap_bar_class;
-
 	std::queue<FBDF_judge_event_st>judge_event;
 	FBDF_judge_event_st buf;
 
