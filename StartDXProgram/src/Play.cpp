@@ -188,7 +188,6 @@ private:
 	int n3Dmodel_handle = -1;
 	int n3Dmotion_idle_ath  = -1;
 	int n3Dmotion_miss_ath  = -1;
-	int n3Dmotion_afk_ath   = -1;
 	int n3Dmotion_dance_ath = -1;
 #endif /* 3Dモデル */
 
@@ -239,18 +238,16 @@ public: /* コンストラクタ系 */
 		miss_pic = dxcur_divpic_c(image_path.c_str(), 4, 2, 2);
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 		n3Dmodel_path  = folder_path;
-		n3Dmodel_path += "model.pmx";
+		n3Dmodel_path += "model.mv1";
 		this->n3Dmodel_handle = MV1LoadModel(n3Dmodel_path.c_str());
-		SetCameraScreenCenter(lins(0, 0, 2000, WINDOW_SIZE_X, 1230), lins(0, 0, 2000, WINDOW_SIZE_Y, 600));
 		MV1SetPosition(this->n3Dmodel_handle, VGet(
 			lins(0, 0, 2000, WINDOW_SIZE_X, 1000),
 			lins(0, 0, 2000, WINDOW_SIZE_Y,  300),
-			0
+			500
 		));
-		MV1SetScale(this->n3Dmodel_handle, VGet(18, 18, 18));
+		MV1SetScale(this->n3Dmodel_handle, VGet(2, 2, 2));
 		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
 		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
-		this->n3Dmotion_afk_ath  = MV1AttachAnim(this->n3Dmodel_handle, 2);
 #endif /* 3Dモデル */
 	}
 
@@ -333,13 +330,13 @@ private:
 			retval = lins_scale(0, 0, this->mtime, 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
-			retval = lins_scale(0, 0, 750, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(0, 0, min(this->mtime, 750), 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_AFK:
-			retval = lins_scale(5000, 0, 5500, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(5000, 60, 6000, 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_MISS:
-			return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
+			return lins_scale(0, 0, 500, 60, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_IDLE:
 			double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
@@ -351,6 +348,34 @@ private:
 			break;
 		}
 		return retval;
+	}
+
+	void SetShapeAll(void) {
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 1.0);
+			}
+			else if (GetNowCount() - this->Stime < 5000) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			}
+			else {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			}
+			break;
+		default:
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			break;
+		}
 	}
 #endif /* 3Dモデル */
 
@@ -588,32 +613,44 @@ private:
 	 * @return なし
 	 */
 	void SetDanceMotionNo(int next_len, FBDF_note_motion_assign_et motion) {
+		if (this->len <= 0) { return; } /* idle or miss なのでスキップ */
+		if ((this->len == 1) &&
+			(this->btn != 1) &&
+			(this->motion_data[this->Nmotion_picNo].len_1 &&
+			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
+		) {
+			return;
+		} /* len1モーションの時は、モーション指定or1ボタンでのみ更新 */
+
+		if ((this->len == 2) &&
+			(this->btn != 1) &&
+			(this->btn != 2) &&
+			(this->motion_data[this->Nmotion_picNo].len_2 &&
+			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
+		) {
+			return;
+		} /* len2モーションの時は、モーション指定or1/2ボタンでのみ更新 */
+
 		if (this->len <= 0) { /* idle or miss */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
-			return;
 		}
-
-		if (GetRand(99) + 1 < 30) { /* 30%にヒット */
+		else if (GetRand(99) + 1 < 30) { /* 30%にヒット */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
-			return;
 		}
-
-		if (SearchMotionWithNext(next_len, motion, this->motion_data[this->Nmotion_picNo].next) == 0) {
+		else if (SearchMotionWithNext(next_len, motion, this->motion_data[this->Nmotion_picNo].next) == 0) {
 			/* nextの中に条件に合うモーションがない */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
-			return;
 		}
 
 		/* 検索は終わってるのでさっさと抽選する */
 		this->Nmotion_picNo = this->GetMotionRandom();
 
 #if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		this->Nmotion_picNo; /* 0,1,2を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
 		MV1DetachAnim(this->n3Dmodel_handle, this->n3Dmotion_dance_ath);
-		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 3);
+		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 2); /* 0,1を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
 #endif /* 3Dモデル */
 	}
 
@@ -652,21 +689,13 @@ private:
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 			break;
 		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_AFK:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   1);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 			break;
 		case FBDF_DANCER_STATE_DANCING_1:
@@ -677,11 +706,12 @@ private:
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
 			break;
 		}
 		MV1DrawModel(this->n3Dmodel_handle);
+		DrawFormatString(5,  5, COLOR_WHITE, _T("%d"), this->len);
+		DrawFormatString(5, 25, COLOR_WHITE, _T("%d"), this->btn);
 	}
 #endif /* 3Dモデル */
 
@@ -719,7 +749,6 @@ public:
 				if (1000 + this->Stime <= GetNowCount()) {
 					this->len = 0;
 				}
-				return;
 			}
 			else {
 				/* motion->idle */
@@ -756,6 +785,8 @@ public:
 		else if (5 <= this->len) {
 			this->Nstate = FBDF_DANCER_STATE_DANCING_LONG;
 		}
+
+		this->SetShapeAll();
 		return;
 	}
 
@@ -1510,10 +1541,10 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 			FBDF_PlayDrawLamp(&pkey);
 			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
-			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
 			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
 			play_class.dancer_class.DrawDance(500, 300);
+			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
 
 			cutin.DrawCut();
