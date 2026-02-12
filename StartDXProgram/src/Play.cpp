@@ -248,6 +248,9 @@ public: /* コンストラクタ系 */
 		MV1SetScale(this->n3Dmodel_handle, VGet(2, 2, 2));
 		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
 		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 #endif /* 3Dモデル */
 	}
 
@@ -675,45 +678,7 @@ private:
 			DrawGraph(x, y, motion_p.pic.handle(this->GetMotionAnimNo()), TRUE);
 		}
 	}
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	/**
-	 * @brief ダンサーを描く
-	 * @param[in] x 描画横位置
-	 * @param[in] y 描画縦位置
-	 * @return なし
-	 */
-	void DrawDancerGraph(void) const {
-		size_t motion_frameNo = this->GetMotionAnimNo();
-		switch (this->Nstate) {
-		case FBDF_DANCER_STATE_IDLE:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_MISS:
-		case FBDF_DANCER_STATE_AFK:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_DANCING_1:
-		case FBDF_DANCER_STATE_DANCING_2:
-		case FBDF_DANCER_STATE_DANCING_3:
-		case FBDF_DANCER_STATE_DANCING_4:
-		case FBDF_DANCER_STATE_DANCING_LONG:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
-			break;
-		}
-		MV1DrawModel(this->n3Dmodel_handle);
-		DrawFormatString(5,  5, COLOR_WHITE, _T("%d"), this->len);
-		DrawFormatString(5, 25, COLOR_WHITE, _T("%d"), this->btn);
-	}
-#endif /* 3Dモデル */
+#endif /* 画像 */
 
 public:
 	/**
@@ -732,16 +697,100 @@ public:
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 		this->DrawDancerGraph(x, y);
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		this->DrawDancerGraph();
+		MV1DrawModel(this->n3Dmodel_handle);
 #endif /* 3Dモデル */
 	}
 
+#if 1 /* update系 */
+private: /* update系 */
+	void UpdateAnimTime(void) {
+		size_t motion_frameNo = this->GetMotionAnimNo();
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+		case FBDF_DANCER_STATE_DANCING_LONG:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			break;
+		}
+	}
+
+	/* ステート(this->Nstate)に変更があったときだけ呼びたい */
+	void UpdateAttachAnimMat(void) {
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+		case FBDF_DANCER_STATE_DANCING_LONG:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
+			break;
+		}
+	}
+
+	/* ステートの更新 */
+	void UpdateState(void) {
+		FBDF_dancer_state_et resv_state = FBDF_DANCER_STATE_IDLE;
+		if (this->len == 0) { /* 待機モーション */
+			resv_state = FBDF_DANCER_STATE_IDLE;
+		}
+		else if (this->len < 0) { /* ミスモーション */
+			if (5000 <= GetNowCount() - this->Stime) {
+				resv_state = FBDF_DANCER_STATE_AFK;
+			}
+			else {
+				resv_state = FBDF_DANCER_STATE_MISS;
+			}
+		}
+		else if (this->len == 1) { /* ダンスモーション */
+			resv_state = FBDF_DANCER_STATE_DANCING_1;
+		}
+		else if (this->len == 2) {
+			resv_state = FBDF_DANCER_STATE_DANCING_2;
+		}
+		else if (this->len == 3) {
+			resv_state = FBDF_DANCER_STATE_DANCING_3;
+		}
+		else if (this->len == 4) {
+			resv_state = FBDF_DANCER_STATE_DANCING_4;
+		}
+		else if (5 <= this->len) {
+			resv_state = FBDF_DANCER_STATE_DANCING_LONG;
+		}
+		if (this->Nstate != resv_state) { /* 変更あり */
+			this->Nstate = resv_state;
+			UpdateAttachAnimMat();
+		}
+	}
+
+public: /* update系 */
 	/**
 	 * @brief 内部情報の更新、最低でも描画前に呼んで。
 	 * @param なし
 	 * @return なし
 	 */
-	void UpdateState(void) {
+	void Update(void) {
 		/* missは自動解消されない */
 		if (0 <= this->len) {
 			/* long->idle */
@@ -757,39 +806,14 @@ public:
 				}
 			}
 		}
-
-		/* ステートの取得 */
-		if (this->len == 0) { /* 待機モーション */
-			this->Nstate = FBDF_DANCER_STATE_IDLE;
-		}
-		else if (this->len < 0) { /* ミスモーション */
-			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				this->Nstate = FBDF_DANCER_STATE_AFK;
-			}
-			else {
-				this->Nstate = FBDF_DANCER_STATE_MISS;
-			}
-		}
-		else if (this->len == 1) { /* ダンスモーション */
-			this->Nstate = FBDF_DANCER_STATE_DANCING_1;
-		}
-		else if (this->len == 2) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_2;
-		}
-		else if (this->len == 3) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_3;
-		}
-		else if (this->len == 4) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_4;
-		}
-		else if (5 <= this->len) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_LONG;
-		}
-
+		this->UpdateState();
+		this->UpdateAnimTime();
 		this->SetShapeAll();
 		return;
 	}
+#endif /* update系 */
 
+#if 1 /* set系 */
 	/**
 	 * @brief ミスモーションにする
 	 * @param なし 
@@ -833,6 +857,7 @@ public:
 	void SetBpm(double val) {
 		this->bpm = max(0.1, val);
 	}
+#endif /* set系 */
 };
 
 class FBDF_score_bar_c {
@@ -1524,7 +1549,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		FBDF_PlayNoteJudge(&play_class, &score, &map, &pkey, &se);
 
 		/* update系 */
-		play_class.dancer_class.UpdateState();
+		play_class.dancer_class.Update();
 		play_class.score_bar_class.update_graph(map.Ntime);
 		cutin.update();
 
