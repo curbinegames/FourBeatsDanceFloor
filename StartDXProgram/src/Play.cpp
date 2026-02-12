@@ -291,6 +291,15 @@ private:
 		return 0; /* 通らないけど一応明記 */
 	}
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
+	size_t GetIdleMotionAnimNo(void) const {
+		double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
+		int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
+		int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
+		int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
+		if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
+		return (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+	}
+
 	size_t GetMotionAnimNo(void) const {
 		size_t retval = 0;
 		size_t start = 0;
@@ -342,12 +351,7 @@ private:
 			return lins_scale(0, 0, 500, 60, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_IDLE:
-			double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
-			int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
-			int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
-			int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
-			if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-			retval = (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+			retval = this->GetIdleMotionAnimNo();
 			break;
 		}
 		return retval;
@@ -717,13 +721,15 @@ private: /* update系 */
 		case FBDF_DANCER_STATE_DANCING_2:
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
 			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath, this->GetIdleMotionAnimNo()); /* idleも計算する必要あり */
 			break;
 		}
 	}
 
-	/* ステート(this->Nstate)に変更があったときだけ呼びたい */
 	void UpdateAttachAnimMat(void) {
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_IDLE:
@@ -741,10 +747,17 @@ private: /* update系 */
 		case FBDF_DANCER_STATE_DANCING_2:
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
-		case FBDF_DANCER_STATE_DANCING_LONG:
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
+		{
+			float idle_per = lins_scale(500, 0.0, 750, 1.0, GetNowCount() - this->Stime);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,      idle_per);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,             0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1 - idle_per);
+		}
 			break;
 		}
 	}
@@ -778,10 +791,8 @@ private: /* update系 */
 		else if (5 <= this->len) {
 			resv_state = FBDF_DANCER_STATE_DANCING_LONG;
 		}
-		if (this->Nstate != resv_state) { /* 変更あり */
-			this->Nstate = resv_state;
-			UpdateAttachAnimMat();
-		}
+		this->Nstate = resv_state;
+		UpdateAttachAnimMat();
 	}
 
 public: /* update系 */
@@ -795,7 +806,7 @@ public: /* update系 */
 		if (0 <= this->len) {
 			/* long->idle */
 			if (4 < this->len) {
-				if (1000 + this->Stime <= GetNowCount()) {
+				if (750 + this->Stime <= GetNowCount()) {
 					this->len = 0;
 				}
 			}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sancur.h>
+
 #define FBDF_DANCER_MAT_TYPE 1 /* 0:‰æ‘œ, 1:3D */
 
 #define LANGUAGE_CHOOSE(jp, en) ((game_option.language == 0) ? (jp) : (en))

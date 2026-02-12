@@ -976,6 +976,8 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 		WaitTimer(10); // ループウェイト
 	}
 
+	FBDF_Save_WriteOption(&game_option);
+
 	nex_music->folder_name   = musiclist[command].folder_name;
 	nex_music->map_file_name = musiclist[command].map_file_name;
 	nex_music->music_name    = musiclist[command].music_name;

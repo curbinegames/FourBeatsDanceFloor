@@ -6,6 +6,7 @@
 #include <strcur.h>
 
 #include <main.h>
+#include <save.h>
 #include <Title.h>
 #include <Select.h>
 #include <Play.h>
@@ -70,6 +71,8 @@ int WINAPI WinMain(DX_MAIN_DEF) {
 
 	// フォント読み込み
 	FBDF_font_DSEG7Modern = LoadFontDataToHandle(_T("font/DSEG7Modern_S32_T4_I.dft"));
+
+	FBDF_Save_ReadOption(&game_option);
 
 	GameMain(); // ゲーム処理
 	DxLib_End(); // DxLib終わり
