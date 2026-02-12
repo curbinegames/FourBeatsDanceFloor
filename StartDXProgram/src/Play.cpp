@@ -638,11 +638,7 @@ private:
 			return;
 		} /* len2モーションの時は、モーション指定or1/2ボタンでのみ更新 */
 
-		if (this->len <= 0) { /* idle or miss */
-			SearchMotion(next_len, motion);
-			this->Nmotion_picNo = this->GetMotionRandom();
-		}
-		else if (GetRand(99) + 1 < 30) { /* 30%にヒット */
+		if (GetRand(99) + 1 < 30) { /* 30%にヒット */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
 		}
@@ -657,7 +653,8 @@ private:
 
 #if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 		MV1DetachAnim(this->n3Dmodel_handle, this->n3Dmotion_dance_ath);
-		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 2); /* 0,1を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
+		/* this->Nmotion_picNoを+2しているのは、0,1を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
+		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 2);
 #endif /* 3Dモデル */
 	}
 
@@ -1192,6 +1189,18 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 	else {
 		buf.mat = JUDGE_MISS;
 	}
+
+	switch (game_option.play_style) {
+	case 0: /* assist */
+		buf.score *= 0.95;
+		break;
+	case 1: /* normal */
+		buf.score *= 0.99;
+		break;
+	case 2: /* mono */
+		buf.score *= 1.00;
+		break;
+	}
 	return;
 }
 
@@ -1445,11 +1454,11 @@ static void FBDF_Play_KeyCheck(
 	FBDF_push_key_st &pkey, FBDF_play_class_set_t &play_class,
 	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
-	int keybox[1] = { KEY_INPUT_RETURN };
+	int keybox[1] = { KEY_INPUT_ESCAPE };
 
 	int hitkey = keycur(keybox, 1);
 
-	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_RETURN)) {
+	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_ESCAPE)) {
 		FBDF_PlayNoteTrash(&play_class, &score, &map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
@@ -1505,6 +1514,33 @@ static void FBDF_Play_KeyCheck(
 	return;
 }
 
+static void FBDF_Play_DrawScore(int x, int y, FBDF_score_st &score) {
+	uint all_point = score.point + score.chain_point;
+	int drawX = x;
+	if (all_point < 10) {
+		drawX = x - 28;
+	}
+	else if (all_point < 100) {
+		drawX = x - 28 * 2;
+	}
+	else if (all_point < 1000) {
+		drawX = x - 28 * 3;
+	}
+	else if (all_point < 10000) {
+		drawX = x - 28 * 4;
+	}
+	else if (all_point < 100000) {
+		drawX = x - 28 * 5;
+	}
+	else if (all_point < 1000000) {
+		drawX = x - 28 * 6;
+	}
+	else if (all_point < 10000000) {
+		drawX = x - 28 * 7;
+	}
+	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), all_point);
+}
+
 /**
  * @brief プレイ画面のベース
  * @param[out] result_data リザルト画面に渡すデータ
@@ -1531,16 +1567,15 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
 
-	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
-	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
-
 	map.note.resetNo();
-	map.Stime = GetNowCount();
 
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 
+	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
+	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
 	cutin.SetIo(CUT_FRAG_OUT);
+	map.Stime = GetNowCount();
 
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
@@ -1565,23 +1600,22 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		cutin.update();
 
 		ClearDrawScreen(); /* 作画エリアここから */ {
-			DrawGraph(0, 0, backPic.handle(), TRUE);
-			DrawFormatString(400,   5, COLOR_WHITE, _T("%d"), map.note.size());
-			DrawFormatString(400,  25, COLOR_WHITE, _T("%d"), map.note.nowNo());
-			DrawFormatString(400,  45, COLOR_WHITE, _T("%d"), score.crit);
-			DrawFormatString(400,  65, COLOR_WHITE, _T("%d"), score.hit);
-			DrawFormatString(400,  85, COLOR_WHITE, _T("%d"), score.save);
-			DrawFormatString(400, 105, COLOR_WHITE, _T("%d"), score.drop);
-			
-			DrawGraph(0, 0, lanePic.handle(), TRUE);
-			FBDF_PlayDrawLamp(&pkey);
-			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
-			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
-			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
-			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
+			DrawGraph(0, 0, backPic.handle(), TRUE); /* 背景描画 */
+
+			/* ダンサー周り描画 */
 			play_class.dancer_class.DrawDance(500, 300);
-			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
+			FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
+
+			/* スコアバー周り描画 */
+			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
+			FBDF_PlayDrawLamp(&pkey);
+			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
+
+			/* プレイエリア周り描画 */
+			DrawGraph(0, 0, lanePic.handle(), TRUE);
+			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
+			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 
 			cutin.DrawCut();
 

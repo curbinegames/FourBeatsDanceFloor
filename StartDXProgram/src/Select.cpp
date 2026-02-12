@@ -38,43 +38,6 @@ typedef enum FBDF_music_list_bar_color_e {
 	GRAY_MUSIC_LIST_BAR,
 } FBDF_music_list_bar_color_t;
 
-typedef enum FBDF_music_folder_num_e {
-	DEFAULT_MUSIC_FOLDER,
-	ALL_MUSIC_FOLDER,
-	LEVEL_SET_MUSIC_FOLDER,
-	LEVEL0_MUSIC_FOLDER,
-	LEVEL1_MUSIC_FOLDER,
-	LEVEL2_MUSIC_FOLDER,
-	LEVEL3_MUSIC_FOLDER,
-	LEVEL4_MUSIC_FOLDER,
-	LEVEL5_MUSIC_FOLDER,
-	LEVEL6_MUSIC_FOLDER,
-	LEVEL7_MUSIC_FOLDER,
-	LEVEL8_MUSIC_FOLDER,
-	LEVEL9_MUSIC_FOLDER,
-	LEVEL10_MUSIC_FOLDER,
-	SCORE_SET_MUSIC_FOLDER,
-	SCORE_P_MUSIC_FOLDER,
-	SCORE_XP_MUSIC_FOLDER,
-	SCORE_X_MUSIC_FOLDER,
-	SCORE_SP_MUSIC_FOLDER,
-	SCORE_S_MUSIC_FOLDER,
-	SCORE_AP_MUSIC_FOLDER,
-	SCORE_A_MUSIC_FOLDER,
-	SCORE_B_MUSIC_FOLDER,
-	SCORE_C_MUSIC_FOLDER,
-	SCORE_D_MUSIC_FOLDER,
-	SCORE_F_MUSIC_FOLDER,
-	CLEARTYPE_SET_MUSIC_FOLDER,
-	CLEARTYPE_PERFECT_MUSIC_FOLDER,
-	CLEARTYPE_FULLCOMBO_MUSIC_FOLDER,
-	CLEARTYPE_MISSLESS_MUSIC_FOLDER,
-	CLEARTYPE_CAKEWALK_MUSIC_FOLDER,
-	CLEARTYPE_CLEARED_MUSIC_FOLDER,
-	CLEARTYPE_FAILED_MUSIC_FOLDER,
-	CLEARTYPE_NOPLAY_MUSIC_FOLDER,
-} FBDF_music_folder_num_t;
-
 #if 1 /* struct */
 
 typedef struct FBDF_music_dif_s {
@@ -782,13 +745,13 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d
 /**
  * @brief PCフォルダー内を調べて楽曲のリストを読み込む
  * @param[out] musiclist 譜面リスト
- * @return int 0=成功, -1=失敗
+ * @return bool true=成功, false=失敗
  */
-static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
+static bool FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 	DIR *dir;
 	struct dirent *dirs;
 	dir = opendir("music");
-	if (dir == NULL) { return -1; }
+	if (dir == NULL) { return false; }
 
 	while (1) {
 		dirs = readdir(dir);
@@ -798,7 +761,7 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 	}
 
 	closedir(dir);
-	return 0;
+	return true;
 }
 
 #endif /* 譜面リスト読み込み系 */
@@ -943,14 +906,14 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	FBDF_select_back_pic_c back_pic;
 	FBDF_option_pic_st option_pic;
 
+	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
+
 	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
-
 	FBDF_Option_ReloadPic();
 	folder_manager_class.MakeMusicList(musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
-	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
+	if (FBDF_Select_LoadMusicList(&musiclist) == false) { return VIEW_SELECT; }
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
