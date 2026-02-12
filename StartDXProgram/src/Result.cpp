@@ -169,7 +169,8 @@ static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t *da
 	if (30 < data->drop)             { return FBDF_CLEAR_TYPE_CLEARED;   }
 	if ( 5 < data->drop)             { return FBDF_CLEAR_TYPE_CAKEWALK;  }
 	if ( 0 < data->drop)             { return FBDF_CLEAR_TYPE_MISSLESS;  }
-	if ( 0 < data->save)             { return FBDF_CLEAR_TYPE_FULLCOMBO; }
+	if ( 0 < data->save ||
+		game_option.play_style <  2) { return FBDF_CLEAR_TYPE_FULLCOMBO; }
 	return FBDF_CLEAR_TYPE_PERFECT;
 }
 

@@ -95,6 +95,7 @@ typedef struct FBDF_Play_note_pic_s {
 	dxcur_pic_c two   = dxcur_pic_c("pic/play/NoteTwo.png");
 	dxcur_pic_c three = dxcur_pic_c("pic/play/NoteThree.png");
 	dxcur_pic_c four  = dxcur_pic_c("pic/play/NoteFour.png");
+	dxcur_pic_c white = dxcur_pic_c("pic/play/NoteWhite.png");
 } FBDF_Play_note_pic_st;
 
 typedef struct FBDT_hit_snd_s {
@@ -1101,7 +1102,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 		}
 
 		if (game_option.play_style == 2) { /* mono */
-			Npic = pic.one.handle(); /* TODO: ”’‚É‚·‚é */
+			Npic = pic.white.handle(); /* TODO: ”’‚É‚·‚é */
 		}
 		else {
 			switch (map->note[in].btn) {
