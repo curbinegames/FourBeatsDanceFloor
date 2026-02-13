@@ -173,6 +173,8 @@ public:
  */
 class FBDF_dancer_c {
 private:
+	const size_t motion_len = 120;
+
 	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
 	DxTime_t mtime = 0; /* モーション長さ */
 	 int Stime = 0; /* モーションスタート絶対時間 */
@@ -298,7 +300,7 @@ private:
 		int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
 		int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
 		if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-		return (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+		return (int)(lins(0, 0, loop_time, motion_len * 2, in_time)) % (motion_len * 2);
 	}
 
 	size_t GetMotionAnimNo(void) const {
@@ -312,16 +314,16 @@ private:
 				start = 0;
 				break;
 			case FBDF_PLAY_NOTE_BTN_2:
-				start = 30;
+				start = this->motion_len / 4;
 				break;
 			case FBDF_PLAY_NOTE_BTN_3:
-				start = 60;
+				start = this->motion_len / 2;
 				break;
 			case FBDF_PLAY_NOTE_BTN_4:
-				start = 90;
+				start = this->motion_len * 3 / 4;
 				break;
 			}
-			end = start + 30;
+			end = start + this->motion_len / 4;
 			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_DANCING_2:
@@ -332,24 +334,24 @@ private:
 				break;
 			case FBDF_PLAY_NOTE_BTN_3:
 			case FBDF_PLAY_NOTE_BTN_4:
-				start = 60;
+				start = this->motion_len / 2;
 				break;
 			}
-			end = start + 60;
+			end = start + this->motion_len / 2;
 			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
-			retval = lins_scale(0, 0, this->mtime, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(0, 0, this->mtime, this->motion_len, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
-			retval = lins_scale(0, 0, min(this->mtime, 750), 120, GetNowCount() - this->Stime);
-			break;
-		case FBDF_DANCER_STATE_AFK:
-			retval = lins_scale(5000, 60, 6000, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(0, 0, min(this->mtime, 750), this->motion_len, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_MISS:
-			return lins_scale(0, 0, 500, 60, GetNowCount() - this->Stime);
+			return lins_scale(0, 0, 500, this->motion_len / 2, GetNowCount() - this->Stime);
+			break;
+		case FBDF_DANCER_STATE_AFK:
+			retval = lins_scale(5000, this->motion_len / 2, 6000, this->motion_len, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_IDLE:
 			retval = this->GetIdleMotionAnimNo();
