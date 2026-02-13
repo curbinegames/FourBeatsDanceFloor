@@ -83,13 +83,6 @@ typedef struct FBDF_judge_event_s {
 	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
 } FBDF_judge_event_st;
 
-typedef struct FBDF_judge_pic_s {
-	dxcur_pic_c crit = dxcur_pic_c(_T("pic/play/JudgeCrit.png"));
-	dxcur_pic_c  hit = dxcur_pic_c(_T("pic/play/JudgeHit.png"));
-	dxcur_pic_c save = dxcur_pic_c(_T("pic/play/JudgeSave.png"));
-	dxcur_pic_c drop = dxcur_pic_c(_T("pic/play/JudgeDrop.png"));
-} FBDF_judge_pic_t;
-
 typedef struct FBDF_Play_note_pic_s {
 	dxcur_pic_c one   = dxcur_pic_c("pic/play/NoteOne.png");
 	dxcur_pic_c two   = dxcur_pic_c("pic/play/NoteTwo.png");
@@ -114,7 +107,12 @@ private:
 	DxTime_t Jtime = 0;
 	DxPic_t Npic = DXLIB_PIC_NULL;
 	FBDF_judge_mat_et Jmat = JUDGE_MISS;
-	FBDF_judge_pic_t pic;
+	struct {
+		dxcur_pic_c crit = dxcur_pic_c(_T("pic/play/JudgeCrit.png"));
+		dxcur_pic_c  hit = dxcur_pic_c(_T("pic/play/JudgeHit.png"));
+		dxcur_pic_c save = dxcur_pic_c(_T("pic/play/JudgeSave.png"));
+		dxcur_pic_c drop = dxcur_pic_c(_T("pic/play/JudgeDrop.png"));
+	} pic;
 
 public:
 	/**
@@ -188,10 +186,10 @@ private:
 	dxcur_divpic_c idle_pic;
 	dxcur_divpic_c miss_pic;
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	int n3Dmodel_handle = -1;
-	int n3Dmotion_idle_ath  = -1;
-	int n3Dmotion_miss_ath  = -1;
-	int n3Dmotion_dance_ath = -1;
+	Dx3Dobj_t  n3Dmodel_handle     = -1;
+	Dx3Danim_t n3Dmotion_idle_ath  = -1;
+	Dx3Danim_t n3Dmotion_miss_ath  = -1;
+	Dx3Danim_t n3Dmotion_dance_ath = -1;
 #endif /* 3Dモデル */
 
 	std::vector<size_t> searched_motion;
@@ -1220,7 +1218,8 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
  * @param[in] noteN ノーツ数
  * @param[in] se 効果音データ
  */
-static void FBDF_Play_NoteJudgeEventAntion(std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t *play_class,
+static void FBDF_Play_NoteJudgeEventAntion(
+	std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t *play_class,
 	FBDF_score_st *score, size_t noteN, const FBDT_hit_snd_t *se
 ) {
 	bool note_judged = !judge_event.empty();
@@ -1570,13 +1569,13 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	DxTime_t FinishTime = 0;
 
-	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
+	/* 譜面読み込み系 */
 	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
-
 	map.note.resetNo();
-
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
+
+	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
 	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
