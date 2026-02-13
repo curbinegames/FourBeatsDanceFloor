@@ -15,7 +15,7 @@
  * @param なし
  * @return なし
  */
-void FBDF_cutin_c::DrawCut() const {
+void FBDF_cutin_c::DrawCut(void) const {
 	if (this->sequence == 0) { return; }
 	int Xoffset = lins(0, 600, 1000, 0, this->sequence);
 	DrawExtendGraph(-Xoffset, 0, -Xoffset + this->x_window_size, this->y_window_size, this->leftpic.handle() , TRUE);
@@ -54,7 +54,7 @@ void FBDF_cutin_c::SetWindowSize(int x, int y) {
  * @param なし
  * @return なし
  */
-void FBDF_cutin_c::update() {
+void FBDF_cutin_c::update(void) {
 	if (this->cutIoFg == CUT_FRAG_IN) {
 		this->sequence = lins_scale(0, 0, 500, 1000, GetNowCount() - this->cutStime);
 	}
@@ -73,7 +73,7 @@ void FBDF_cutin_c::update() {
  * @param なし
  * @return int 1=カットインである, 0=カットアウトである
  */
-int FBDF_cutin_c::IsClosing() const {
+int FBDF_cutin_c::IsClosing(void) const {
 	return this->cutIoFg;
 }
 
@@ -82,6 +82,6 @@ int FBDF_cutin_c::IsClosing() const {
  * @param なし
  * @return bool true=カットインであり、アニメも終わった, false=アニメが終わってないか、カットアウトである
  */
-bool FBDF_cutin_c::IsEndAnim() const {
+bool FBDF_cutin_c::IsEndAnim(void) const {
 	return (this->cutIoFg == CUT_FRAG_IN && this->cutStime + 2000 <= GetNowCount());
 }

@@ -973,9 +973,7 @@ public:
 	 * @param なし
 	 * @return 精度スコア
 	 */
-	double GetScore_ave(void) const {
-		return this->score_ave;
-	}
+	double GetScore_ave(void) const { return this->score_ave; }
 };
 
 class FBDF_gap_bar_c {
@@ -1043,9 +1041,7 @@ public:
 	 * @param なし
 	 * @return 全データの平均
 	 */
-	double GetAve(void) const {
-		return DIV_AVOID_ZERO(this->sum, this->count, 0);
-	}
+	double GetAve(void) const { return DIV_AVOID_ZERO(this->sum, this->count, 0); }
 };
 
 #endif /* class */

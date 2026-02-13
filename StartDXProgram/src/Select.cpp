@@ -94,7 +94,7 @@ private:
 	int FrontNo = 1;
 
 public:
-	void UpdateState() {
+	void UpdateState(void) {
 		DxTime_t Ntime = GetNowCount();
 		if (4000 + this->Stime <= Ntime) {
 			this->FrontNo = (this->FrontNo + 1) % 3;
@@ -102,7 +102,7 @@ public:
 		}
 	}
 
-	void DrawPic() const {
+	void DrawPic(void) const {
 		int backNo = (this->FrontNo + 3 - 1) % 3;
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, this->back[backNo].handle(), TRUE);
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA,
@@ -123,6 +123,14 @@ public:
 	}
 
 	const FBDF_music_detail_t& operator[](int n) const {
+		return this->detail[sort[n]];
+	}
+
+	FBDF_music_detail_t& at(int n) {
+		return this->detail[sort[n]];
+	}
+
+	const FBDF_music_detail_t& at(int n) const {
 		return this->detail[sort[n]];
 	}
 };

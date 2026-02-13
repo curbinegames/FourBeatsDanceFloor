@@ -29,14 +29,13 @@ private:
 	bool acs_sound = false;
 
 public:
-
 	/* カットイン描画 */
-	void DrawCut() const;
+	void DrawCut(void) const;
 
 	void SetIo(int val);
 	void SetWindowSize(int x, int y);
 
-	void update();
-	int IsClosing() const;
-	bool IsEndAnim() const;
+	void update(void);
+	int IsClosing(void) const;
+	bool IsEndAnim(void) const;
 };
