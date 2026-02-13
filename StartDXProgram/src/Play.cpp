@@ -1046,6 +1046,149 @@ public:
 	double GetAve(void) const { return DIV_AVOID_ZERO(this->sum, this->count, 0); }
 };
 
+class FBDF_play_notes_draw_c {
+private:
+	bool is_missing = false;
+	DxTime_t wave_time = 0;
+	FBDF_Play_note_pic_st note_pic;
+
+	int GetNotesAlpha(void) const {
+		if (is_missing) { return 0xFF; }
+		return lins_scale(1000, 0xFF, 3000, 0, GetNowCount() - wave_time);
+	}
+
+public:
+	/**
+	 * @brief ノーツの描画
+	 * @param[in] left  描画左位置
+	 * @param[in] right 描画右位置
+	 * @param[in] down  描画下位置
+	 * @param[in] wave_time ミス復帰時間[ms]
+	 * @param[in] map マップデーター
+	 * @return なし
+	 * @details 描画上位置は0固定
+	 */
+	void DrawNotes(int left, int right, int down, const FBDF_map_t &map) const {
+		int BaseLeft  = left;
+		int BaseRight = right;
+		int DrawYpos  = 0;
+		int DrawLeft  = BaseLeft;
+		int DrawRight = BaseRight;
+		DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
+
+		for (int in = map.note.nowNo(); in < map.note.size(); in++) {
+			if (map.note[in].time == 0) { break; }
+
+			/* 描画横位置 */
+			switch (game_option.play_style) {
+        	case FBDF_PLAYSTYLE_ASSIST_PLUS:
+				switch (map.note[in].btn) {
+				case 1:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 0);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+					break;
+				case 2:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+					break;
+				case 3:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+					break;
+				case 4:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 4);
+					break;
+				}
+				break;
+        	case FBDF_PLAYSTYLE_ASSIST:
+				switch (map.note[in].btn) {
+				case 1:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 0);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+					break;
+				case 2:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 1);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+					break;
+				case 3:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 2);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+					break;
+				case 4:
+					DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 3);
+					DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 4);
+					break;
+				}
+				if (!this->is_missing) {
+					DrawLeft  = lins_scale(1000, DrawLeft,  3000, BaseLeft,  GetNowCount() - this->wave_time);
+					DrawRight = lins_scale(1000, DrawRight, 3000, BaseRight, GetNowCount() - this->wave_time);
+				}
+				break;
+        	case FBDF_PLAYSTYLE_NORMAL:
+        	case FBDF_PLAYSTYLE_BLANC:
+        	case FBDF_PLAYSTYLE_BLANC_PLUS:
+				DrawLeft  = BaseLeft;
+				DrawRight = BaseRight;
+				break;
+			}
+
+			/* 描画色 */
+			switch (map.note[in].btn) {
+			case 1:
+				Npic = this->note_pic.one.handle();
+				break;
+			case 2:
+				Npic = this->note_pic.two.handle();
+				break;
+			case 3:
+				Npic = this->note_pic.three.handle();
+				break;
+			case 4:
+				Npic = this->note_pic.four.handle();
+				break;
+			}
+
+			/* 描画縦位置 */ {
+				int time_gap = map.note[in].time - map.Ntime;
+				DrawYpos = down - NOTE_HEIGHT -
+					(int)((time_gap - 16 + game_option.note_offset_draw) *
+					game_option.lane_speed) / 50;
+			}
+			if (NOTE_HEIGHT + DrawYpos < 0) { break; } /* 画面外break */
+
+			/* 描画処理 */
+			switch (game_option.play_style) {
+        	case FBDF_PLAYSTYLE_ASSIST_PLUS:
+        	case FBDF_PLAYSTYLE_ASSIST:
+        	case FBDF_PLAYSTYLE_NORMAL:
+				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
+				break;
+        	case FBDF_PLAYSTYLE_BLANC:
+				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, this->GetNotesAlpha());
+				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+				break;
+        	case FBDF_PLAYSTYLE_BLANC_PLUS:
+				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
+				break;
+			}
+		}
+		return;
+	}
+
+	void SetMiss(void) {
+		is_missing = true;
+	}
+
+	void SetRecover(void) {
+		if (!is_missing) { return; }
+		is_missing = false;
+		wave_time = GetNowCount();
+	}
+};
+
 #endif /* class */
 
 /* プレイ画面に関するクラスをまとめたもの */
@@ -1054,84 +1197,10 @@ typedef struct FBDF_play_class_set_s {
 	FBDF_dancer_c dancer_class;
 	FBDF_score_bar_c score_bar_class;
 	FBDF_gap_bar_c gap_bar_class;
+	FBDF_play_notes_draw_c notes_draw_class;
 } FBDF_play_class_set_t;
 
 #if 1 /* Draw系 */
-
-/**
- * @brief ノーツの描画
- * @param[in] left  描画左位置
- * @param[in] right 描画右位置
- * @param[in] down  描画下位置
- * @param[in] map   マップデーター
- * @return なし
- * @details 描画上位置は0固定
- */
-static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *map, const FBDF_Play_note_pic_st &pic) {
-	int BaseLeft  = left;
-	int BaseRight = right;
-	int DrawYpos  = 0;
-	int DrawLeft  = BaseLeft;
-	int DrawRight = BaseRight;
-	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
-
-	for (int in = map->note.nowNo(); in < map->note.size(); in++) {
-		if (map->note[in].time <= 10) { break; }
-		if (game_option.play_style == 0) { /* assist */
-			switch (map->note[in].btn) {
-			case 1:
-				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 0);
-				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 1);
-				break;
-			case 2:
-				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 1);
-				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 2);
-				break;
-			case 3:
-				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 2);
-				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 3);
-				break;
-			case 4:
-				DrawLeft  = lins_scale(0, BaseLeft, 4, BaseRight, 3);
-				DrawRight = lins_scale(0, BaseLeft, 4, BaseRight, 4);
-				break;
-			}
-		}
-		else {
-			DrawLeft  = BaseLeft;
-			DrawRight = BaseRight;
-		}
-
-		if (game_option.play_style == 2) { /* mono */
-			Npic = pic.white.handle(); /* TODO: 白にする */
-		}
-		else {
-			switch (map->note[in].btn) {
-			case 1:
-				Npic = pic.one.handle();
-				break;
-			case 2:
-				Npic = pic.two.handle();
-				break;
-			case 3:
-				Npic = pic.three.handle();
-				break;
-			case 4:
-				Npic = pic.four.handle();
-				break;
-			}
-		}
-		{
-			int time_gap = map->note[in].time - map->Ntime;
-			DrawYpos = down - NOTE_HEIGHT -
-				(int)((time_gap - 16 + game_option.note_offset_draw) *
-				game_option.lane_speed) / 50;
-		}
-		if (NOTE_HEIGHT + DrawYpos < 0) { break; } /* 画面外break */
-		DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
-	}
-	return;
-}
 
 /**
  * @brief 押しキーランプの描画
@@ -1195,13 +1264,19 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 	}
 
 	switch (game_option.play_style) {
-	case 0: /* assist */
-		buf.score *= 0.95;
+	case FBDF_PLAYSTYLE_ASSIST_PLUS:
+		buf.score *= 0.85;
 		break;
-	case 1: /* normal */
+	case FBDF_PLAYSTYLE_ASSIST:
+		buf.score *= 0.90;
+		break;
+	case FBDF_PLAYSTYLE_NORMAL:
 		buf.score *= 0.99;
 		break;
-	case 2: /* mono */
+	case FBDF_PLAYSTYLE_BLANC:
+		buf.score *= 0.995;
+		break;
+	case FBDF_PLAYSTYLE_BLANC_PLUS:
 		buf.score *= 1.00;
 		break;
 	}
@@ -1223,10 +1298,11 @@ static void FBDF_Play_NoteJudgeEventAntion(
 	bool note_judged = !judge_event.empty();
 	FBDF_judge_event_st buf;
 
-	FBDF_judge_c     *judge_class     = &play_class->judge_class;
-	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
-	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
-	FBDF_gap_bar_c   *gap_bar_class   = &play_class->gap_bar_class;
+	FBDF_judge_c           *judge_class      = &play_class->judge_class;
+	FBDF_dancer_c          *dancer_class     = &play_class->dancer_class;
+	FBDF_score_bar_c       *score_bar_class  = &play_class->score_bar_class;
+	FBDF_gap_bar_c         *gap_bar_class    = &play_class->gap_bar_class;
+	FBDF_play_notes_draw_c *notes_draw_class = &play_class->notes_draw_class;
 
 	while (!judge_event.empty()) {
 		buf = judge_event.front();
@@ -1271,7 +1347,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
 
 		/* スコア計算 */
 		score->point += buf.score;
-		score->chain_point += score->chain;
+		if (FBDF_PLAYSTYLE_NORMAL <= game_option.play_style) { score->chain_point += score->chain; }
 
 		/* キャラモーション変更 */
 		if (buf.mat == JUDGE_MISS) {
@@ -1284,6 +1360,14 @@ static void FBDF_Play_NoteJudgeEventAntion(
 		/* gap追加 */
 		if (buf.mat != JUDGE_MISS) {
 			gap_bar_class->SetVal(buf.gap);
+		}
+
+		/* ノーツ描画に影響するパラメータ */
+		if (buf.mat != JUDGE_MISS) {
+			notes_draw_class->SetRecover();
+		}
+		else {
+			notes_draw_class->SetMiss();
 		}
 	}
 
@@ -1560,7 +1644,6 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	dxcur_pic_c backPic(_T("pic/play/PlayBack.png"));
 	dxcur_pic_c lanePic(_T("pic/play/PlayLane.png"));
-	FBDF_Play_note_pic_st note_pic;
 
 	dxcur_snd_c musicData;
 	FBDT_hit_snd_t se;
@@ -1619,7 +1702,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 			/* プレイエリア周り描画 */
 			DrawGraph(0, 0, lanePic.handle(), TRUE);
 			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
-			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
+			play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
 			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 

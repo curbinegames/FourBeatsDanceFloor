@@ -152,7 +152,7 @@ public:
     FBDF_option_item_playstyle_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_UINT;
         this->is_loop_param = true;
-        this->upper_limit   = 2;
+        this->upper_limit   = 4;
         this->option_p      = &game_option.play_style;
         this->item_name     = "プレイスタイル";
         this->item_detail   = "プレイスタイルを選びます。";
@@ -161,14 +161,20 @@ public:
     std::string GetParamName(void) const override {
         std::string s = "";
         switch (*(uint *)(this->option_p)) {
-        case 0:
+        case FBDF_PLAYSTYLE_ASSIST_PLUS:
+            s = "assist+";
+            break;
+        case FBDF_PLAYSTYLE_ASSIST:
             s = "assist";
             break;
-        case 1:
+        case FBDF_PLAYSTYLE_NORMAL:
             s = "normal";
             break;
-        case 2:
+        case FBDF_PLAYSTYLE_BLANC:
             s = "blanc";
+            break;
+        case FBDF_PLAYSTYLE_BLANC_PLUS:
+            s = "blanc+";
             break;
         }
         return s;
@@ -177,14 +183,20 @@ public:
     std::string GetParamDetail(void) const override {
         std::string s = "";
         switch (*(uint *)(this->option_p)) {
-        case 0:
-            s = "ボタン位置のアシストが付きますが、その代わり得られるスコアが減ります。";
+        case FBDF_PLAYSTYLE_ASSIST_PLUS:
+            s = "常にボタン位置のアシストが付きます。\nその代わり、得られるスコアがかなり減ります。";
             break;
-        case 1:
+        case FBDF_PLAYSTYLE_ASSIST:
+            s = "ミスをすると一定時間ボタン位置のアシストが付きます。\nその代わり、得られるスコアが減ります。";
+            break;
+        case FBDF_PLAYSTYLE_NORMAL:
             s = "通常のモードです。";
             break;
-        case 2:
-            s = "色が分からなくなりますが、その代わり得られるスコアがちょっとだけ増えます。";
+        case FBDF_PLAYSTYLE_BLANC:
+            s = "色が分からなくなりますが、その代わり得られるスコアがほんの僅かだけ増えます。\nミスをすると一定時間色が復活します。";
+            break;
+        case FBDF_PLAYSTYLE_BLANC_PLUS:
+            s = "色が分からなくなりますが、その代わり得られるスコアがちょっとだけ増えます。\nミスをしても色は復活しません。";
             break;
         }
         return s;

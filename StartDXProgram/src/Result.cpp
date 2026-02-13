@@ -165,12 +165,14 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
  */
 static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t *data) {
 	if (data->acc < 70.0)            { return FBDF_CLEAR_TYPE_FAILED;    }
-	if (game_option.play_style == 0) { return FBDF_CLEAR_TYPE_ASSIST;    }
+	if (game_option.play_style <= FBDF_PLAYSTYLE_ASSIST)
+	                                 { return FBDF_CLEAR_TYPE_ASSIST;    }
 	if (30 < data->drop)             { return FBDF_CLEAR_TYPE_CLEARED;   }
 	if ( 5 < data->drop)             { return FBDF_CLEAR_TYPE_CAKEWALK;  }
 	if ( 0 < data->drop)             { return FBDF_CLEAR_TYPE_MISSLESS;  }
 	if ( 0 < data->save ||
-		game_option.play_style <  2) { return FBDF_CLEAR_TYPE_FULLCOMBO; }
+		game_option.play_style <  FBDF_PLAYSTYLE_BLANC_PLUS)
+		                             { return FBDF_CLEAR_TYPE_FULLCOMBO; }
 	return FBDF_CLEAR_TYPE_PERFECT;
 }
 

@@ -13,12 +13,18 @@
 #define FBDF_DANCER_TRIMBA  3
 #define FBDF_DANCER_QUATTRO 4
 
+#define FBDF_PLAYSTYLE_ASSIST_PLUS 0
+#define FBDF_PLAYSTYLE_ASSIST      1
+#define FBDF_PLAYSTYLE_NORMAL      2
+#define FBDF_PLAYSTYLE_BLANC       3
+#define FBDF_PLAYSTYLE_BLANC_PLUS  4
+
 #define LANGUAGE_CHOOSE(jp, en) ((game_option.language == 0) ? (jp) : (en))
 
 typedef struct FBDF_game_option_s {
 	 int empty_val  = 0; /* nullptr‚Ì‘ã‚í‚è */
 	uint chara      = FBDF_DANCER_UNIOW;
-	uint play_style = 1; /* enum‰»—\’è */
+	uint play_style = FBDF_PLAYSTYLE_NORMAL;
 	bool auto_en    = false;
 	uint lane_speed = 10;
 	 int note_offset_timing = 0;
