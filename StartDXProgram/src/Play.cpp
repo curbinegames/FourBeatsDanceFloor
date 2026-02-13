@@ -31,8 +31,6 @@
 
 #define ISNOTE(c) ((c) == '-' || (c) == '.')
 
-#define IS_NUMBER_CHAR(x) ((x)==_T('0')||(x)==_T('1')||(x)==_T('2')||(x)==_T('3')||(x)==_T('4')||(x)==_T('5')||(x)==_T('6')||(x)==_T('7')||(x)==_T('8')||(x)==_T('9'))
-
 #define NOTE_HEIGHT 15
 #define NOTE_SPEED   4
 
@@ -97,6 +95,7 @@ typedef struct FBDF_Play_note_pic_s {
 	dxcur_pic_c two   = dxcur_pic_c("pic/play/NoteTwo.png");
 	dxcur_pic_c three = dxcur_pic_c("pic/play/NoteThree.png");
 	dxcur_pic_c four  = dxcur_pic_c("pic/play/NoteFour.png");
+	dxcur_pic_c white = dxcur_pic_c("pic/play/NoteWhite.png");
 } FBDF_Play_note_pic_st;
 
 typedef struct FBDT_hit_snd_s {
@@ -176,7 +175,7 @@ class FBDF_dancer_c {
 private:
 	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
 	uint btn = 1; // 1-4
-	uint mtime = 0; /* モーション長さ */
+	DxTime_t mtime = 0; /* モーション長さ */
 	 int Stime = 0; /* モーションスタート絶対時間 */
 	 int offset = 0; /* 待機ステップ開始時間 */
 	size_t Nmotion_picNo = 0; /* 今のダンスモーション番号 */
@@ -190,7 +189,6 @@ private:
 	int n3Dmodel_handle = -1;
 	int n3Dmotion_idle_ath  = -1;
 	int n3Dmotion_miss_ath  = -1;
-	int n3Dmotion_afk_ath   = -1;
 	int n3Dmotion_dance_ath = -1;
 #endif /* 3Dモデル */
 
@@ -206,7 +204,6 @@ public: /* コンストラクタ系 */
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 		std::string image_path;
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		int n3Dmodel_handle = -1;
 		std::string n3Dmodel_path;
 #endif /* 3Dモデル */
 
@@ -242,18 +239,19 @@ public: /* コンストラクタ系 */
 		miss_pic = dxcur_divpic_c(image_path.c_str(), 4, 2, 2);
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 		n3Dmodel_path  = folder_path;
-		n3Dmodel_path += "model.pmx";
+		n3Dmodel_path += "model.mv1";
 		this->n3Dmodel_handle = MV1LoadModel(n3Dmodel_path.c_str());
-		SetCameraScreenCenter(lins(0, 0, 2000, WINDOW_SIZE_X, 1230), lins(0, 0, 2000, WINDOW_SIZE_Y, 600));
 		MV1SetPosition(this->n3Dmodel_handle, VGet(
 			lins(0, 0, 2000, WINDOW_SIZE_X, 1000),
 			lins(0, 0, 2000, WINDOW_SIZE_Y,  300),
-			0
+			500
 		));
-		MV1SetScale(this->n3Dmodel_handle, VGet(18, 18, 18));
+		MV1SetScale(this->n3Dmodel_handle, VGet(2, 2, 2));
 		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
 		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
-		this->n3Dmotion_afk_ath  = MV1AttachAnim(this->n3Dmodel_handle, 2);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
 #endif /* 3Dモデル */
 	}
 
@@ -294,6 +292,15 @@ private:
 		return 0; /* 通らないけど一応明記 */
 	}
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
+	size_t GetIdleMotionAnimNo(void) const {
+		double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
+		int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
+		int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
+		int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
+		if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
+		return (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+	}
+
 	size_t GetMotionAnimNo(void) const {
 		size_t retval = 0;
 		size_t start = 0;
@@ -336,24 +343,47 @@ private:
 			retval = lins_scale(0, 0, this->mtime, 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
-			retval = lins_scale(0, 0, 750, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(0, 0, min(this->mtime, 750), 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_AFK:
-			retval = lins_scale(5000, 0, 5500, 120, GetNowCount() - this->Stime);
+			retval = lins_scale(5000, 60, 6000, 120, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_MISS:
-			return lins_scale(0, 0, 500, 120, GetNowCount() - this->Stime);
+			return lins_scale(0, 0, 500, 60, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_IDLE:
-			double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
-			int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
-			int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
-			int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
-			if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-			retval = (int)(lins(0, 0, loop_time, 240, in_time)) % 240;
+			retval = this->GetIdleMotionAnimNo();
 			break;
 		}
 		return retval;
+	}
+
+	void SetShapeAll(void) {
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 1.0);
+			}
+			else if (GetNowCount() - this->Stime < 5000) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			}
+			else {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			}
+			break;
+		default:
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			break;
+		}
 	}
 #endif /* 3Dモデル */
 
@@ -591,32 +621,41 @@ private:
 	 * @return なし
 	 */
 	void SetDanceMotionNo(int next_len, FBDF_note_motion_assign_et motion) {
-		if (this->len <= 0) { /* idle or miss */
-			SearchMotion(next_len, motion);
-			this->Nmotion_picNo = this->GetMotionRandom();
+		if (this->len <= 0) { return; } /* idle or miss なのでスキップ */
+		if ((this->len == 1) &&
+			(this->btn != 1) &&
+			(this->motion_data[this->Nmotion_picNo].len_1 &&
+			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
+		) {
 			return;
-		}
+		} /* len1モーションの時は、モーション指定or1ボタンでのみ更新 */
+
+		if ((this->len == 2) &&
+			(this->btn != 1) &&
+			(this->btn != 2) &&
+			(this->motion_data[this->Nmotion_picNo].len_2 &&
+			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
+		) {
+			return;
+		} /* len2モーションの時は、モーション指定or1/2ボタンでのみ更新 */
 
 		if (GetRand(99) + 1 < 30) { /* 30%にヒット */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
-			return;
 		}
-
-		if (SearchMotionWithNext(next_len, motion, this->motion_data[this->Nmotion_picNo].next) == 0) {
+		else if (SearchMotionWithNext(next_len, motion, this->motion_data[this->Nmotion_picNo].next) == 0) {
 			/* nextの中に条件に合うモーションがない */
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
-			return;
 		}
 
 		/* 検索は終わってるのでさっさと抽選する */
 		this->Nmotion_picNo = this->GetMotionRandom();
 
 #if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		this->Nmotion_picNo; /* 0,1,2を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
 		MV1DetachAnim(this->n3Dmodel_handle, this->n3Dmotion_dance_ath);
-		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 3);
+		/* this->Nmotion_picNoを+2しているのは、0,1を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
+		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 2);
 #endif /* 3Dモデル */
 	}
 
@@ -641,52 +680,7 @@ private:
 			DrawGraph(x, y, motion_p.pic.handle(this->GetMotionAnimNo()), TRUE);
 		}
 	}
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	/**
-	 * @brief ダンサーを描く
-	 * @param[in] x 描画横位置
-	 * @param[in] y 描画縦位置
-	 * @return なし
-	 */
-	void DrawDancerGraph(int x, int y) const {
-		size_t motion_frameNo = this->GetMotionAnimNo();
-		switch (this->Nstate) {
-		case FBDF_DANCER_STATE_IDLE:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_MISS:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_AFK:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-			break;
-		case FBDF_DANCER_STATE_DANCING_1:
-		case FBDF_DANCER_STATE_DANCING_2:
-		case FBDF_DANCER_STATE_DANCING_3:
-		case FBDF_DANCER_STATE_DANCING_4:
-		case FBDF_DANCER_STATE_DANCING_LONG:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_afk_ath,   0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
-			break;
-		}
-		MV1DrawModel(this->n3Dmodel_handle);
-	}
-#endif /* 3Dモデル */
+#endif /* 画像 */
 
 public:
 	/**
@@ -702,58 +696,133 @@ public:
 		this->DrawDebugDanceWaitTime(x, y + 22);
 		this->DrawDebugDanceMotionTime(x, y + 42);
 #endif
+#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 		this->DrawDancerGraph(x, y);
+#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
+		MV1DrawModel(this->n3Dmodel_handle);
+#endif /* 3Dモデル */
 	}
 
+#if 1 /* update系 */
+private: /* update系 */
+	void UpdateAnimTime(void) {
+		size_t motion_frameNo = this->GetMotionAnimNo();
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath, this->GetIdleMotionAnimNo()); /* idleも計算する必要あり */
+			break;
+		}
+	}
+
+	void UpdateAttachAnimMat(void) {
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_IDLE:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			break;
+		case FBDF_DANCER_STATE_DANCING_1:
+		case FBDF_DANCER_STATE_DANCING_2:
+		case FBDF_DANCER_STATE_DANCING_3:
+		case FBDF_DANCER_STATE_DANCING_4:
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
+			break;
+		case FBDF_DANCER_STATE_DANCING_LONG:
+		{
+			float idle_per = lins_scale(500, 0.0, 750, 1.0, GetNowCount() - this->Stime);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,      idle_per);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,             0);
+			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1 - idle_per);
+		}
+			break;
+		}
+	}
+
+	/* ステートの更新 */
+	void UpdateState(void) {
+		FBDF_dancer_state_et resv_state = FBDF_DANCER_STATE_IDLE;
+		if (this->len == 0) { /* 待機モーション */
+			resv_state = FBDF_DANCER_STATE_IDLE;
+		}
+		else if (this->len < 0) { /* ミスモーション */
+			if (5000 <= GetNowCount() - this->Stime) {
+				resv_state = FBDF_DANCER_STATE_AFK;
+			}
+			else {
+				resv_state = FBDF_DANCER_STATE_MISS;
+			}
+		}
+		else if (this->len == 1) { /* ダンスモーション */
+			resv_state = FBDF_DANCER_STATE_DANCING_1;
+		}
+		else if (this->len == 2) {
+			resv_state = FBDF_DANCER_STATE_DANCING_2;
+		}
+		else if (this->len == 3) {
+			resv_state = FBDF_DANCER_STATE_DANCING_3;
+		}
+		else if (this->len == 4) {
+			resv_state = FBDF_DANCER_STATE_DANCING_4;
+		}
+		else if (5 <= this->len) {
+			resv_state = FBDF_DANCER_STATE_DANCING_LONG;
+		}
+		this->Nstate = resv_state;
+		UpdateAttachAnimMat();
+	}
+
+public: /* update系 */
 	/**
 	 * @brief 内部情報の更新、最低でも描画前に呼んで。
 	 * @param なし
 	 * @return なし
 	 */
-	void UpdateState(void) {
-		if (this->len < 0) { return; } /* missは自動解消されない */
-		/* long->idle */
-		if (4 < this->len) {
-			if (1000 + this->Stime <= GetNowCount()) {
-				this->len = 0;
-			}
-			return;
-		}
-		/* motion->idle */
-		if (this->mtime + JUDGE_WIDTH + this->Stime <= GetNowCount()) {
-			this->len = 0;
-		}
-
-		/* ステートの取得 */
-		if (this->len == 0) { /* 待機モーション */
-			this->Nstate = FBDF_DANCER_STATE_IDLE;
-		}
-		else if (this->len < 0) { /* ミスモーション */
-			if (5000 <= GetNowCount() - this->Stime) { /* ミス放置モーション */
-				this->Nstate = FBDF_DANCER_STATE_AFK;
+	void Update(void) {
+		/* missは自動解消されない */
+		if (0 <= this->len) {
+			/* long->idle */
+			if (4 < this->len) {
+				if (750 + this->Stime <= GetNowCount()) {
+					this->len = 0;
+				}
 			}
 			else {
-				this->Nstate = FBDF_DANCER_STATE_MISS;
+				/* motion->idle */
+				if (this->mtime + JUDGE_WIDTH + this->Stime <= GetNowCount()) {
+					this->len = 0;
+				}
 			}
 		}
-		else if (this->len == 1) { /* ダンスモーション */
-			this->Nstate = FBDF_DANCER_STATE_DANCING_1;
-		}
-		else if (this->len == 2) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_2;
-		}
-		else if (this->len == 3) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_3;
-		}
-		else if (this->len == 4) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_4;
-		}
-		else if (5 <= this->len) {
-			this->Nstate = FBDF_DANCER_STATE_DANCING_LONG;
-		}
+		this->UpdateState();
+		this->UpdateAnimTime();
+		this->SetShapeAll();
 		return;
 	}
+#endif /* update系 */
 
+#if 1 /* set系 */
 	/**
 	 * @brief ミスモーションにする
 	 * @param なし 
@@ -797,6 +866,7 @@ public:
 	void SetBpm(double val) {
 		this->bpm = max(0.1, val);
 	}
+#endif /* set系 */
 };
 
 class FBDF_score_bar_c {
@@ -1005,6 +1075,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 	DxPic_t Npic = DXLIB_PIC_HAND_DEFAULT;
 
 	for (int in = map->note.nowNo(); in < map->note.size(); in++) {
+		if (map->note[in].time <= 10) { break; }
 		if (game_option.play_style == 0) { /* assist */
 			switch (map->note[in].btn) {
 			case 1:
@@ -1031,7 +1102,7 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 		}
 
 		if (game_option.play_style == 2) { /* mono */
-			Npic = pic.one.handle(); /* TODO: 白にする */
+			Npic = pic.white.handle(); /* TODO: 白にする */
 		}
 		else {
 			switch (map->note[in].btn) {
@@ -1049,9 +1120,13 @@ static void FBDF_PlayDrawNotes(int left, int right, int down, const FBDF_map_t *
 				break;
 			}
 		}
-		DrawYpos = down - NOTE_HEIGHT -
-			((sint)map->note[in].time - (sint)map->Ntime - 16 + game_option.note_offset_draw) *
-			NOTE_SPEED * game_option.lane_speed / 150;
+		{
+			int time_gap = map->note[in].time - map->Ntime;
+			DrawYpos = down - NOTE_HEIGHT -
+				(int)((time_gap - 16 + game_option.note_offset_draw) *
+				game_option.lane_speed) / 50;
+		}
+		if (NOTE_HEIGHT + DrawYpos < 0) { break; } /* 画面外break */
 		DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 	}
 	return;
@@ -1115,72 +1190,40 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 	else {
 		buf.mat = JUDGE_MISS;
 	}
+
+	switch (game_option.play_style) {
+	case 0: /* assist */
+		buf.score *= 0.95;
+		break;
+	case 1: /* normal */
+		buf.score *= 0.99;
+		break;
+	case 2: /* mono */
+		buf.score *= 1.00;
+		break;
+	}
 	return;
 }
 
 /**
- * @brief ノーツの判定
+ * @brief ノートイベントを処理する
+ * @param[in] judge_event 予約されたノートイベント。関数を抜けた後は空っぽになる。
  * @param[out] play_class プレイクラス
- * @param[out] score スコア
- * @param[out] map マップデータ
- * @param[in] pkey キー入力情報
- * @param[in] se 効果音情報
- * @return なし
+ * @param[out] score スコアデータ
+ * @param[in] noteN ノーツ数
+ * @param[in] se 効果音データ
  */
-static void FBDF_PlayNoteJudge(
-	FBDF_play_class_set_t *play_class, FBDF_score_st *score, FBDF_map_t *map,
-	const FBDF_push_key_st *pkey, const FBDT_hit_snd_t *se)
-{
+static void FBDF_Play_NoteJudgeEventAntion(std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t *play_class,
+	FBDF_score_st *score, size_t noteN, const FBDT_hit_snd_t *se
+) {
+	bool note_judged = !judge_event.empty();
+	FBDF_judge_event_st buf;
+
 	FBDF_judge_c     *judge_class     = &play_class->judge_class;
 	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
 	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
 	FBDF_gap_bar_c   *gap_bar_class   = &play_class->gap_bar_class;
 
-	std::queue<FBDF_judge_event_st>judge_event;
-	FBDF_judge_event_st buf;
-
-	bool key_detect_d = (pkey->D == 1);
-	bool key_detect_f = (pkey->F == 1);
-	bool key_detect_j = (pkey->J == 1);
-	bool key_detect_k = (pkey->K == 1);
-
-	if (1 <= pkey->alltap) {
-		while (map->note.nowData().time != 0 &&
-			map->note.nowData().time - JUDGE_WIDTH < map->Ntime &&
-			(key_detect_d || key_detect_f || key_detect_j || key_detect_k))
-		{
-			buf.tip = map->note.nowData().btn;
-			buf.len = map->note.nowData().len;
-			buf.mtime = map->note.nowData().mtime;
-			buf.motion = map->note.nowData().motion;
-			switch (map->note.nowData().btn) {
-			case FBDF_PLAY_NOTE_BTN_1:
-				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
-				break;
-			case FBDF_PLAY_NOTE_BTN_2:
-				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_f, map);
-				break;
-			case FBDF_PLAY_NOTE_BTN_3:
-				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_j, map);
-				break;
-			case FBDF_PLAY_NOTE_BTN_4:
-				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_k, map);
-				break;
-			}
-			judge_event.push(buf);
-			if (buf.mat != JUDGE_NONE) { map->note.stepNo(); }
-		}
-	}
-
-	if (map->note.nowData().time != 0 &&
-		map->note.nowData().time + JUDGE_WIDTH < map->Ntime)
-	{
-		buf.mat = JUDGE_MISS;
-		judge_event.push(buf);
-		map->note.stepNo();
-	}
-
-	bool note_judged = !judge_event.empty();
 	while (!judge_event.empty()) {
 		buf = judge_event.front();
 		judge_event.pop();
@@ -1241,9 +1284,70 @@ static void FBDF_PlayNoteJudge(
 	}
 
 	if (note_judged) {
-		score_bar_class->update_score(score, map->note.size());
+		score_bar_class->update_score(score, noteN);
 	}
 
+	return;
+}
+
+/**
+ * @brief ノーツの判定
+ * @param[out] play_class プレイクラス
+ * @param[out] score スコア
+ * @param[out] map マップデータ
+ * @param[in] pkey キー入力情報
+ * @param[in] se 効果音情報
+ * @return なし
+ */
+static void FBDF_PlayNoteJudge(
+	FBDF_play_class_set_t *play_class, FBDF_score_st *score, FBDF_map_t *map,
+	const FBDF_push_key_st *pkey, const FBDT_hit_snd_t *se)
+{
+	std::queue<FBDF_judge_event_st>judge_event;
+	FBDF_judge_event_st buf;
+
+	bool key_detect_d = (pkey->D == 1);
+	bool key_detect_f = (pkey->F == 1);
+	bool key_detect_j = (pkey->J == 1);
+	bool key_detect_k = (pkey->K == 1);
+
+	if (1 <= pkey->alltap) {
+		while (map->note.nowData().time != 0 &&
+			map->note.nowData().time - JUDGE_WIDTH < map->Ntime &&
+			(key_detect_d || key_detect_f || key_detect_j || key_detect_k))
+		{
+			buf.tip = map->note.nowData().btn;
+			buf.len = map->note.nowData().len;
+			buf.mtime = map->note.nowData().mtime;
+			buf.motion = map->note.nowData().motion;
+			switch (map->note.nowData().btn) {
+			case FBDF_PLAY_NOTE_BTN_1:
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
+				break;
+			case FBDF_PLAY_NOTE_BTN_2:
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_f, map);
+				break;
+			case FBDF_PLAY_NOTE_BTN_3:
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_j, map);
+				break;
+			case FBDF_PLAY_NOTE_BTN_4:
+				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_k, map);
+				break;
+			}
+			judge_event.push(buf);
+			if (buf.mat != JUDGE_NONE) { map->note.stepNo(); }
+		}
+	}
+
+	if (map->note.nowData().time != 0 &&
+		map->note.nowData().time + JUDGE_WIDTH < map->Ntime)
+	{
+		buf.mat = JUDGE_MISS;
+		judge_event.push(buf);
+		map->note.stepNo();
+	}
+
+	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map->note.size(), se);
 	return;
 }
 
@@ -1351,11 +1455,11 @@ static void FBDF_Play_KeyCheck(
 	FBDF_push_key_st &pkey, FBDF_play_class_set_t &play_class,
 	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
-	int keybox[1] = { KEY_INPUT_RETURN };
+	int keybox[1] = { KEY_INPUT_ESCAPE };
 
 	int hitkey = keycur(keybox, 1);
 
-	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_RETURN)) {
+	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_ESCAPE)) {
 		FBDF_PlayNoteTrash(&play_class, &score, &map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
@@ -1411,6 +1515,33 @@ static void FBDF_Play_KeyCheck(
 	return;
 }
 
+static void FBDF_Play_DrawScore(int x, int y, FBDF_score_st &score) {
+	uint all_point = score.point + score.chain_point;
+	int drawX = x;
+	if (all_point < 10) {
+		drawX = x - 28;
+	}
+	else if (all_point < 100) {
+		drawX = x - 28 * 2;
+	}
+	else if (all_point < 1000) {
+		drawX = x - 28 * 3;
+	}
+	else if (all_point < 10000) {
+		drawX = x - 28 * 4;
+	}
+	else if (all_point < 100000) {
+		drawX = x - 28 * 5;
+	}
+	else if (all_point < 1000000) {
+		drawX = x - 28 * 6;
+	}
+	else if (all_point < 10000000) {
+		drawX = x - 28 * 7;
+	}
+	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), all_point);
+}
+
 /**
  * @brief プレイ画面のベース
  * @param[out] result_data リザルト画面に渡すデータ
@@ -1437,16 +1568,15 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
 
-	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
-	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
-
 	map.note.resetNo();
-	map.Stime = GetNowCount();
 
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 
+	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
+	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
 	cutin.SetIo(CUT_FRAG_OUT);
+	map.Stime = GetNowCount();
 
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
@@ -1466,28 +1596,27 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 		FBDF_PlayNoteJudge(&play_class, &score, &map, &pkey, &se);
 
 		/* update系 */
-		play_class.dancer_class.UpdateState();
+		play_class.dancer_class.Update();
 		play_class.score_bar_class.update_graph(map.Ntime);
 		cutin.update();
 
 		ClearDrawScreen(); /* 作画エリアここから */ {
-			DrawGraph(0, 0, backPic.handle(), TRUE);
-			DrawFormatString(400,   5, COLOR_WHITE, _T("%d"), map.note.size());
-			DrawFormatString(400,  25, COLOR_WHITE, _T("%d"), map.note.nowNo());
-			DrawFormatString(400,  45, COLOR_WHITE, _T("%d"), score.crit);
-			DrawFormatString(400,  65, COLOR_WHITE, _T("%d"), score.hit);
-			DrawFormatString(400,  85, COLOR_WHITE, _T("%d"), score.save);
-			DrawFormatString(400, 105, COLOR_WHITE, _T("%d"), score.drop);
-			
-			DrawGraph(0, 0, lanePic.handle(), TRUE);
-			FBDF_PlayDrawLamp(&pkey);
-			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
-			DrawFormatStringToHandle(710, 35, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.point + score.chain_point); /* スコア描画 */
-			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
-			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
-			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
+			DrawGraph(0, 0, backPic.handle(), TRUE); /* 背景描画 */
+
+			/* ダンサー周り描画 */
 			play_class.dancer_class.DrawDance(500, 300);
+			FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
+
+			/* スコアバー周り描画 */
+			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
+			FBDF_PlayDrawLamp(&pkey);
+			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
+
+			/* プレイエリア周り描画 */
+			DrawGraph(0, 0, lanePic.handle(), TRUE);
+			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
+			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 
 			cutin.DrawCut();
 

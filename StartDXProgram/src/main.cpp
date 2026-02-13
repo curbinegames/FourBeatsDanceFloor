@@ -6,6 +6,7 @@
 #include <strcur.h>
 
 #include <main.h>
+#include <save.h>
 #include <Title.h>
 #include <Select.h>
 #include <Play.h>
@@ -55,9 +56,23 @@ int WINAPI WinMain(DX_MAIN_DEF) {
 	SetWindowSizeChangeEnableFlag(TRUE); // ウィンドウサイズを変えれるようにする
 	if (DxLib_Init() == -1) { return -1; } // エラーで中断
 	SetDrawScreen(DX_SCREEN_BACK); // 作画モード変更
+	
+	/* 3Dライト設定 */ {
+		/* (左/右 ,上/下 , 手前/奥) */
+		/* ゲーム中に変更/削除する予定がないのでハンドルは破棄 */
+		ChangeLightTypeDir(  VGet( 0, -1,  1)); // 下から
+		CreateDirLightHandle(VGet( 1,  1,  1)); // 左上から
+		CreateDirLightHandle(VGet(-1,  1,  1)); // 右上から
+		CreateDirLightHandle(VGet( 0,  0, -1)); // 奥から
+	}
+	/* 3Dカメラ設定 */
+	SetCameraScreenCenter(lins(0, 0, 2000, WINDOW_SIZE_X, 1230), lins(0, 0, 2000, WINDOW_SIZE_Y, 600));
+	SetupCamera_Perspective(0.6);
 
 	// フォント読み込み
 	FBDF_font_DSEG7Modern = LoadFontDataToHandle(_T("font/DSEG7Modern_S32_T4_I.dft"));
+
+	FBDF_Save_ReadOption(&game_option);
 
 	GameMain(); // ゲーム処理
 	DxLib_End(); // DxLib終わり

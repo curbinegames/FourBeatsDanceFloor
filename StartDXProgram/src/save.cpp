@@ -2,7 +2,7 @@
 #include <string>
 
 #include <DxLib.h>
-
+#include <system.h>
 #include <save.h>
 
 /* 前置インクリメントの定義 */
@@ -34,6 +34,8 @@ FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
     }
     return val;
 }
+
+#if 1 /* 曲スコア関連 */
 
 /**
  * @brief ユーザースコアデータを全部の難易度分読み込む
@@ -143,4 +145,40 @@ bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st *src, const TCHA
     if (buf.score      < src->score     ) { buf.score      = src->score;      }
 
     return FBDF_Save_WriteScoreOneDif(&buf, music_folder_name, dif_type);
+}
+
+#endif /* 曲スコア関連 */
+
+/**
+* @brief ユーザーオプションデータを読み込む
+* @param[out] dest 格納先、配列数は3
+* @param[in] music_folder_name 曲のフォルダ名
+* @return bool true=成功, false=失敗
+*/
+bool FBDF_Save_ReadOption(FBDF_game_option_st *dest) {
+    FILE *fp;
+
+    fopen_s(&fp, "save/user/option.dat", "rb");
+    if (fp == NULL) { return false; }
+    fread(dest, sizeof(FBDF_game_option_st), 1, fp);
+    fclose(fp);
+
+    return true;
+}
+
+/**
+* @brief ユーザーオプションデータを読み込む
+* @param[out] dest 格納先、配列数は3
+* @param[in] music_folder_name 曲のフォルダ名
+* @return bool true=成功, false=失敗
+*/
+bool FBDF_Save_WriteOption(const FBDF_game_option_st *src) {
+    FILE *fp;
+
+    fopen_s(&fp, "save/user/option.dat", "wb");
+    if (fp == NULL) { return false; }
+    fwrite(src, sizeof(FBDF_game_option_st), 1, fp);
+    fclose(fp);
+
+    return true;
 }

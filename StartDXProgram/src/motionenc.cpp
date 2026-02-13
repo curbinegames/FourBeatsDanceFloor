@@ -18,8 +18,6 @@
 int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *folder_name) {
 	char buf[256];
 
-    size_t motionNo = 0;
-
 	FBDF_Play_motion_st motion_buf;
 
     std::string folder_path = "dancer/";

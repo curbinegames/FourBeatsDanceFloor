@@ -144,7 +144,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 		bool skipFG = false;
 
 		switch (map->note[i].btn) {
-		case 1:
+		case FBDF_PLAY_NOTE_BTN_1:
 			switch (map->note[i - 1].btn) {
 			case 1: /* 11ステップ */
 				BasePoint = point_step_11;
@@ -165,7 +165,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				break;
 			}
 			break;
-		case 2:
+		case FBDF_PLAY_NOTE_BTN_2:
 			switch (map->note[i - 1].btn) {
 			case 2: /* 22ステップ */
 				BasePoint = point_step_22;
@@ -186,7 +186,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				break;
 			}
 			break;
-		case 3:
+		case FBDF_PLAY_NOTE_BTN_3:
 			switch (map->note[i - 1].btn) {
 			case 3: /* 33ステップ */
 				BasePoint = point_step_33;
@@ -207,7 +207,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				break;
 			}
 			break;
-		case 4:
+		case FBDF_PLAY_NOTE_BTN_4:
 			switch (map->note[i - 1].btn) {
 			case 4: /* 44ステップ */
 				BasePoint = point_step_44;

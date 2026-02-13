@@ -38,43 +38,6 @@ typedef enum FBDF_music_list_bar_color_e {
 	GRAY_MUSIC_LIST_BAR,
 } FBDF_music_list_bar_color_t;
 
-typedef enum FBDF_music_folder_num_e {
-	DEFAULT_MUSIC_FOLDER,
-	ALL_MUSIC_FOLDER,
-	LEVEL_SET_MUSIC_FOLDER,
-	LEVEL0_MUSIC_FOLDER,
-	LEVEL1_MUSIC_FOLDER,
-	LEVEL2_MUSIC_FOLDER,
-	LEVEL3_MUSIC_FOLDER,
-	LEVEL4_MUSIC_FOLDER,
-	LEVEL5_MUSIC_FOLDER,
-	LEVEL6_MUSIC_FOLDER,
-	LEVEL7_MUSIC_FOLDER,
-	LEVEL8_MUSIC_FOLDER,
-	LEVEL9_MUSIC_FOLDER,
-	LEVEL10_MUSIC_FOLDER,
-	SCORE_SET_MUSIC_FOLDER,
-	SCORE_P_MUSIC_FOLDER,
-	SCORE_XP_MUSIC_FOLDER,
-	SCORE_X_MUSIC_FOLDER,
-	SCORE_SP_MUSIC_FOLDER,
-	SCORE_S_MUSIC_FOLDER,
-	SCORE_AP_MUSIC_FOLDER,
-	SCORE_A_MUSIC_FOLDER,
-	SCORE_B_MUSIC_FOLDER,
-	SCORE_C_MUSIC_FOLDER,
-	SCORE_D_MUSIC_FOLDER,
-	SCORE_F_MUSIC_FOLDER,
-	CLEARTYPE_SET_MUSIC_FOLDER,
-	CLEARTYPE_PERFECT_MUSIC_FOLDER,
-	CLEARTYPE_FULLCOMBO_MUSIC_FOLDER,
-	CLEARTYPE_MISSLESS_MUSIC_FOLDER,
-	CLEARTYPE_CAKEWALK_MUSIC_FOLDER,
-	CLEARTYPE_CLEARED_MUSIC_FOLDER,
-	CLEARTYPE_FAILED_MUSIC_FOLDER,
-	CLEARTYPE_NOPLAY_MUSIC_FOLDER,
-} FBDF_music_folder_num_t;
-
 #if 1 /* struct */
 
 typedef struct FBDF_music_dif_s {
@@ -330,6 +293,10 @@ static bool FBDF_Select_FolderFiltetClearTypeCleared(const FBDF_music_detail_t &
 	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_CLEARED);
 }
 
+static bool FBDF_Select_FolderFiltetClearTypeAssist(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
+	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_ASSIST);
+}
+
 static bool FBDF_Select_FolderFiltetClearTypeFailed(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
 	return (detail.user_highscore.clear_type == FBDF_CLEAR_TYPE_FAILED);
 }
@@ -349,12 +316,13 @@ private:
 
 	FBDF_music_folder_node_st fol_cleartype_noplay{   "No Play",     true, FBDF_Select_FolderFiltetClearTypeNoPlay,    {}};
 	FBDF_music_folder_node_st fol_cleartype_failed{   "Failed",      true, FBDF_Select_FolderFiltetClearTypeFailed,    {}};
+	FBDF_music_folder_node_st fol_cleartype_assist{   "Assist",      true, FBDF_Select_FolderFiltetClearTypeAssist,    {}};
 	FBDF_music_folder_node_st fol_cleartype_cleared{  "Cleared",     true, FBDF_Select_FolderFiltetClearTypeCleared,   {}};
 	FBDF_music_folder_node_st fol_cleartype_cakewalk{ "Cakewalk",    true, FBDF_Select_FolderFiltetClearTypeCakewalk,  {}};
 	FBDF_music_folder_node_st fol_cleartype_missless{ "Miss Less",   true, FBDF_Select_FolderFiltetClearTypeMissLess,  {}};
 	FBDF_music_folder_node_st fol_cleartype_fullchain{"Full Chain",  true, FBDF_Select_FolderFiltetClearTypeFullChain, {}};
 	FBDF_music_folder_node_st fol_cleartype_perfect{  "Perfect",     true, FBDF_Select_FolderFiltetClearTypePerfect,   {}};
-	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_failed, &fol_cleartype_noplay}};
+	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_assist, &fol_cleartype_failed, &fol_cleartype_noplay}};
 
 	FBDF_music_folder_node_st fol_score_f{  "Score F",   true, FBDF_Select_FolderFiltetScoreF,  {}};
 	FBDF_music_folder_node_st fol_score_d{  "Score D",   true, FBDF_Select_FolderFiltetScoreD,  {}};
@@ -597,7 +565,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	map_path += '/';
 	map_path += file;
 
-	if (MapLoadOne(&map, map_path.c_str()) != FDF_MAPENC_ERROR_NONE) { return; }
+	if (MapLoadOne(&map, map_path.c_str()) != FBDF_MAPENC_ERROR_NONE) { return; }
 
 	buf.folder_name        = d_name;
 	buf.music_name         = d_name;
@@ -777,13 +745,13 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d
 /**
  * @brief PCフォルダー内を調べて楽曲のリストを読み込む
  * @param[out] musiclist 譜面リスト
- * @return int 0=成功, -1=失敗
+ * @return bool true=成功, false=失敗
  */
-static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
+static bool FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 	DIR *dir;
 	struct dirent *dirs;
 	dir = opendir("music");
-	if (dir == NULL) { return -1; }
+	if (dir == NULL) { return false; }
 
 	while (1) {
 		dirs = readdir(dir);
@@ -793,7 +761,7 @@ static int FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
 	}
 
 	closedir(dir);
-	return 0;
+	return true;
 }
 
 #endif /* 譜面リスト読み込み系 */
@@ -938,14 +906,14 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	FBDF_select_back_pic_c back_pic;
 	FBDF_option_pic_st option_pic;
 
+	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
+
 	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
-
 	FBDF_Option_ReloadPic();
 	folder_manager_class.MakeMusicList(musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
-	if (FBDF_Select_LoadMusicList(&musiclist) != 0) { return VIEW_EXIT; }
+	if (FBDF_Select_LoadMusicList(&musiclist) == false) { return VIEW_SELECT; }
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
@@ -970,6 +938,8 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 		ScreenFlip(); // 作画エリアここまで
 		WaitTimer(10); // ループウェイト
 	}
+
+	FBDF_Save_WriteOption(&game_option);
 
 	nex_music->folder_name   = musiclist[command].folder_name;
 	nex_music->map_file_name = musiclist[command].map_file_name;
