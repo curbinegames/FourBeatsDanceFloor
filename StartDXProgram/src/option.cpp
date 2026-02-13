@@ -113,18 +113,18 @@ public:
     }
 
     std::string GetParamName(void) const override {
-        std::string s;
+        std::string s = "";
         switch (*(uint *)(this->option_p)) {
-        case 0:
+        case FBDF_DANCER_UNIOW:
             s = LANGUAGE_CHOOSE("ユニオ", "uniow");
             break;
-        case 1:
+        case FBDF_DANCER_NEIDA:
             s = LANGUAGE_CHOOSE("ニーダ", "neida");
             break;
-        case 2:
+        case FBDF_DANCER_TRIMBA:
             s = LANGUAGE_CHOOSE("トリンバ", "trimba");
             break;
-        case 3:
+        case FBDF_DANCER_QUATTRO:
             s = LANGUAGE_CHOOSE("クアトロ", "quattro");
             break;
         }

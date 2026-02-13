@@ -2,13 +2,22 @@
 
 #include <sancur.h>
 
+/**
+ * 初期の案では画像で表示する予定だった。思い出で残してる。
+ * 画像処理の方はメンテしてないので動作未定義。
+ */
 #define FBDF_DANCER_MAT_TYPE 1 /* 0:画像, 1:3D */
+
+#define FBDF_DANCER_UNIOW   1
+#define FBDF_DANCER_NEIDA   2
+#define FBDF_DANCER_TRIMBA  3
+#define FBDF_DANCER_QUATTRO 4
 
 #define LANGUAGE_CHOOSE(jp, en) ((game_option.language == 0) ? (jp) : (en))
 
 typedef struct FBDF_game_option_s {
 	 int empty_val  = 0; /* nullptrの代わり */
-	uint chara      = 0; /* enum化予定 */
+	uint chara      = FBDF_DANCER_UNIOW;
 	uint play_style = 1; /* enum化予定 */
 	bool auto_en    = false;
 	uint lane_speed = 10;

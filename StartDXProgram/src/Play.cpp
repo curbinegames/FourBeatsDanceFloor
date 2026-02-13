@@ -39,7 +39,7 @@ typedef enum FBDF_judge_mat_e {
 	JUDGE_HIT,
 	JUDGE_SAVE,
 	JUDGE_MISS,
-	JUDGE_NONE,
+	JUDGE_NONE
 } FBDF_judge_mat_et;
 
 typedef enum FBDF_dancer_state_e {
@@ -50,7 +50,7 @@ typedef enum FBDF_dancer_state_e {
 	FBDF_DANCER_STATE_DANCING_2,
 	FBDF_DANCER_STATE_DANCING_3,
 	FBDF_DANCER_STATE_DANCING_4,
-	FBDF_DANCER_STATE_DANCING_LONG,
+	FBDF_DANCER_STATE_DANCING_LONG
 } FBDF_dancer_state_et;
 
 #if 1 /* struct */
@@ -65,7 +65,7 @@ typedef struct FBDF_push_key_s {
 
 typedef struct FBDF_score_s {
 	uint crit  = 0;
-	uint hit   = 0;
+	uint  hit  = 0;
 	uint save  = 0;
 	uint drop  = 0;
 	uint point = 0; /* 理論値 = 184 * ノーツ数 */
@@ -103,7 +103,9 @@ typedef struct FBDT_hit_snd_s {
 	dxcur_snd_c SE2Data = dxcur_snd_c(_T("SE/SE2.wav"));
 } FBDT_hit_snd_t;
 
-#endif
+#endif /* struct */
+
+#if 1 /* class */
 
 class FBDF_judge_c {
 private:
@@ -119,7 +121,7 @@ public:
 	 * @brief コンストラクタ、画像データの大きさを取得している
 	 * @param なし
 	 */
-	FBDF_judge_c() {
+	FBDF_judge_c(void) {
 		GetGraphSize(this->pic.crit.handle(), &this->Xsize, &this->Ysize);
 	}
 
@@ -129,7 +131,7 @@ public:
 	 * @param[in] y 描画縦位置
 	 * @return なし
 	 */
-	void DrawJudge(int x, int y) {
+	void DrawJudge(int x, int y) const {
 		double zoom = 1.0;
 		if (this->Jtime + 750 < GetNowCount()) { return; }
 		zoom = lins(0, 1.25, 100, 1.0, betweens(0, GetNowCount() - this->Jtime, 100)) * 0.8;
@@ -196,7 +198,7 @@ private:
 	std::vector<FBDF_Play_motion_st> motion_data;
 
 public: /* コンストラクタ系 */
-	FBDF_dancer_c(void) : FBDF_dancer_c(1) {} /* ユニオとして初期化 */
+	FBDF_dancer_c(void) : FBDF_dancer_c(FBDF_DANCER_UNIOW) {} /* ユニオとして初期化 */
 
 	FBDF_dancer_c(size_t n) {
 		std::string chara_name;
@@ -208,20 +210,20 @@ public: /* コンストラクタ系 */
 #endif /* 3Dモデル */
 
 		switch (n) {
-		case 1:
+		case FBDF_DANCER_UNIOW:
 			chara_name = "uniow";
 			break;
-		case 2:
+		case FBDF_DANCER_NEIDA:
 			chara_name = "neida";
 			break;
-		case 3:
+		case FBDF_DANCER_TRIMBA:
 			chara_name = "trimba";
 			break;
-		case 4:
+		case FBDF_DANCER_QUATTRO:
 			chara_name = "quattro";
 			break;
-		case 0:
-			chara_name = "zeroid";
+		default:
+			chara_name = "uniow";
 			break;
 		}
 		FBDF_DancerMotionEnc(motion_data, chara_name.c_str());
@@ -362,6 +364,7 @@ private:
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
+			/* FIXME: ユニオ専用の設定になってる */
 			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
 				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.0);
 				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
@@ -495,7 +498,7 @@ private:
 
 #endif /* デバッグ描画 */
 
-#if 1 /* ダンスモーション計算系 */
+#if 1 /* ダンスモーション抽選系 */
 
 	/**
 	 * @brief srcがしたい下条件に合うかどうかを返す
@@ -659,7 +662,7 @@ private:
 #endif /* 3Dモデル */
 	}
 
-#endif /* ダンスモーション計算系 */
+#endif /* ダンスモーション抽選系 */
 
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 	/**
@@ -1047,6 +1050,8 @@ public:
 	}
 };
 
+#endif /* class */
+
 /* プレイ画面に関するクラスをまとめたもの */
 typedef struct FBDF_play_class_set_s {
 	FBDF_judge_c judge_class;
@@ -1159,6 +1164,8 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_st *pkey) {
 }
 
 #endif
+
+#if 1 /* ノーツ判定系 */
 
 /**
  * @brief キー押し検出後の1ノーツ判定
@@ -1381,6 +1388,8 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st 
 	return;
 }
 
+#endif /* ノーツ判定系 */
+
 /**
  * @brief リザルト用のデータを作成
  * @param[out] result_data 格納先
@@ -1396,7 +1405,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
 	result_data->name        = nex_music->folder_name;
 	result_data->artist      = map.artist;
 	result_data->folder_name = nex_music->folder_name;
-	result_data->level       = 0; /* meta.binから取ってくる */
+	result_data->level       = 0;
 	result_data->score       = score.point + score.chain_point;
 	result_data->acc         = play_class.score_bar_class.GetScore_ave();
 	result_data->crit        = score.crit;
@@ -1455,11 +1464,7 @@ static void FBDF_Play_KeyCheck(
 	FBDF_push_key_st &pkey, FBDF_play_class_set_t &play_class,
 	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
-	int keybox[1] = { KEY_INPUT_ESCAPE };
-
-	int hitkey = keycur(keybox, 1);
-
-	if (!cutin.IsClosing() && (hitkey == KEY_INPUT_ESCAPE)) {
+	if (!cutin.IsClosing() && (CheckHitKey(KEY_INPUT_ESCAPE) == 1)) {
 		FBDF_PlayNoteTrash(&play_class, &score, &map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
@@ -1555,7 +1560,6 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	FBDF_play_class_set_t play_class;
 	FBDF_cutin_c cutin;
-	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	dxcur_pic_c backPic(_T("pic/play/PlayBack.png"));
 	dxcur_pic_c lanePic(_T("pic/play/PlayLane.png"));
@@ -1566,6 +1570,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	DxTime_t FinishTime = 0;
 
+	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
 
 	map.note.resetNo();
@@ -1575,9 +1580,12 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
 	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
+
+	/* 曲再生後にやるべき初期化 */
 	cutin.SetIo(CUT_FRAG_OUT);
 	map.Stime = GetNowCount();
 
+	/* ゲーム実行ループ */
 	while (1) {
 		if (cutin.IsEndAnim()) { break; }
 
@@ -1610,10 +1618,10 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 			/* スコアバー周り描画 */
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
 			FBDF_PlayDrawLamp(&pkey);
-			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
 
 			/* プレイエリア周り描画 */
 			DrawGraph(0, 0, lanePic.handle(), TRUE);
+			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
 			FBDF_PlayDrawNotes(42, 42 + 110, 570, &map, note_pic);
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
 			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
