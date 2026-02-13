@@ -74,13 +74,13 @@ typedef struct FBDF_score_s {
 } FBDF_score_st;
 
 typedef struct FBDF_judge_event_s {
-	FBDF_judge_mat_et mat = JUDGE_MISS;
-	 int gap = 0;
-	uint tip = 1; /* 1,2,3,4 */
-	uint len = 4;
-	uint mtime = 0;
-	uint score = 0;
+	FBDF_judge_mat_et mat = JUDGE_MISS; /* ノーツの判定 */
+	 int gap = 0; /* 押したタイミングのずれ[ms] */
+	uint len = 4; /* 次のノーツまでのブロック数 */
+	uint mtime = 0; /* 次のノーツまでの時間、モーション時間[ms] */
+	uint score = 0; /* このノーツの点数 */
 	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
+	FBDF_Play_note_btn_et tip = FBDF_PLAY_NOTE_BTN_1;
 } FBDF_judge_event_st;
 
 typedef struct FBDF_Play_note_pic_s {
@@ -174,12 +174,12 @@ public:
 class FBDF_dancer_c {
 private:
 	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
-	uint btn = 1; // 1-4
 	DxTime_t mtime = 0; /* モーション長さ */
 	 int Stime = 0; /* モーションスタート絶対時間 */
 	 int offset = 0; /* 待機ステップ開始時間 */
 	size_t Nmotion_picNo = 0; /* 今のダンスモーション番号 */
 	double bpm = 120;
+	FBDF_Play_note_btn_et btn = FBDF_PLAY_NOTE_BTN_1;
 	FBDF_dancer_state_et Nstate = FBDF_DANCER_STATE_IDLE;
 
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
@@ -506,7 +506,7 @@ private:
 	 * @return bool 合ってたらtrue、違ったらfalse
 	 */
 	bool IsMatchMotion(const FBDF_Play_motion_st &src, int next_len, FBDF_note_motion_assign_et motion) const {
-		if (next_len <= 0) { return false; } /* ダンスモーションちゃうぞ */
+		if (next_len <= 0) { return false; } /* ダンスモーションじゃないので終わり */
 
 		switch (next_len) {
 		case 1:
@@ -846,7 +846,7 @@ public: /* update系 */
 	 * @details 裏技、a_lenを0未満にするとmissモーション、0にするとidleモーションにできる。
 	 * その時はa_btnとa_mtimeとallowを無視できる。適当に0とか入れといて。
 	 */
-	void SetState(uint a_btn, int a_len, uint a_mtime, FBDF_note_motion_assign_et motion) {
+	void SetState(FBDF_Play_note_btn_et a_btn, int a_len, uint a_mtime, FBDF_note_motion_assign_et motion) {
 		if (a_len < 0) { /* a_lenに0未満指定はミスモーションとして扱うので、専用関数呼んで終わり */
 			this->SetMissState();
 			return;
@@ -1253,12 +1253,12 @@ static void FBDF_Play_NoteJudgeEventAntion(
 		/* 効果音再生 */
 		if (buf.mat != JUDGE_MISS) {
 			switch (buf.tip) {
-			case 1:
+			case FBDF_PLAY_NOTE_BTN_1:
 				PlaySoundMem(se->SE1Data.handle(), DX_PLAYTYPE_BACK);
 				break;
-			case 2:
-			case 3:
-			case 4:
+			case FBDF_PLAY_NOTE_BTN_2:
+			case FBDF_PLAY_NOTE_BTN_3:
+			case FBDF_PLAY_NOTE_BTN_4:
 				PlaySoundMem(se->SE2Data.handle(), DX_PLAYTYPE_BACK);
 				break;
 			}
