@@ -2,6 +2,7 @@
 #include <string>
 #include <DxLib.h>
 #include <dxcur.h>
+#include <main.h>
 #include <system.h>
 #include <option.h>
 
@@ -525,6 +526,6 @@ void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic) {
     /* à–¾‚Ì‰æ‘œ‚ð•`‚­ */
     DrawGraph(0, 0, s_op_list.at(cmd)->GetPicHandle(), TRUE);
     /* Ú×‚ð•`‚­ */
-    DrawFormatString(5,  5, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
-    DrawFormatString(5, 25, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
+    DrawFormatString(5, WINDOW_SIZE_Y - 5 - 60, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
+    DrawFormatString(5, WINDOW_SIZE_Y - 5 - 40, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
 }

@@ -2,16 +2,16 @@
 ;0を待機、1をミスモーションとして扱う
 
 ;[0] (内部では2扱い) 腕上→下
-LEN:12348
+LEN:348
 DATAIN
 
 ;[1] (内部では3扱い) 腕左→右
-LEN:12348
+LEN:2348
 TYPE:l
 DATAIN
 
 ;[2] 腕右→左
-LEN:12348
+LEN:2348
 TYPE:r
 DATAIN
 
@@ -40,31 +40,36 @@ EXTRA
 DATAIN
 
 ;[7] 足ステップ右、前→後
-LEN:4
+LEN:34
 NEXT:8
 DATAIN
 
 ;[8] 足ステップ右、後→前
-LEN:4
+LEN:34
 NEXT:7
 DATAIN
 
 ;[9] 足ステップ左、前→後
-LEN:4
+LEN:34
 NEXT:10
 DATAIN
 
 ;[10] 足ステップ左、後→前
-LEN:4
+LEN:34
 NEXT:9
 DATAIN
 
-;[11] 拳上げ
-LEN:4
+;[11] 1上げ
+LEN:34
 TYPE:u
 DATAIN
 
 ;[12] パンチ
-LEN:4
+LEN:34
 TYPE:f
+DATAIN
+
+;[13] ターン
+LEN:1
+TYPE:t
 DATAIN

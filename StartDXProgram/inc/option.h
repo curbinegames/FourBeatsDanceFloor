@@ -3,7 +3,7 @@
 #include <dxcur.h>
 
 typedef struct FBDF_option_pic_s {
-    dxcur_pic_c back = dxcur_pic_c(_T(""));
+    dxcur_pic_c back = dxcur_pic_c(_T("pic/black.png"));
 } FBDF_option_pic_st;
 
 extern void FBDF_Option_ReloadPic(void);
