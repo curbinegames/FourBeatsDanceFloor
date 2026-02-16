@@ -565,8 +565,8 @@ private:
 		case FBDF_NOTE_MOTION_ASSIGN_4:
 			if (!src.type_4) { return false; }
 			break;
-		default:
-			/* 無指定と見なして処理 */
+		default: /* 無指定と見なして処理 */
+			if (src.extra) { return false; }
 			break;
 		}
 
@@ -600,7 +600,7 @@ private:
 		for (size_t i = 0; i < next_list.size(); i++) {
 			if (next_list[i] < motion_data.size()) {
 				if (IsMatchMotion(motion_data[next_list[i]], next_len, motion)) {
-					searched_motion.push_back(i);
+					searched_motion.push_back(next_list[i]);
 				}
 			}
 		}
@@ -613,7 +613,7 @@ private:
 	 * @return size_t 抽選結果
 	 */
 	size_t GetMotionRandom(void) const {
-		if (this->searched_motion.size() <= 1) { return 0; } /* searched_motionが空っぽ/1個だけなのでとりあえず0を返しておく(1個でも画像データがあればそれを表示できる) */
+		if (this->searched_motion.size() < 1) { return 0; } /* searched_motionが空っぽなのでとりあえず0を返しておく(1個でも画像データがあればそれを表示できる) */
 		return searched_motion.at(GetRand(this->searched_motion.size() - 1));
 	}
 
@@ -651,9 +651,10 @@ private:
 			SearchMotion(next_len, motion);
 			this->Nmotion_picNo = this->GetMotionRandom();
 		}
-
-		/* 検索は終わってるのでさっさと抽選する */
-		this->Nmotion_picNo = this->GetMotionRandom();
+		else {
+			/* 検索は終わってるのでさっさと抽選する */
+			this->Nmotion_picNo = this->GetMotionRandom();
+		}
 
 #if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 		MV1DetachAnim(this->n3Dmodel_handle, this->n3Dmotion_dance_ath);

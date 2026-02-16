@@ -126,6 +126,9 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 				strnex_EX2(buf, 256, ',');
 			}
 		}
+		else if (strands(buf, "EXTRA")) {
+			motion_buf.extra = true;
+		}
 		else if (strands(buf, "DATAIN")) {
 #if FBDF_DANCER_MAT_TYPE == 0 /* âÊëú */
 			/* âÊëúì«Ç›çûÇ› */
@@ -171,6 +174,7 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 			motion_buf.type_2 = false;
 			motion_buf.type_3 = false;
 			motion_buf.type_4 = false;
+			motion_buf.extra = false;
 		}
 	}
 	fclose(fp);

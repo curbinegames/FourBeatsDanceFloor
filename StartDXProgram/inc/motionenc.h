@@ -29,7 +29,7 @@ typedef struct FBDF_Play_motion_s {
 	bool type_2 = false;
 	bool type_3 = false;
 	bool type_4 = false;
-	/* bool type_j = false; ƒWƒƒƒ“ƒv */
+	bool extra = false;
 	std::vector<size_t> next;
 } FBDF_Play_motion_st;
 
