@@ -950,7 +950,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
  * @param[out] nex_music プレイ画面に渡すデータ
  * @return view_num_t 次の画面
  */
-view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
+view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	bool option_fg = false;
 	int command = 0;
 	int option_cmd = 0;
@@ -1003,9 +1003,9 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	folder_manager_class.WriteFile();
 	FBDF_Save_WriteOption(&game_option);
 
-	nex_music->folder_name   = musiclist[command].folder_name;
-	nex_music->map_file_name = musiclist[command].map_file_name;
-	nex_music->music_name    = musiclist[command].music_name;
-	nex_music->dif_type      = musiclist[command].dif_type;
+	nex_music.folder_name   = musiclist[command].folder_name;
+	nex_music.map_file_name = musiclist[command].map_file_name;
+	nex_music.music_name    = musiclist[command].music_name;
+	nex_music.dif_type      = musiclist[command].dif_type;
 	return VIEW_PLAY;
 }

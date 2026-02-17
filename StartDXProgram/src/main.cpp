@@ -27,7 +27,7 @@ static void GameMain(void) {
 			next = FBDF_TitleView();
 			break;
 		case VIEW_SELECT:
-			next = FBDF_SelectView(&next_music);
+			next = FBDF_SelectView(next_music);
 			break;
 		case VIEW_PLAY:
 			next = FBDF_PlayView(&result, &next_music);
