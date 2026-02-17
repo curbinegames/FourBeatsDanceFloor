@@ -184,6 +184,7 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 			motion_buf.type.n3 = false;
 			motion_buf.type.n4 = false;
 			motion_buf.type.vpose = false;
+			motion_buf.extra = false;
 		}
 	}
 	fclose(fp);

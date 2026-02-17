@@ -10,6 +10,7 @@
 #include <strcur.h>
 #include <datacur.h>
 #include <dxcur.h>
+#include <stdcur.h>
 #include <UTF8_conv.h>
 
 #include <main.h>
@@ -149,10 +150,12 @@ template<typename FolderNode = int>
 class folder_manager_c {
 private:
 	std::stack<FolderNode*> folder_stack;
+	std::stack<size_t> cmd_stack;
 
 public:
 	folder_manager_c(FolderNode *root) {
 		this->folder_stack.push(root);
+		this->cmd_stack.push(0);
 	}
 
 	FolderNode *NowFolder(void) const {
@@ -167,13 +170,19 @@ public:
 		}
 
 		this->folder_stack.push(current->children[cmd]);
+		this->cmd_stack.push(cmd);
 		return true;
 	}
 
 	bool PopFolder(void) {
 		if (this->folder_stack.size() <= 1) { return false; }
 		this->folder_stack.pop();
+		this->cmd_stack.pop();
 		return true;
+	}
+
+	std::stack<size_t> GetCmdStack(void) {
+		return this->cmd_stack;
 	}
 };
 
@@ -474,6 +483,38 @@ public:
 			}
 		}
 		return;
+	}
+
+	bool ReadFile(void) {
+		bool ret = false;
+		FILE *fp;
+		std::vector<size_t> vec;
+		fopen_s(&fp, "save/user/select.dat", "rb");
+		if (fp == nullptr) { return false; }
+		else {
+			ret = ReadFileForVector<size_t>(vec, fp);
+		}
+		fclose(fp);
+
+		if (ret == true) {
+			for (size_t i = 1; i < vec.size(); i++) {
+				this->PushFolder(vec[i]);
+			}
+		}
+		return ret;
+	}
+
+	bool WriteFile(void) {
+		bool ret = false;
+		FILE *fp;
+		std::vector<size_t> vec;
+		fopen_s(&fp, "save/user/select.dat", "wb");
+		if (fp == nullptr) { return false; }
+		else {
+			ret = WriteFileForStack<size_t>(folder_manager_class.GetCmdStack(), fp);
+		}
+		fclose(fp);
+		return ret;
 	}
 };
 
@@ -930,8 +971,10 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Option_ReloadPic();
-	folder_manager_class.MakeMusicList(musiclist, view_dif_type); /* defaultフォルダで作られる想定 */
 	if (FBDF_Select_LoadMusicList(&musiclist) == false) { return VIEW_SELECT; }
+	folder_manager_class.ReadFile();
+	folder_manager_class.MakeMusicList(musiclist, view_dif_type);
+	/* view_dif_typeも保存したい */
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
@@ -957,6 +1000,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st *nex_music) {
 		WaitTimer(10); // ループウェイト
 	}
 
+	folder_manager_class.WriteFile();
 	FBDF_Save_WriteOption(&game_option);
 
 	nex_music->folder_name   = musiclist[command].folder_name;
