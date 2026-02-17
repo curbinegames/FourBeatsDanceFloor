@@ -564,6 +564,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	std::vector<FBDF_music_detail_t> &detail, const FBDF_music_detail_base_st &music_detail_base,
 	const char *d_name, const char *file, FBDF_dif_type_ec dif
 ) {
+	FBDF_mapenc_error_et ret;
 	FBDF_map_t map;
 	FBDF_music_detail_t buf;
 	std::string map_path;
@@ -573,7 +574,16 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	map_path += '/';
 	map_path += file;
 
-	if (MapLoadOne(&map, map_path.c_str()) != FBDF_MAPENC_ERROR_NONE) { return; }
+	ret = MapLoadOne(&map, map_path.c_str());
+	if (ret != FBDF_MAPENC_ERROR_NONE) {
+		/* エラーメッセージか何かを残したい */
+		if (ret == FBDF_MAPENC_ERROR_FILE) {
+			return;
+		}
+		else {
+			/* 気にせずスルー */
+		}
+	}
 
 	buf.folder_name        = d_name;
 	buf.music_name         = d_name;

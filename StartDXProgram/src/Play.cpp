@@ -1507,11 +1507,21 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF
  * @return bool true=成功, false=失敗
  */
 static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const TCHAR *map_file_name) {
+	FBDF_mapenc_error_et ret;
 	std::string path = "music/";
 	path += folder_name;
 	path += '/';
 	path += map_file_name;
-	if (MapLoadOne(&map, path.c_str()) != 0) { return false; }
+	ret = MapLoadOne(&map, path.c_str());
+	if (ret != FBDF_MAPENC_ERROR_NONE) {
+		/* エラーメッセージか何かを残したい */
+		if (ret == FBDF_MAPENC_ERROR_FILE) {
+			return false;
+		}
+		else {
+			/* 気にせずスルー */
+		}
+	}
 	map.note.resetNo();
 	map.Stime = GetNowCount();
 	return true;
