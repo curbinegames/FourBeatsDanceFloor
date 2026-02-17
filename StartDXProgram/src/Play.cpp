@@ -1272,19 +1272,19 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 
 	switch (game_option.play_style) {
 	case FBDF_PLAYSTYLE_ASSIST_PLUS:
-		buf.score *= 0.85;
+		buf.score = buf.score * 90 / 100;
 		break;
 	case FBDF_PLAYSTYLE_ASSIST:
-		buf.score *= 0.90;
+		buf.score = buf.score * 95 / 100;
 		break;
 	case FBDF_PLAYSTYLE_NORMAL:
-		buf.score *= 0.99;
+		buf.score = buf.score * 99 / 100;
 		break;
 	case FBDF_PLAYSTYLE_BLANC:
-		buf.score *= 0.995;
+		buf.score = buf.score * 995 / 1000;
 		break;
 	case FBDF_PLAYSTYLE_BLANC_PLUS:
-		buf.score *= 1.00;
+		/* buf.score *= 1.00; */
 		break;
 	}
 	return;
