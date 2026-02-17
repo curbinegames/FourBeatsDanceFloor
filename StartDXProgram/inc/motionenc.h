@@ -7,29 +7,39 @@
 
 #include <system.h>
 
+typedef struct FBDF_Play_motion_len_s {
+	bool n1 = false;
+	bool n2 = false;
+	bool n3 = false;
+	bool n4 = false;
+	bool n8 = false;
+} FBDF_Play_motion_len_st;
+
+typedef struct FBDF_Play_motion_type_s {
+	bool up = false; /* 方向関連は2個以上同時にtrueにならないかも */
+	bool down = false;
+	bool left = false;
+	bool right = false;
+	bool front = false;
+	bool back = false;
+	bool jump = false;
+	bool clap = false;
+	bool turn = false;
+	bool n1 = false;
+	bool n2 = false;
+	bool n3 = false;
+	bool n4 = false;
+	bool vpose = false;
+} FBDF_Play_motion_type_st;
+
 typedef struct FBDF_Play_motion_s {
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
 	std::string image_path;
 	dxcur_divpic_c pic;
 #endif /* 画像 */
-	bool len_1 = false;
-	bool len_2 = false;
-	bool len_3 = false;
-	bool len_4 = false;
-	bool len_8 = false;
-	bool type_u = false; /* 方向関連は2個以上同時にtrueにならないかも */
-	bool type_d = false;
-	bool type_l = false;
-	bool type_r = false;
-	bool type_f = false;
-	bool type_b = false;
-	bool type_j = false;
-	bool type_c = false;
-	bool type_1 = false;
-	bool type_2 = false;
-	bool type_3 = false;
-	bool type_4 = false;
-	bool extra = false;
+	FBDF_Play_motion_len_st len;
+	FBDF_Play_motion_type_st type;
+	bool extra = false; /* ポーズ指定の時のみ呼ばれるかどうか */
 	std::vector<size_t> next;
 } FBDF_Play_motion_st;
 

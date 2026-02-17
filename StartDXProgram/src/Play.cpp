@@ -512,58 +512,64 @@ private:
 
 		switch (next_len) {
 		case 1:
-			if (!src.len_1) { return false; }
+			if (!src.len.n1) { return false; }
 			break;
 		case 2:
-			if (!src.len_2) { return false; }
+			if (!src.len.n2) { return false; }
 			break;
 		case 3:
-			if (!src.len_3) { return false; }
+			if (!src.len.n3) { return false; }
 			break;
 		case 4:
-			if (!src.len_4) { return false; }
+			if (!src.len.n4) { return false; }
 			break;
 		default: /* 5以上を想定 */
-			if (!src.len_8) { return false; }
+			if (!src.len.n8) { return false; }
 			break;
 		}
 
 		switch (motion) {
 		case FBDF_NOTE_MOTION_ASSIGN_UP:
-			if (!src.type_u) { return false; }
+			if (!src.type.up) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_DOWN:
-			if (!src.type_d) { return false; }
+			if (!src.type.down) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_LEFT:
-			if (!src.type_l) { return false; }
+			if (!src.type.left) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_RIGHT:
-			if (!src.type_r) { return false; }
+			if (!src.type.right) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_FRONT:
-			if (!src.type_f) { return false; }
+			if (!src.type.front) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_BACK:
-			if (!src.type_b) { return false; }
+			if (!src.type.back) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_JUMP:
-			if (!src.type_j) { return false; }
+			if (!src.type.jump) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_CLAP:
-			if (!src.type_c) { return false; }
+			if (!src.type.clap) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_TURN:
+			if (!src.type.turn) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_1:
-			if (!src.type_1) { return false; }
+			if (!src.type.n1) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_2:
-			if (!src.type_2) { return false; }
+			if (!src.type.n2) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_3:
-			if (!src.type_3) { return false; }
+			if (!src.type.n3) { return false; }
 			break;
 		case FBDF_NOTE_MOTION_ASSIGN_4:
-			if (!src.type_4) { return false; }
+			if (!src.type.n4) { return false; }
+			break;
+		case FBDF_NOTE_MOTION_ASSIGN_VPOSE:
+			if (!src.type.vpose) { return false; }
 			break;
 		default: /* 無指定と見なして処理 */
 			if (src.extra) { return false; }
@@ -627,7 +633,7 @@ private:
 		if (this->len <= 0) { return; } /* idle or miss なのでスキップ */
 		if ((this->len == 1) &&
 			(this->btn != 1) &&
-			(this->motion_data[this->Nmotion_picNo].len_1 &&
+			(this->motion_data[this->Nmotion_picNo].len.n1 &&
 			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
 		) {
 			return;
@@ -636,7 +642,7 @@ private:
 		if ((this->len == 2) &&
 			(this->btn != 1) &&
 			(this->btn != 2) &&
-			(this->motion_data[this->Nmotion_picNo].len_2 &&
+			(this->motion_data[this->Nmotion_picNo].len.n2 &&
 			motion == FBDF_NOTE_MOTION_ASSIGN_NONE)
 		) {
 			return;

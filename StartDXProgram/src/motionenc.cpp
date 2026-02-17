@@ -53,67 +53,75 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 		}
 #endif /* ‰æ‘œ */
 		else if (strands(buf, "LEN:")) {
+			FBDF_Play_motion_len_st &insert_buf = motion_buf.len;
 			strmods(buf, 4);
 			while (buf[0] != '\0') {
 				switch (buf[0]) {
 				case '1':
-					motion_buf.len_1 = true;
+					insert_buf.n1 = true;
 					break;
 				case '2':
-					motion_buf.len_2 = true;
+					insert_buf.n2 = true;
 					break;
 				case '3':
-					motion_buf.len_3 = true;
+					insert_buf.n3 = true;
 					break;
 				case '4':
-					motion_buf.len_4 = true;
+					insert_buf.n4 = true;
 					break;
 				case '8':
-					motion_buf.len_8 = true;
+					insert_buf.n8 = true;
 					break;
 				}
 				strmods(buf, 1);
 			}
 		}
 		else if (strands(buf, "TYPE:")) {
+			FBDF_Play_motion_type_st &insert_buf = motion_buf.type;
 			strmods(buf, 5);
 			while (buf[0] != '\0') {
 				switch (buf[0]) {
 				case 'u':
-					motion_buf.type_u = true;
+					insert_buf.up = true;
 					break;
 				case 'd':
-					motion_buf.type_d = true;
+					insert_buf.down = true;
 					break;
 				case 'l':
-					motion_buf.type_l = true;
+					insert_buf.left = true;
 					break;
 				case 'r':
-					motion_buf.type_r = true;
+					insert_buf.right = true;
 					break;
 				case 'f':
-					motion_buf.type_f = true;
+					insert_buf.front = true;
 					break;
 				case 'b':
-					motion_buf.type_b = true;
+					insert_buf.back = true;
 					break;
 				case 'j':
-					motion_buf.type_b = true;
+					insert_buf.jump = true;
 					break;
 				case 'c':
-					motion_buf.type_b = true;
+					insert_buf.clap = true;
+					break;
+				case 't':
+					insert_buf.turn = true;
 					break;
 				case '1':
-					motion_buf.type_1 = true;
+					insert_buf.n1 = true;
 					break;
 				case '2':
-					motion_buf.type_2 = true;
+					insert_buf.n2 = true;
 					break;
 				case '3':
-					motion_buf.type_3 = true;
+					insert_buf.n3 = true;
 					break;
 				case '4':
-					motion_buf.type_4 = true;
+					insert_buf.n4 = true;
+					break;
+				case 'v':
+					insert_buf.vpose = true;
 					break;
 				}
 				strmods(buf, 1);
@@ -157,24 +165,25 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 			motion_buf.pic.clear();
 #endif /* ‰æ‘œ */
 			motion_buf.next.clear();
-			motion_buf.len_1 = false;
-			motion_buf.len_2 = false;
-			motion_buf.len_3 = false;
-			motion_buf.len_4 = false;
-			motion_buf.len_8 = false;
-			motion_buf.type_u = false;
-			motion_buf.type_d = false;
-			motion_buf.type_l = false;
-			motion_buf.type_r = false;
-			motion_buf.type_f = false;
-			motion_buf.type_b = false;
-			motion_buf.type_j = false;
-			motion_buf.type_c = false;
-			motion_buf.type_1 = false;
-			motion_buf.type_2 = false;
-			motion_buf.type_3 = false;
-			motion_buf.type_4 = false;
-			motion_buf.extra = false;
+			motion_buf.len.n1 = false;
+			motion_buf.len.n2 = false;
+			motion_buf.len.n3 = false;
+			motion_buf.len.n4 = false;
+			motion_buf.len.n8 = false;
+			motion_buf.type.up = false;
+			motion_buf.type.down = false;
+			motion_buf.type.left = false;
+			motion_buf.type.right = false;
+			motion_buf.type.front = false;
+			motion_buf.type.back = false;
+			motion_buf.type.jump = false;
+			motion_buf.type.clap = false;
+			motion_buf.type.turn = false;
+			motion_buf.type.n1 = false;
+			motion_buf.type.n2 = false;
+			motion_buf.type.n3 = false;
+			motion_buf.type.n4 = false;
+			motion_buf.type.vpose = false;
 		}
 	}
 	fclose(fp);
