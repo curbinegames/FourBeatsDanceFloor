@@ -208,7 +208,7 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t *map, const char *buf, FBDF_m
  * @param[in] nex_music 譜面ファイルのパス
  * @return FBDF_mapenc_error_et エラー情報
  */
-FBDF_mapenc_error_et MapLoadOne(FBDF_map_t *map, const char *nex_music) {
+FBDF_mapenc_error_et MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
@@ -225,25 +225,25 @@ FBDF_mapenc_error_et MapLoadOne(FBDF_map_t *map, const char *nex_music) {
 	while (fgets(buf, 256, fp) != NULL) {
 		if (strands(buf, "BPM:")) {
 			strmods(buf, 4);
-			map->bpm = strsansD(buf, 256);
-			option.now_bpm = map->bpm;
+			map.bpm = strsansD(buf, 256);
+			option.now_bpm = map.bpm;
 		}
 		else if (strands(buf, "OFFSET:")) {
 			strmods(buf, 7);
-			map->offset = strtol(buf, NULL, 10);
-			option.now_shuttime = map->offset;
+			map.offset = strtol(buf, NULL, 10);
+			option.now_shuttime = map.offset;
 		}
 		else if (strands(buf, "ARTIST:")) {
 			strmods(buf, 7);
-			map->artist = buf;
+			map.artist = buf;
 			/* 改行消し */
-			for (int ic = 0; ic < map->artist.size(); ic++) {
-				if (map->artist[ic] == '\n') {
-					map->artist.pop_back();
+			for (int ic = 0; ic < map.artist.size(); ic++) {
+				if (map.artist[ic] == '\n') {
+					map.artist.pop_back();
 				}
 			}
 			/* 日本語補正 */
-			map->artist = UTF8_converter(map->artist);
+			map.artist = UTF8_converter(map.artist);
 		}
 		else {
 			break;
@@ -263,7 +263,7 @@ FBDF_mapenc_error_et MapLoadOne(FBDF_map_t *map, const char *nex_music) {
 			option.now_bpm = strtod(buf, NULL);
 		}
 		else {
-			FBDF_mapenc_error_et err_buf = GetNoteLine(map, buf, &option);
+			FBDF_mapenc_error_et err_buf = GetNoteLine(&map, buf, &option);
 			if (err_buf != FBDF_MAPENC_ERROR_NONE) { err = err_buf; } /* エラーあっても最後まで読み切る */
 		}
 	}
@@ -271,7 +271,7 @@ FBDF_mapenc_error_et MapLoadOne(FBDF_map_t *map, const char *nex_music) {
 
 	/* ラストノート挿入 */ {
 		FBDF_note_t buf_note;
-		map->note.push_back(buf_note);
+		map.note.push_back(buf_note);
 	}
 
 	return FBDF_MAPENC_ERROR_NONE;
