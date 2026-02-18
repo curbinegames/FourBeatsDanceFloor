@@ -186,7 +186,9 @@ static void FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
 	this_time_score.acc        = data->acc;
 	this_time_score.clear_type = FBDF_ResultJudgeClearType(data);
 	this_time_score.score      = data->score;
-	FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type);
+	if (FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type) == false) {
+		FBDF_ErrorLogWrite("スコアの保存に失敗しました。");
+	}
 }
 
 /**

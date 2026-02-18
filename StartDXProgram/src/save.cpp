@@ -1,5 +1,6 @@
 
 #include <string>
+#include <ctime>
 
 #include <DxLib.h>
 #include <system.h>
@@ -179,6 +180,47 @@ bool FBDF_Save_WriteOption(const FBDF_game_option_st *src) {
     if (fp == NULL) { return false; }
     fwrite(src, sizeof(FBDF_game_option_st), 1, fp);
     fclose(fp);
+
+    return true;
+}
+
+/**
+ * @brief エラーログを追記する。
+ * @param[in] message 書き込むメッセージ。printf表記には対応してないので注意。事前にsprintf()とか使ってね。勝手に改行されるから、末尾に\nを入れる必要はないよ。
+ * @return bool true=成功, false=失敗
+ */
+bool FBDF_ErrorLogWrite(const char *message) {
+    int err_check = 0;
+
+    if (message == nullptr) { return false; }
+
+    FILE *fp;
+    std::time_t buf = std::time(nullptr);
+    std::tm Ntime;
+    err_check = localtime_s(&Ntime, &buf);
+    if (err_check != 0) { return false; }
+
+    err_check = fopen_s(&fp, "FBDF_errorlog.txt", "a");
+    if (err_check != 0) { return false; }
+
+    /* ファイル操作エリア */ {
+        /* 年は不要 */
+        err_check = fprintf(fp, "[%02d/%02d %02d:%02d:%02d] %s\n",
+            Ntime.tm_mon + 1,
+            Ntime.tm_mday,
+            Ntime.tm_hour,
+            Ntime.tm_min,
+            Ntime.tm_sec,
+            message
+        );
+        if (err_check < 0) {
+            fclose(fp);
+            return false;
+        }
+    }
+
+    err_check = fclose(fp);
+    if (err_check != 0) { return false; }
 
     return true;
 }

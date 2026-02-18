@@ -49,3 +49,5 @@ extern bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st *src,    
 
 extern bool FBDF_Save_ReadOption(FBDF_game_option_st *dest);
 extern bool FBDF_Save_WriteOption(const FBDF_game_option_st *src);
+
+extern bool FBDF_ErrorLogWrite(const char *message);

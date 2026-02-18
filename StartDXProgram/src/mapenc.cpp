@@ -9,6 +9,7 @@
 #include <datacur.h>
 #include <UTF8_conv.h>
 
+#include <save.h>
 #include <system.h>
 
 #include <mapenc.h>
@@ -220,7 +221,12 @@ FBDF_mapenc_error_et MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 	strcpy_s(musicPath, sizeof(musicPath), nex_music);
 
 	fopen_s(&fp, musicPath, "r");
-	if (fp == NULL) { return FBDF_MAPENC_ERROR_FILE; }
+	if (fp == NULL) {
+		std::string buf = "couldn't open file: ";
+		buf += musicPath;
+		FBDF_ErrorLogWrite(buf.c_str());
+		return FBDF_MAPENC_ERROR_FILE;
+	}
 
 	while (fgets(buf, 256, fp) != NULL) {
 		if (strands(buf, "BPM:")) {
@@ -274,5 +280,5 @@ FBDF_mapenc_error_et MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 		map.note.push_back(buf_note);
 	}
 
-	return FBDF_MAPENC_ERROR_NONE;
+	return err;
 }
