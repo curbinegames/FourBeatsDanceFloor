@@ -1651,7 +1651,7 @@ static void FBDF_Play_DrawScore(int x, int y, FBDF_score_st &score) {
  * @param[in] nex_music セレクト画面から渡されたデータ
  * @return view_num_t 次の画面
  */
-view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *nex_music) {
+view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose_music_st &nex_music) {
 	FBDF_map_t map;
 	FBDF_score_st score;
 	FBDF_push_key_st pkey;
@@ -1668,14 +1668,14 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 	DxTime_t FinishTime = 0;
 
 	/* 譜面読み込み系 */
-	if (FBDF_Play_MapLoad(map, nex_music->folder_name.c_str(), nex_music->map_file_name.c_str()) == false) { return VIEW_SELECT; }
+	if (FBDF_Play_MapLoad(map, nex_music.folder_name.c_str(), nex_music.map_file_name.c_str()) == false) { return VIEW_SELECT; }
 	map.note.resetNo();
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	FBDF_Play_Loadmusic(musicData, nex_music->folder_name.c_str(), map.music_file);
+	FBDF_Play_Loadmusic(musicData, nex_music.folder_name.c_str(), map.music_file);
 	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
 
 	/* 曲再生後にやるべき初期化 */
@@ -1718,7 +1718,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 			/* プレイエリア周り描画 */
 			DrawGraph(0, 0, lanePic.handle(), TRUE);
-			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music->folder_name.c_str());
+			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music.folder_name.c_str());
 			play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
 			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
 			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
@@ -1738,7 +1738,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t *result_data, const FBDF_play_choose
 
 	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
-	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);
+	FBDF_Play_MakeResultData(&result_data, &nex_music, map, score, play_class);
 
 	return VIEW_RESULT;
 }

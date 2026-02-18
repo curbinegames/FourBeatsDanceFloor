@@ -30,10 +30,10 @@ static void GameMain(void) {
 			next = FBDF_SelectView(next_music);
 			break;
 		case VIEW_PLAY:
-			next = FBDF_PlayView(&result, &next_music);
+			next = FBDF_PlayView(result, next_music);
 			break;
 		case VIEW_RESULT:
-			next = FirstResultView(&result);
+			next = FirstResultView(result);
 			break;
 		default:
 			return;

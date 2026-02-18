@@ -24,4 +24,4 @@ typedef struct FBDF_result_data_s {
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::NONE;
 } FBDF_result_data_t;
 
-extern view_num_t FirstResultView(const FBDF_result_data_t *data);
+extern view_num_t FirstResultView(const FBDF_result_data_t &data);

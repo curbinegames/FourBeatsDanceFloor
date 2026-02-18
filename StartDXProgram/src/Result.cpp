@@ -196,7 +196,7 @@ static void FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
  * @param[in] data プレイ画面から渡されたデータ
  * @return view_num_t 次の画面
  */
-view_num_t FirstResultView(const FBDF_result_data_t *data) {
-	FBDF_ResultSaveMusicScore(data);
-	return FBDF_ResultView(data);
+view_num_t FirstResultView(const FBDF_result_data_t &data) {
+	FBDF_ResultSaveMusicScore(&data);
+	return FBDF_ResultView(&data);
 }
