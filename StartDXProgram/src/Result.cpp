@@ -136,12 +136,12 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t *data) {
 
 		/* スコアグラフの横 */
 		FBDF_ResultDrawFinalBar(data->acc);
-		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN     , COLOR_WHITE, _T("%s / %s")    , data->name.c_str(), data->artist.c_str());
+		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN     , COLOR_WHITE, _T("%s / %s")    , data->music_name.c_str(), data->artist_name.c_str());
 		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN + 20, COLOR_WHITE, _T("level: %.2f"), data->level);
 
 		/* スコアグラフの下 */
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 0, COLOR_WHITE, _T("score: %7d")   , data->score);
-		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 1, COLOR_WHITE, _T("acc: %6.2f")   , data->acc);
+		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 1, COLOR_WHITE, _T("  acc: %6.2f") , data->acc);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 2, COLOR_WHITE, _T("crit: %4d")    , data->crit);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 3, COLOR_WHITE, _T(" hit: %4d")    , data->hit);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 4, COLOR_WHITE, _T("save: %4d")    , data->save);
@@ -181,14 +181,12 @@ static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t *da
  * @param[in] data プレイデータ
  * @return bool true=成功, false=失敗
  */
-static void FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
+static bool FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
 	FBDF_file_music_score_st this_time_score;
 	this_time_score.acc        = data->acc;
 	this_time_score.clear_type = FBDF_ResultJudgeClearType(data);
 	this_time_score.score      = data->score;
-	if (FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type) == false) {
-		FBDF_ErrorLogWrite("スコアの保存に失敗しました。");
-	}
+	return FBDF_Save_UpdateScoreOneDif(&this_time_score, data->folder_name.c_str(), data->dif_type);
 }
 
 /**
@@ -197,6 +195,10 @@ static void FBDF_ResultSaveMusicScore(const FBDF_result_data_t *data) {
  * @return view_num_t 次の画面
  */
 view_num_t FirstResultView(const FBDF_result_data_t &data) {
-	FBDF_ResultSaveMusicScore(&data);
+	if (FBDF_ResultSaveMusicScore(&data) == false) {
+		std::string msg = data.music_name;
+		msg += ": スコアの保存に失敗しました。";
+		FBDF_ErrorLogWrite(msg.c_str());
+	}
 	return FBDF_ResultView(&data);
 }

@@ -29,8 +29,6 @@
 #define NOTE_COLOR_3 0xFFFF62FB
 #define NOTE_COLOR_4 0xFFFFFF00
 
-#define ISNOTE(c) ((c) == '-' || (c) == '.')
-
 #define NOTE_HEIGHT 15
 #define NOTE_SPEED   4
 
@@ -926,10 +924,8 @@ public:
 	 */
 	void update_graph(int Ntime) {
 		if (this->graphNo >= FBDF_RESULT_SCORE_GRAPH_COUNT) { return; }
-		if (((Etime * this->graphNo + Stime * (FBDF_RESULT_SCORE_GRAPH_COUNT - this->graphNo - 1)) / (FBDF_RESULT_SCORE_GRAPH_COUNT - 1)) < Ntime)
-		{
-			this->set_graph();
-		}
+		DxTime_t point_time = lins_scale(0, this->Stime, (FBDF_RESULT_SCORE_GRAPH_COUNT - 1), this->Etime, this->graphNo);
+		if (point_time < Ntime) { this->set_graph(); }
 	}
 
 	/**
@@ -990,6 +986,7 @@ private:
 	const int len    =   3; /* バーの長さ[px] */
 	const int thick  =   1; /* バーの太さ[px] */
 	const int height = 100; /* 表示gap[ms] */
+	const size_t max_count = 50;
 	std::vector<int> queue;
 
 	int sum   = 0;
@@ -1004,13 +1001,13 @@ public:
 	 * @param[in]  down 描画下位置
 	 * @return なし
 	 */
-	void DrawBar(int x1, int y1, int x2, int y2) const {
-		int Yborder = (y1 + y2) / 2;
-		DrawLine(x1, Yborder, x2, Yborder, COLOR_RED);
+	void DrawBar(int left, int up, int right, int down) const {
+		int Yborder = (up + down) / 2;
+		DrawLine(left, Yborder, right, Yborder, COLOR_RED);
 		for (int in = 0; in < this->queue.size(); in++) {
-			int Drawx1 = lins_scale(        0, x1, 49            , x2, in + 50 - this->queue.size());
-			int Drawx2 = lins_scale(this->len, x1, 49 + this->len, x2, in + 50 - this->queue.size());
-			int Drawy  = lins_scale(   height, y1,        -height, y2, this->queue[in]);
+			int Drawx1 = lins_scale(        0, left, this->max_count - 1            , right, in + this->max_count - this->queue.size());
+			int Drawx2 = lins_scale(this->len, left, this->max_count - 1 + this->len, right, in + this->max_count - this->queue.size());
+			int Drawy  = lins_scale(   height,   up,        -height,  down, this->queue[in]);
 			DrawLine(Drawx1, Drawy, Drawx2, Drawy, COLOR_WHITE);
 		}
 	}
@@ -1022,7 +1019,7 @@ public:
 	 */
 	void SetVal(int val) {
 		this->queue.push_back(val);
-		if (50 <= this->queue.size()) {
+		if (this->max_count <= this->queue.size()) {
 			this->queue.erase(this->queue.begin());
 		}
 
@@ -1490,8 +1487,8 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st 
 static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *nex_music,
 	const FBDF_map_t &map, const FBDF_score_st &score, const FBDF_play_class_set_t &play_class
 ) {
-	result_data->name        = nex_music->folder_name;
-	result_data->artist      = map.artist;
+	result_data->music_name  = nex_music->folder_name;
+	result_data->artist_name = map.artist;
 	result_data->folder_name = nex_music->folder_name;
 	result_data->level       = 0;
 	result_data->score       = score.point + score.chain_point;

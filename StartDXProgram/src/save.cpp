@@ -151,11 +151,11 @@ bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st *src, const TCHA
 #endif /* 曲スコア関連 */
 
 /**
-* @brief ユーザーオプションデータを読み込む
-* @param[out] dest 格納先、配列数は3
-* @param[in] music_folder_name 曲のフォルダ名
-* @return bool true=成功, false=失敗
-*/
+ * @brief ユーザーオプションデータを読み込む
+ * @param[out] dest 格納先、配列数は3
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_ReadOption(FBDF_game_option_st *dest) {
     FILE *fp;
 
@@ -168,11 +168,11 @@ bool FBDF_Save_ReadOption(FBDF_game_option_st *dest) {
 }
 
 /**
-* @brief ユーザーオプションデータを読み込む
-* @param[out] dest 格納先、配列数は3
-* @param[in] music_folder_name 曲のフォルダ名
-* @return bool true=成功, false=失敗
-*/
+ * @brief ユーザーオプションデータを読み込む
+ * @param[out] dest 格納先、配列数は3
+ * @param[in] music_folder_name 曲のフォルダ名
+ * @return bool true=成功, false=失敗
+ */
 bool FBDF_Save_WriteOption(const FBDF_game_option_st *src) {
     FILE *fp;
 

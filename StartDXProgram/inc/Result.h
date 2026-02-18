@@ -9,8 +9,8 @@
 #define FBDF_RESULT_SCORE_GRAPH_COUNT 25
 
 typedef struct FBDF_result_data_s {
-	std::string name;
-	std::string artist;
+	std::string music_name;
+	std::string artist_name;
 	std::string folder_name;
 	double level = 0;
 	uint score = 0;
