@@ -150,7 +150,7 @@ template<typename FolderNode = int>
 class folder_manager_c {
 private:
 	std::stack<FolderNode*> folder_stack;
-	std::stack<size_t> cmd_stack;
+	std::stack<uint32_t> cmd_stack;
 
 public:
 	folder_manager_c(FolderNode *root) {
@@ -181,7 +181,7 @@ public:
 		return true;
 	}
 
-	std::stack<size_t> GetCmdStack(void) {
+	std::stack<uint32_t> GetCmdStack(void) {
 		return this->cmd_stack;
 	}
 };
@@ -488,11 +488,11 @@ public:
 	bool ReadFile(void) {
 		bool ret = false;
 		FILE *fp;
-		std::vector<size_t> vec;
+		std::vector<uint32_t> vec;
 		fopen_s(&fp, "save/user/select.dat", "rb");
 		if (fp == nullptr) { return false; }
 		else {
-			ret = ReadFileForVector<size_t>(vec, fp);
+			ret = ReadFileForVector<uint32_t>(vec, fp);
 		}
 		fclose(fp);
 
@@ -507,11 +507,11 @@ public:
 	bool WriteFile(void) {
 		bool ret = false;
 		FILE *fp;
-		std::vector<size_t> vec;
+		std::vector<uint32_t> vec;
 		fopen_s(&fp, "save/user/select.dat", "wb");
 		if (fp == nullptr) { return false; }
 		else {
-			ret = WriteFileForStack<size_t>(folder_manager_class.GetCmdStack(), fp);
+			ret = WriteFileForStack<uint32_t>(folder_manager_class.GetCmdStack(), fp);
 		}
 		fclose(fp);
 		return ret;
