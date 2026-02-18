@@ -66,4 +66,4 @@ typedef struct FBDF_map_s {
 	TCHAR    music_file[256]=_T("music.mp3"); // rrs osu tja nps êÍóp
 } FBDF_map_t;
 
-extern FBDF_mapenc_error_et MapLoadOne(FBDF_map_t &map, const char *nex_music);
+extern FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music);

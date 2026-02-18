@@ -615,7 +615,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	map_path += '/';
 	map_path += file;
 
-	ret = MapLoadOne(map, map_path.c_str());
+	ret = FBDF_MapLoadOne(map, map_path.c_str());
 	if (ret != FBDF_MAPENC_ERROR_NONE) {
 		/* エラーメッセージか何かを残したい */
 		if (ret == FBDF_MAPENC_ERROR_FILE) {

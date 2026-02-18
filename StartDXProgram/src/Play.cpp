@@ -1515,7 +1515,7 @@ static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const T
 	path += folder_name;
 	path += '/';
 	path += map_file_name;
-	ret = MapLoadOne(map, path.c_str());
+	ret = FBDF_MapLoadOne(map, path.c_str());
 	if (ret != FBDF_MAPENC_ERROR_NONE) {
 		/* エラーメッセージか何かを残したい */
 		if (ret == FBDF_MAPENC_ERROR_FILE) {

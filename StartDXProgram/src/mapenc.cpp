@@ -209,7 +209,7 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t *map, const char *buf, FBDF_m
  * @param[in] nex_music 譜面ファイルのパス
  * @return FBDF_mapenc_error_et エラー情報
  */
-FBDF_mapenc_error_et MapLoadOne(FBDF_map_t &map, const char *nex_music) {
+FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
