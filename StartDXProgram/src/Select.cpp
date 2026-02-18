@@ -610,6 +610,8 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	FBDF_music_detail_t buf;
 	std::string map_path;
 
+	if (file[0] == '\0') { return; }
+
 	map_path  = "music/";
 	map_path += d_name;
 	map_path += '/';
@@ -793,9 +795,18 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d
 		else { /* ‚È‚©‚Á‚½‚çmap.txt‚¾‚¯’T‚· */
 			detail_base[1].map_path = "map.txt";
 		}
-		FBDF_Select_MapLoadMusicGetDetail(musiclist->detail, detail_base[0], d_name, detail_base[0].map_path.c_str(), FBDF_dif_type_ec::LIGHT );
-		FBDF_Select_MapLoadMusicGetDetail(musiclist->detail, detail_base[1], d_name, detail_base[1].map_path.c_str(), FBDF_dif_type_ec::NORMAL);
-		FBDF_Select_MapLoadMusicGetDetail(musiclist->detail, detail_base[2], d_name, detail_base[2].map_path.c_str(), FBDF_dif_type_ec::HYPER );
+
+		FBDF_Select_MapLoadMusicGetDetail(
+			musiclist->detail, detail_base[0], d_name, detail_base[0].map_path.c_str(),
+			FBDF_dif_type_ec::LIGHT );
+		FBDF_Select_MapLoadMusicGetDetail(
+			musiclist->detail, detail_base[1], d_name, detail_base[1].map_path.c_str(),
+			FBDF_dif_type_ec::NORMAL
+		);
+		FBDF_Select_MapLoadMusicGetDetail(
+			musiclist->detail, detail_base[2], d_name, detail_base[2].map_path.c_str(),
+			FBDF_dif_type_ec::HYPER
+		);
 	}
 
 	return;

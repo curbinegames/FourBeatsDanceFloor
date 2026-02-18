@@ -53,6 +53,7 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
 	if (option->now_block == 0) { return FBDF_MAPENC_ERROR_OPTION; } /* ブロック数0とか意味わからんもの定義してないからダメ */
 	for (size_t ic = 0; ic < option->now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
+			FBDF_ErrorLogWrite("ノーツに関係ない文字が混ざっています。");
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
@@ -269,6 +270,12 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 			option.now_bpm = strtod(buf, NULL);
 		}
 		else {
+			for (size_t i = 0; buf[i] != '\0'; i++) {
+				if (buf[i] == '\n') {
+					buf[i] = '\0';
+					break;
+				}
+			}
 			FBDF_mapenc_error_et err_buf = GetNoteLine(&map, buf, &option);
 			if (err_buf != FBDF_MAPENC_ERROR_NONE) { err = err_buf; } /* エラーあっても最後まで読み切る */
 		}
