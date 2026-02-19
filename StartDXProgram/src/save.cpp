@@ -190,18 +190,23 @@ bool FBDF_Save_WriteOption(const FBDF_game_option_st *src) {
  * @return bool true=成功, false=失敗
  */
 bool FBDF_ErrorLogWrite(const char *message) {
-    int err_check = 0;
-
     if (message == nullptr) { return false; }
 
+    int err_check = 0;
+    size_t file_size = 0;
     FILE *fp;
     std::time_t buf = std::time(nullptr);
     std::tm Ntime;
+
     err_check = localtime_s(&Ntime, &buf);
     if (err_check != 0) { return false; }
 
     err_check = fopen_s(&fp, "FBDF_errorlog.txt", "a");
     if (err_check != 0) { return false; }
+
+    fseek(fp, 0, SEEK_END);
+    file_size = ftell(fp);
+    if (0xffffff < file_size) { return false; }
 
     /* ファイル操作エリア */ {
         /* 年は不要 */

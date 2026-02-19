@@ -49,8 +49,14 @@ typedef struct FBDF_map_enc_s {
  * @return FBDF_mapenc_error_et エラー情報
  */
 static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
-	if (map->note.isfull()) { return FBDF_MAPENC_ERROR_NOTE_FULL; } /* ノーツ数が2000に達していたらこれ以上読み込まない */
-	if (option->now_block == 0) { return FBDF_MAPENC_ERROR_OPTION; } /* ブロック数0とか意味わからんもの定義してないからダメ */
+	if (map->note.isfull()) { /* ノーツ数が2000に達していたらこれ以上読み込まない */
+		FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
+		return FBDF_MAPENC_ERROR_NOTE_FULL;
+	}
+	if (option->now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
+		FBDF_ErrorLogWrite("ブロック数に0を指定してノーツを読み込もうとしました。");
+		return FBDF_MAPENC_ERROR_OPTION;
+	}
 	for (size_t ic = 0; ic < option->now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
 			FBDF_ErrorLogWrite("ノーツに関係ない文字が混ざっています。");
@@ -173,7 +179,10 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
 			map->note.push_back(buf_note);
 			map->Etime = buf_note.time;
 			map->note.stepNo();
-			if (map->note.isfull()) { return FBDF_MAPENC_ERROR_NOTE_FULL; }
+			if (map->note.isfull()) {
+				FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
+				return FBDF_MAPENC_ERROR_NOTE_FULL;
+			}
 		}
 	}
 	option->now_shutpos += option->now_block;
