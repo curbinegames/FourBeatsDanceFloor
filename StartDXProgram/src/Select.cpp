@@ -641,7 +641,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	buf.dif_type           = dif;
 	FBDF_CalMapMostColorPat(buf.most_colorpat, &map);
 	FBDF_CountMapColor(&buf.color_count, &map, buf.Length);
-	FBDF_Save_ReadScoreOneDif(&buf.user_highscore, d_name, dif);
+	FBDF_Save_ReadScoreOneDif(buf.user_highscore, d_name, dif);
 
 	detail.push_back(buf);
 }

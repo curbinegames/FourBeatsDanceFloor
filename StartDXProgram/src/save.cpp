@@ -89,18 +89,18 @@ bool FBDF_Save_WriteScoreAllDif(const FBDF_file_music_score_st src[], const TCHA
  * @param[in] dif_type 難易度タイプ
  * @return bool true=成功, false=失敗
  */
-bool FBDF_Save_ReadScoreOneDif(FBDF_file_music_score_st *dest, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
+bool FBDF_Save_ReadScoreOneDif(FBDF_file_music_score_st &dest, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf[3];
     if (FBDF_Save_ReadScoreAllDif(buf, music_folder_name) != true) { return false; }
     switch (dif_type) {
     case FBDF_dif_type_ec::LIGHT:
-        *dest = buf[0];
+        dest = buf[0];
         break;
     case FBDF_dif_type_ec::NORMAL:
-        *dest = buf[1];
+        dest = buf[1];
         break;
     case FBDF_dif_type_ec::HYPER:
-        *dest = buf[2];
+        dest = buf[2];
         break;
     }
     return true;
@@ -113,18 +113,18 @@ bool FBDF_Save_ReadScoreOneDif(FBDF_file_music_score_st *dest, const TCHAR *musi
  * @param[in] dif_type 難易度タイプ
  * @return bool true=成功, false=失敗
  */
-bool FBDF_Save_WriteScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
+bool FBDF_Save_WriteScoreOneDif(const FBDF_file_music_score_st &src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf[3];
     FBDF_Save_ReadScoreAllDif(buf, music_folder_name); /* readできてなくても良い */
     switch (dif_type) {
     case FBDF_dif_type_ec::LIGHT:
-        buf[0] = *src;
+        buf[0] = src;
         break;
     case FBDF_dif_type_ec::NORMAL:
-        buf[1] = *src;
+        buf[1] = src;
         break;
     case FBDF_dif_type_ec::HYPER:
-        buf[2] = *src;
+        buf[2] = src;
         break;
     }
     return FBDF_Save_WriteScoreAllDif(buf, music_folder_name);
@@ -137,15 +137,15 @@ bool FBDF_Save_WriteScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR
  * @param[in] dif_type 難易度タイプ
  * @return bool true=成功, false=失敗
  */
-bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st *src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
+bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st &src, const TCHAR *music_folder_name, FBDF_dif_type_ec dif_type) {
     FBDF_file_music_score_st buf;
-    FBDF_Save_ReadScoreOneDif(&buf, music_folder_name, dif_type); /* readできてなくても良い */
+    FBDF_Save_ReadScoreOneDif(buf, music_folder_name, dif_type); /* readできてなくても良い */
 
-    if (buf.acc        < src->acc       ) { buf.acc        = src->acc;        }
-    if (buf.clear_type < src->clear_type) { buf.clear_type = src->clear_type; }
-    if (buf.score      < src->score     ) { buf.score      = src->score;      }
+    if (buf.acc        < src.acc       ) { buf.acc        = src.acc;        }
+    if (buf.clear_type < src.clear_type) { buf.clear_type = src.clear_type; }
+    if (buf.score      < src.score     ) { buf.score      = src.score;      }
 
-    return FBDF_Save_WriteScoreOneDif(&buf, music_folder_name, dif_type);
+    return FBDF_Save_WriteScoreOneDif(buf, music_folder_name, dif_type);
 }
 
 #endif /* 曲スコア関連 */
