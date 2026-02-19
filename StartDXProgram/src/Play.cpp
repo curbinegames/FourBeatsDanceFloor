@@ -906,15 +906,15 @@ public:
 	 * @param[in] noteN 今のノート番号
 	 * @return なし
 	 */
-	void update_score(const FBDF_score_st *score, uint noteN) {
-		uint hit_notes = score->crit + score->hit + score->drop;
+	void update_score(const FBDF_score_st &score, uint noteN) {
+		uint hit_notes = score.crit + score.hit + score.drop;
 		uint remain_notes = noteN - hit_notes;
-		this->score_bar.bar_70 = 100 * (score->point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_90 = 100 * (score->point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_96 = 100 * (score->point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_98 = 100 * (score->point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_99 = 100 * (score->point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_ave = DIV_AVOID_ZERO(100 * score->point, hit_notes * CRIT_SCORE, 100.00);
+		this->score_bar.bar_70 = 100 * (score.point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_90 = 100 * (score.point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_96 = 100 * (score.point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_98 = 100 * (score.point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_99 = 100 * (score.point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_ave = DIV_AVOID_ZERO(100 * score.point, hit_notes * CRIT_SCORE, 100.00);
 	}
 
 	/**
@@ -1211,22 +1211,22 @@ typedef struct FBDF_play_class_set_s {
  * @param[in] pkey キー入力情報
  * @return なし
  */
-static void FBDF_PlayDrawLamp(const FBDF_push_key_st *pkey) {
+static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
 	static const int baseX = 165;
 	static const int baseY = 575;
 	static const int sizeX =  60;
 	static const int sizeY =  15;
 	static const int   gap =  10;
-	if (IS_BETWEEN(1, pkey->D, 15)) {
+	if (IS_BETWEEN(1, pkey.D, 15)) {
 		DrawBox(baseX                      , baseY, baseX +     sizeX          , baseY + sizeY, NOTE_COLOR_1, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey->F, 15)) {
+	if (IS_BETWEEN(1, pkey.F, 15)) {
 		DrawBox(baseX +     sizeX +     gap, baseY, baseX + 2 * sizeX +     gap, baseY + sizeY, NOTE_COLOR_2, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey->J, 15)) {
+	if (IS_BETWEEN(1, pkey.J, 15)) {
 		DrawBox(baseX + 2 * sizeX + 2 * gap, baseY, baseX + 3 * sizeX + 2 * gap, baseY + sizeY, NOTE_COLOR_3, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey->K, 15)) {
+	if (IS_BETWEEN(1, pkey.K, 15)) {
 		DrawBox(baseX + 3 * sizeX + 3 * gap, baseY, baseX + 4 * sizeX + 3 * gap, baseY + sizeY, NOTE_COLOR_4, TRUE);
 	}
 	return;
@@ -1243,10 +1243,10 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_st *pkey) {
  * @param[out] map マップデータ
  * @return なし
  */
-static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool &key_detect, const FBDF_map_t *map) {
+static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool &key_detect, const FBDF_map_t &map) {
 	if (key_detect) {
 		key_detect = false;
-		buf.gap = map->note.nowData().time - map->Ntime;
+		buf.gap = map.note.nowData().time - map.Ntime;
 		if (buf.gap <= 0) {
 			buf.score = betweens(0, JUDGE_WIDTH + buf.gap, CRIT_SCORE);
 		}
@@ -1296,17 +1296,17 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
  * @param[in] se 効果音データ
  */
 static void FBDF_Play_NoteJudgeEventAntion(
-	std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t *play_class,
-	FBDF_score_st *score, size_t noteN, const FBDT_hit_snd_t *se
+	std::queue<FBDF_judge_event_st> &judge_event, FBDF_play_class_set_t &play_class,
+	FBDF_score_st &score, size_t noteN, const FBDT_hit_snd_t &se
 ) {
 	bool note_judged = !judge_event.empty();
 	FBDF_judge_event_st buf;
 
-	FBDF_judge_c           *judge_class      = &play_class->judge_class;
-	FBDF_dancer_c          *dancer_class     = &play_class->dancer_class;
-	FBDF_score_bar_c       *score_bar_class  = &play_class->score_bar_class;
-	FBDF_gap_bar_c         *gap_bar_class    = &play_class->gap_bar_class;
-	FBDF_play_notes_draw_c *notes_draw_class = &play_class->notes_draw_class;
+	FBDF_judge_c           &judge_class      = play_class.judge_class;
+	FBDF_dancer_c          &dancer_class     = play_class.dancer_class;
+	FBDF_score_bar_c       &score_bar_class  = play_class.score_bar_class;
+	FBDF_gap_bar_c         &gap_bar_class    = play_class.gap_bar_class;
+	FBDF_play_notes_draw_c &notes_draw_class = play_class.notes_draw_class;
 
 	while (!judge_event.empty()) {
 		buf = judge_event.front();
@@ -1314,21 +1314,21 @@ static void FBDF_Play_NoteJudgeEventAntion(
 
 		if (buf.mat == JUDGE_NONE) { continue; }
 
-		judge_class->SetJudge(buf.mat);
+		judge_class.SetJudge(buf.mat);
 
 		/* 判定数追加 */
 		switch (buf.mat) {
 		case JUDGE_CRIT:
-			score->crit++;
+			score.crit++;
 			break;
 		case JUDGE_HIT:
-			score->hit++;
+			score.hit++;
 			break;
 		case JUDGE_SAVE:
-			score->save++;
+			score.save++;
 			break;
 		case JUDGE_MISS:
-			score->drop++;
+			score.drop++;
 			break;
 		}
 
@@ -1336,47 +1336,47 @@ static void FBDF_Play_NoteJudgeEventAntion(
 		if (buf.mat != JUDGE_MISS) {
 			switch (buf.tip) {
 			case FBDF_PLAY_NOTE_BTN_1:
-				PlaySoundMem(se->SE1Data.handle(), DX_PLAYTYPE_BACK);
+				PlaySoundMem(se.SE1Data.handle(), DX_PLAYTYPE_BACK);
 				break;
 			case FBDF_PLAY_NOTE_BTN_2:
 			case FBDF_PLAY_NOTE_BTN_3:
 			case FBDF_PLAY_NOTE_BTN_4:
-				PlaySoundMem(se->SE2Data.handle(), DX_PLAYTYPE_BACK);
+				PlaySoundMem(se.SE2Data.handle(), DX_PLAYTYPE_BACK);
 				break;
 			}
 		}
 
 		/* コンボ計算 */
-		if (buf.mat != JUDGE_MISS) { score->chain++; }
+		if (buf.mat != JUDGE_MISS) { score.chain++; }
 
 		/* スコア計算 */
-		score->point += buf.score;
-		if (FBDF_PLAYSTYLE_NORMAL <= game_option.play_style) { score->chain_point += score->chain; }
+		score.point += buf.score;
+		if (FBDF_PLAYSTYLE_NORMAL <= game_option.play_style) { score.chain_point += score.chain; }
 
 		/* キャラモーション変更 */
 		if (buf.mat == JUDGE_MISS) {
-			dancer_class->SetMissState();
+			dancer_class.SetMissState();
 		}
 		else {
-			dancer_class->SetState(buf.tip, buf.len, buf.mtime, buf.motion);
+			dancer_class.SetState(buf.tip, buf.len, buf.mtime, buf.motion);
 		}
 
 		/* gap追加 */
 		if (buf.mat != JUDGE_MISS) {
-			gap_bar_class->SetVal(buf.gap);
+			gap_bar_class.SetVal(buf.gap);
 		}
 
 		/* ノーツ描画に影響するパラメータ */
 		if (buf.mat != JUDGE_MISS) {
-			notes_draw_class->SetRecover();
+			notes_draw_class.SetRecover();
 		}
 		else {
-			notes_draw_class->SetMiss();
+			notes_draw_class.SetMiss();
 		}
 	}
 
 	if (note_judged) {
-		score_bar_class->update_score(score, noteN);
+		score_bar_class.update_score(score, noteN);
 	}
 
 	return;
@@ -1392,27 +1392,27 @@ static void FBDF_Play_NoteJudgeEventAntion(
  * @return なし
  */
 static void FBDF_PlayNoteJudge(
-	FBDF_play_class_set_t *play_class, FBDF_score_st *score, FBDF_map_t *map,
-	const FBDF_push_key_st *pkey, const FBDT_hit_snd_t *se)
+	FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map,
+	const FBDF_push_key_st &pkey, const FBDT_hit_snd_t &se)
 {
 	std::queue<FBDF_judge_event_st>judge_event;
 	FBDF_judge_event_st buf;
 
-	bool key_detect_d = (pkey->D == 1);
-	bool key_detect_f = (pkey->F == 1);
-	bool key_detect_j = (pkey->J == 1);
-	bool key_detect_k = (pkey->K == 1);
+	bool key_detect_d = (pkey.D == 1);
+	bool key_detect_f = (pkey.F == 1);
+	bool key_detect_j = (pkey.J == 1);
+	bool key_detect_k = (pkey.K == 1);
 
-	if (1 <= pkey->alltap) {
-		while (map->note.nowData().time != 0 &&
-			map->note.nowData().time - JUDGE_WIDTH < map->Ntime &&
+	if (1 <= pkey.alltap) {
+		while (map.note.nowData().time != 0 &&
+			map.note.nowData().time - JUDGE_WIDTH < map.Ntime &&
 			(key_detect_d || key_detect_f || key_detect_j || key_detect_k))
 		{
-			buf.tip = map->note.nowData().btn;
-			buf.len = map->note.nowData().len;
-			buf.mtime = map->note.nowData().mtime;
-			buf.motion = map->note.nowData().motion;
-			switch (map->note.nowData().btn) {
+			buf.tip = map.note.nowData().btn;
+			buf.len = map.note.nowData().len;
+			buf.mtime = map.note.nowData().mtime;
+			buf.motion = map.note.nowData().motion;
+			switch (map.note.nowData().btn) {
 			case FBDF_PLAY_NOTE_BTN_1:
 				FBDF_Play_OneNoteJudgeAfterKeyDetect(buf, key_detect_d, map);
 				break;
@@ -1427,19 +1427,19 @@ static void FBDF_PlayNoteJudge(
 				break;
 			}
 			judge_event.push(buf);
-			if (buf.mat != JUDGE_NONE) { map->note.stepNo(); }
+			if (buf.mat != JUDGE_NONE) { map.note.stepNo(); }
 		}
 	}
 
-	if (map->note.nowData().time != 0 &&
-		map->note.nowData().time + JUDGE_WIDTH < map->Ntime)
+	if (map.note.nowData().time != 0 &&
+		map.note.nowData().time + JUDGE_WIDTH < map.Ntime)
 	{
 		buf.mat = JUDGE_MISS;
 		judge_event.push(buf);
-		map->note.stepNo();
+		map.note.stepNo();
 	}
 
-	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map->note.size(), se);
+	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map.note.size(), se);
 	return;
 }
 
@@ -1450,24 +1450,24 @@ static void FBDF_PlayNoteJudge(
  * @param[out] map マップデータ
  * @return なし
  */
-static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st *score, FBDF_map_t *map) {
+static void FBDF_PlayNoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map) {
 	size_t remain_notes = 0;
-	FBDF_judge_c     *judge_class     = &play_class->judge_class;
-	FBDF_dancer_c    *dancer_class    = &play_class->dancer_class;
-	FBDF_score_bar_c *score_bar_class = &play_class->score_bar_class;
+	FBDF_judge_c     *judge_class     = &play_class.judge_class;
+	FBDF_dancer_c    *dancer_class    = &play_class.dancer_class;
+	FBDF_score_bar_c *score_bar_class = &play_class.score_bar_class;
 
 	FBDF_judge_event_st buf;
 
-	while (map->note.nowData().time != 0) {
+	while (map.note.nowData().time != 0) {
 		remain_notes++;
-		map->note.stepNo();
+		map.note.stepNo();
 	}
 
 	if (0 < remain_notes) {
 		judge_class->SetJudge(JUDGE_MISS);
-		score->drop += remain_notes;
+		score.drop += remain_notes;
 		dancer_class->SetMissState();
-		score_bar_class->update_score(score, map->note.size());
+		score_bar_class->update_score(score, map.note.size());
 	}
 
 	return;
@@ -1484,22 +1484,22 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t *play_class, FBDF_score_st 
  * @param[in] play_class プレイクラス
  * @return なし
  */
-static void FBDF_Play_MakeResultData(FBDF_result_data_t *result_data, const FBDF_play_choose_music_st *nex_music,
+static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF_play_choose_music_st &nex_music,
 	const FBDF_map_t &map, const FBDF_score_st &score, const FBDF_play_class_set_t &play_class
 ) {
-	result_data->music_name  = nex_music->folder_name;
-	result_data->artist_name = map.artist;
-	result_data->folder_name = nex_music->folder_name;
-	result_data->level       = 0;
-	result_data->score       = score.point + score.chain_point;
-	result_data->acc         = play_class.score_bar_class.GetScore_ave();
-	result_data->crit        = score.crit;
-	result_data->hit         = score.hit;
-	result_data->save        = score.save;
-	result_data->drop        = score.drop;
-	result_data->gap_ave     = play_class.gap_bar_class.GetAve();
-	play_class.score_bar_class.get_graph(result_data->score_graph);
-	result_data->dif_type    = nex_music->dif_type;
+	result_data.music_name  = nex_music.folder_name;
+	result_data.artist_name = map.artist;
+	result_data.folder_name = nex_music.folder_name;
+	result_data.level       = 0;
+	result_data.score       = score.point + score.chain_point;
+	result_data.acc         = play_class.score_bar_class.GetScore_ave();
+	result_data.crit        = score.crit;
+	result_data.hit         = score.hit;
+	result_data.save        = score.save;
+	result_data.drop        = score.drop;
+	result_data.gap_ave     = play_class.gap_bar_class.GetAve();
+	play_class.score_bar_class.get_graph(result_data.score_graph);
+	result_data.dif_type    = nex_music.dif_type;
 	return;
 }
 
@@ -1560,7 +1560,7 @@ static void FBDF_Play_KeyCheck(
 	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
 	if (!cutin.IsClosing() && (CheckHitKey(KEY_INPUT_ESCAPE) == 1)) {
-		FBDF_PlayNoteTrash(&play_class, &score, &map);
+		FBDF_PlayNoteTrash(play_class, score, map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
 	}
@@ -1695,7 +1695,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 			cutin.SetIo(CUT_FRAG_IN);
 		}
 
-		FBDF_PlayNoteJudge(&play_class, &score, &map, &pkey, &se);
+		FBDF_PlayNoteJudge(play_class, score, map, pkey, se);
 
 		/* update系 */
 		play_class.dancer_class.Update();
@@ -1711,7 +1711,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 
 			/* スコアバー周り描画 */
 			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
-			FBDF_PlayDrawLamp(&pkey);
+			FBDF_PlayDrawLamp(pkey);
 
 			/* プレイエリア周り描画 */
 			DrawGraph(0, 0, lanePic.handle(), TRUE);
@@ -1735,7 +1735,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 
 	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
-	FBDF_Play_MakeResultData(&result_data, &nex_music, map, score, play_class);
+	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);
 
 	return VIEW_RESULT;
 }

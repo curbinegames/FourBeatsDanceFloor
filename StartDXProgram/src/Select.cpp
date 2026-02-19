@@ -521,20 +521,20 @@ public:
 #endif /* 曲フォルダ―関連 */
 
 static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
-	FBDF_music_list_bar_color_t bar_color, const FBDF_music_ber_pic_t *music_ber_pic)
+	FBDF_music_list_bar_color_t bar_color, const FBDF_music_ber_pic_t &music_ber_pic)
 {
 	int DrawX = WINDOW_SIZE_X / 2 - 30;
 	if (offset != 0) { DrawX += 50; }
 
 	/* bar_colorで色を変える */
 	DrawGraph(
-		DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, music_ber_pic->blue.handle(), TRUE);
+		DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, music_ber_pic.blue.handle(), TRUE);
 	DrawFormatString(
 		DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
 	return;
 }
 
-static void FBDF_SelectDrawMusicList(int command, const FBDF_music_ber_pic_t *music_ber_pic) {
+static void FBDF_SelectDrawMusicList(int command, const FBDF_music_ber_pic_t &music_ber_pic) {
 	if (folder_str.empty()) {
 		/* フォルダ内に項目がない。曲フォルダである場合が多い */
 		/* 上下の空きスペースに何か置きたい。イラストとか */
@@ -563,20 +563,20 @@ static void FBDF_SelectDrawMusicList(int command, const FBDF_music_ber_pic_t *mu
 	}
 }
 
-static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t *count) {
-	int Len = pals_scale(35, 300, 0, 0, count->c1);
+static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
+	int Len = pals_scale(35, 300, 0, 0, count.c1);
 	int BaseY = y;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_1, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count->c2);
+	Len = pals_scale(35, 300, 0, 0, count.c2);
 	BaseY += 15;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_2, TRUE);
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_2, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count->c3);
+	Len = pals_scale(35, 300, 0, 0, count.c3);
 	BaseY += 15;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_3, TRUE);
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_3, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count->c4);
+	Len = pals_scale(35, 300, 0, 0, count.c4);
 	BaseY += 15;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_4, TRUE);
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_4, FALSE);
@@ -584,9 +584,9 @@ static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_
 }
 
 /* 譜面の長さを計算する */
-static uint FBDF_CalMapLength(const FBDF_map_t *map) {
-	if (map->note.size() < 3) { return 0; }
-	return map->note[map->note.size() - 2].time - map->note[0].time;
+static uint FBDF_CalMapLength(const FBDF_map_t &map) {
+	if (map.note.size() < 3) { return 0; }
+	return map.note[map.note.size() - 2].time - map.note[0].time;
 }
 
 #if 1 /* 譜面リスト読み込み系 */
@@ -631,7 +631,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	buf.folder_name        = d_name;
 	buf.music_name         = d_name;
 	buf.artist             = map.artist;
-	buf.Length             = FBDF_CalMapLength(&map);
+	buf.Length             = FBDF_CalMapLength(map);
 	buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(&map);
 	buf.auto_cal_dif.color = FBDF_CalMapColorDif(&map);
 	buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(&map);
@@ -652,7 +652,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
  * @param[in] d_name PCフォルダー名。 "asd" とすると "music/asd" フォルダーから楽曲のリストを読み込む
  * @return なし
  */
-static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d_name) {
+static void FBDF_Select_MapLoadMusic(FBDF_music_list_c &musiclist, const char *d_name) {
 	char str_buf[256] = "";
 	FBDF_map_t map;
 	FBDF_music_detail_t buf;
@@ -797,14 +797,14 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d
 		}
 
 		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist->detail, detail_base[0], d_name, detail_base[0].map_path.c_str(),
+			musiclist.detail, detail_base[0], d_name, detail_base[0].map_path.c_str(),
 			FBDF_dif_type_ec::LIGHT );
 		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist->detail, detail_base[1], d_name, detail_base[1].map_path.c_str(),
+			musiclist.detail, detail_base[1], d_name, detail_base[1].map_path.c_str(),
 			FBDF_dif_type_ec::NORMAL
 		);
 		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist->detail, detail_base[2], d_name, detail_base[2].map_path.c_str(),
+			musiclist.detail, detail_base[2], d_name, detail_base[2].map_path.c_str(),
 			FBDF_dif_type_ec::HYPER
 		);
 	}
@@ -817,7 +817,7 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c *musiclist, const char *d
  * @param[out] musiclist 譜面リスト
  * @return bool true=成功, false=失敗
  */
-static bool FBDF_Select_LoadMusicList(FBDF_music_list_c *musiclist) {
+static bool FBDF_Select_LoadMusicList(FBDF_music_list_c &musiclist) {
 	DIR *dir;
 	struct dirent *dirs;
 	dir = opendir("music");
@@ -854,18 +854,18 @@ static void FBDF_select_KeyCheck(
 	bool &option_fg,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c &musiclist,
-	FBDF_cutin_c *cutin
+	FBDF_cutin_c &cutin
 ) {
 	size_t list_size = 0;
 	size_t poped_cmd = 0;
-	if (cutin->IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
+	if (cutin.IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
 
 	InputAllKeyHold();
 	switch (GetKeyPushOnce()) {
 	case KEY_INPUT_RETURN:
 		if (folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
 			if (!musiclist.sort.empty()) { /* 曲フォルダの中が空じゃない */
-				cutin->SetIo(CUT_FRAG_IN);
+				cutin.SetIo(CUT_FRAG_IN);
 			}
 		}
 		else { /* サブフォルダである */
@@ -951,9 +951,9 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[cmd].user_highscore.score);
 		DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[cmd].user_highscore.acc);
 		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[cmd].user_highscore.clear_type);
-		FBDF_SelectDrawColorCount(5, 660, &(musiclist[cmd].color_count));
+		FBDF_SelectDrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
-	FBDF_SelectDrawMusicList(cmd, &music_ber_pic);
+	FBDF_SelectDrawMusicList(cmd, music_ber_pic);
 }
 
 /**
@@ -982,7 +982,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Option_ReloadPic();
-	if (FBDF_Select_LoadMusicList(&musiclist) == false) { return VIEW_SELECT; }
+	if (FBDF_Select_LoadMusicList(musiclist) == false) { return VIEW_SELECT; }
 	folder_manager_class.ReadFile();
 	folder_manager_class.MakeMusicList(musiclist, view_dif_type);
 	/* view_dif_typeも保存したい */
@@ -994,7 +994,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 			FBDF_Option_KeyAction(option_cmd, option_fg);
 		}
 		else {
-			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, &cutin);
+			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, cutin);
 		}
 
 		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; }

@@ -48,23 +48,23 @@ typedef struct FBDF_map_enc_s {
  * @param[out] option 譜面読み込みのオプション
  * @return FBDF_mapenc_error_et エラー情報
  */
-static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_map_enc_t *option) {
-	if (map->note.isfull()) { /* ノーツ数が2000に達していたらこれ以上読み込まない */
+static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_map_enc_t &option) {
+	if (map.note.isfull()) { /* ノーツ数が2000に達していたらこれ以上読み込まない */
 		FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
 		return FBDF_MAPENC_ERROR_NOTE_FULL;
 	}
-	if (option->now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
+	if (option.now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
 		FBDF_ErrorLogWrite("ブロック数に0を指定してノーツを読み込もうとしました。");
 		return FBDF_MAPENC_ERROR_OPTION;
 	}
-	for (size_t ic = 0; ic < option->now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
+	for (size_t ic = 0; ic < option.now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
 			FBDF_ErrorLogWrite("ノーツに関係ない文字が混ざっています。");
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
 
-	for (size_t ic = 0; ic < option->now_block; ic++) {
+	for (size_t ic = 0; ic < option.now_block; ic++) {
 		FBDF_note_t buf_note;
 		if (buf[ic] != '.') {
 			switch (buf[ic]) {
@@ -105,8 +105,8 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
 				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_4;
 				break;
 			}
-			buf_note.pos = option->now_shutpos + ic;
-			switch (option->now_block) {
+			buf_note.pos = option.now_shutpos + ic;
+			switch (option.now_block) {
 			case 2:
 				buf_note.btn = (ic == 1) ? FBDF_PLAY_NOTE_BTN_3 : FBDF_PLAY_NOTE_BTN_1;
 				break;
@@ -161,33 +161,33 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
 				break;
 			}
 			buf_note.len = 99;
-			if (!map->note.empty()) {
-				FBDF_note_t before_note = map->note.lastData();
-				map->note.pop_back();
+			if (!map.note.empty()) {
+				FBDF_note_t before_note = map.note.lastData();
+				map.note.pop_back();
 				before_note.len = buf_note.pos - before_note.pos;
-				map->note.push_back(before_note);
+				map.note.push_back(before_note);
 			}
-			buf_note.time = option->now_shuttime + 60000 * 4 * ic / (option->now_bpm * option->scrool * option->measure_u * option->now_block) + game_option.note_offset_timing;
+			buf_note.time = option.now_shuttime + 60000 * 4 * ic / (option.now_bpm * option.scrool * option.measure_u * option.now_block) + game_option.note_offset_timing;
 			buf_note.mtime = 750;
-			if (!map->note.empty()) {
-				FBDF_note_t before_note = map->note.lastData();
-				map->note.pop_back();
+			if (!map.note.empty()) {
+				FBDF_note_t before_note = map.note.lastData();
+				map.note.pop_back();
 				before_note.mtime = buf_note.time - before_note.time;
-				map->note.push_back(before_note);
+				map.note.push_back(before_note);
 			}
-			buf_note.bpm = option->now_bpm;
-			map->note.push_back(buf_note);
-			map->Etime = buf_note.time;
-			map->note.stepNo();
-			if (map->note.isfull()) {
+			buf_note.bpm = option.now_bpm;
+			map.note.push_back(buf_note);
+			map.Etime = buf_note.time;
+			map.note.stepNo();
+			if (map.note.isfull()) {
 				FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
 				return FBDF_MAPENC_ERROR_NOTE_FULL;
 			}
 		}
 	}
-	option->now_shutpos += option->now_block;
-	option->now_shuttime += 60000 * 4 / (double)(option->now_bpm * option->scrool * option->measure_u);
-	map->blockNo++;
+	option.now_shutpos += option.now_block;
+	option.now_shuttime += 60000 * 4 / (double)(option.now_bpm * option.scrool * option.measure_u);
+	map.blockNo++;
 	return FBDF_MAPENC_ERROR_NONE;
 }
 
@@ -198,7 +198,7 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t *map, char const *buf, FBDF_
  * @param[out] option 譜面読み込みのオプション
  * @return FBDF_mapenc_error_et エラー情報
  */
-static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t *map, const char *buf, FBDF_map_enc_t *option) {
+static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t &map, const char *buf, FBDF_map_enc_t &option) {
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
 	std::string strbuf = buf;
 
@@ -207,7 +207,7 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t *map, const char *buf, FBDF_m
 		if (err != FBDF_MAPENC_ERROR_NONE) {
 			return err;
 		}
-		strbuf.erase(0, option->now_block);
+		strbuf.erase(0, option.now_block);
 	}
 
 	return FBDF_MAPENC_ERROR_NONE;
@@ -285,7 +285,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 					break;
 				}
 			}
-			FBDF_mapenc_error_et err_buf = GetNoteLine(&map, buf, &option);
+			FBDF_mapenc_error_et err_buf = GetNoteLine(map, buf, option);
 			if (err_buf != FBDF_MAPENC_ERROR_NONE) { err = err_buf; } /* エラーあっても最後まで読み切る */
 		}
 	}
