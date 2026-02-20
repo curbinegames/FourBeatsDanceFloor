@@ -119,6 +119,39 @@ public:
 	std::vector<FBDF_music_detail_t>detail;
 	std::vector<uint>sort;
 
+public: /* 並び替え系 */
+	/**
+	 * @brief 現在の this->sort の内容を難易度順に並び替える
+	 * @param なし
+	 * @return なし
+	 */
+	void SortByDif(void) {
+		if (this->sort.empty()) { return; }
+		for (int is = 0; is + 1 < (this->sort.size()); is++) {
+			for (int ie = is + 1; ie < this->sort.size(); ie++) {
+				if (this->detail[this->sort[is]].auto_cal_dif.all >
+					this->detail[this->sort[ie]].auto_cal_dif.all)
+				{
+					uint temp = this->sort[is];
+					this->sort[is] = this->sort[ie];
+					this->sort[ie] = temp;
+				}
+			}
+		}
+	}
+
+public: /* 絞り込み系 */
+	void Search(bool (*filter_func)(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type), FBDF_dif_type_ec view_dif) {
+		if (filter_func == nullptr) { return; }
+		this->sort.clear();
+		for (size_t i = 0; i < detail.size(); i++) {
+			if (filter_func(this->detail[i], view_dif)) {
+				this->sort.push_back(i);
+			}
+		}
+	}
+
+public: /* 番地検索系 */
 	FBDF_music_detail_t& operator[](int n) {
 		return this->detail[sort[n]];
 	}
@@ -375,43 +408,6 @@ private:
 
 #endif /* フォルダー定義 */
 
-	/**
-	 * @brief 譜面リストを難易度順に並び替える
-	 * @param[out] musiclist 譜面リスト
-	 * @return なし
-	 */
-	void SortMusicListDif(FBDF_music_list_c &musiclist) const {
-		if (musiclist.sort.empty()) { return; }
-		for (int is = 0; is + 1 < (musiclist.sort.size()); is++) {
-			for (int ie = is + 1; ie < musiclist.sort.size(); ie++) {
-				if (musiclist.detail[musiclist.sort[is]].auto_cal_dif.all >
-					musiclist.detail[musiclist.sort[ie]].auto_cal_dif.all)
-				{
-					uint temp = musiclist.sort[is];
-					musiclist.sort[is] = musiclist.sort[ie];
-					musiclist.sort[ie] = temp;
-				}
-			}
-		}
-	}
-
-	/**
-	 * @brief 絞り込み条件から譜面リストを作る
-	 * @param[out] musiclist 譜面リスト
-	 * @param[in] view_dif_type 今の難易度表示
-	 * @return なし
-	 */
-	void MakeMusicListDetectMusic(FBDF_music_list_c &musiclist, FBDF_dif_type_ec view_dif_type) {
-		if (this->folder_manager_class.NowFolder()->is_music_folder == false) { return; }
-		for (int i = 0; i < musiclist.detail.size(); i++) {
-			if (this->folder_manager_class.NowFolder()->filter_func != nullptr) {
-				if (this->folder_manager_class.NowFolder()->filter_func(musiclist.detail[i], view_dif_type)) {
-					musiclist.sort.push_back(i);
-				}
-			}
-		}
-	}
-
 public:
 	bool IsMusicFolderNow(void) const {
 		return this->folder_manager_class.NowFolder()->is_music_folder;
@@ -452,14 +448,15 @@ public:
 	 * @return なし
 	 */
 	void MakeMusicList(FBDF_music_list_c &musiclist, FBDF_dif_type_ec view_dif_type) {
+		/* 内部リスト操作 */
 		if (this->IsMusicFolderNow()) {
-			musiclist.sort.clear();
-			folder_str.clear();
+			musiclist.Search(this->folder_manager_class.NowFolder()->filter_func, view_dif_type);
+			musiclist.SortByDif();
+		}
 
-			this->MakeMusicListDetectMusic(musiclist, view_dif_type);
-			this->SortMusicListDif(musiclist);
-
-			/* リスト作成 */
+		/* リスト作成 */
+		folder_str.clear();
+		if (this->IsMusicFolderNow()) {
 			for (int is = 0; is < musiclist.sort.size(); is++) {
 				std::string buf = musiclist[is].music_name;
 				switch (musiclist[is].dif_type) {
@@ -477,7 +474,6 @@ public:
 			}
 		}
 		else {
-			folder_str.clear();
 			for (size_t i = 0; i < this->folder_manager_class.NowFolder()->children.size(); i++) {
 				folder_str.push_back(this->folder_manager_class.NowFolder()->children[i]->name);
 			}
@@ -802,7 +798,8 @@ static void FBDF_Select_MapLoadMusic(FBDF_music_list_c &musiclist, const char *d
 
 		FBDF_Select_MapLoadMusicGetDetail(
 			musiclist.detail, detail_base[0], d_name, detail_base[0].map_path.c_str(),
-			FBDF_dif_type_ec::LIGHT );
+			FBDF_dif_type_ec::LIGHT
+		);
 		FBDF_Select_MapLoadMusicGetDetail(
 			musiclist.detail, detail_base[1], d_name, detail_base[1].map_path.c_str(),
 			FBDF_dif_type_ec::NORMAL
