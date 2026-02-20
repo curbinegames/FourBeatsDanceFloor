@@ -74,71 +74,6 @@ typedef struct FBDF_music_detail_base_s {
 
 #endif /* struct */
 
-class FBDF_select_view_string_c {
-private:
-	std::vector<std::string> folder_str;
-	struct {
-		dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
-		dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
-		dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
-		dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
-	} pic;
-
-	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
-		int DrawX = WINDOW_SIZE_X / 2 - 30;
-		if (offset != 0) { DrawX += 50; }
-
-		/* bar_colorで色を変える */
-		DrawGraph(
-			DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, this->pic.blue.handle(), TRUE);
-		DrawFormatString(
-			DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
-		return;
-	}
-
-public:
-	void DrawList(int command) const {
-		if (this->folder_str.empty()) {
-			/* フォルダ内に項目がない。曲フォルダである場合が多い */
-			/* 上下の空きスペースに何か置きたい。イラストとか */
-			this->DrawOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR);
-			return;
-		}
-
-		/* 選択中 */
-		this->DrawOne(this->folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR);
-		/* 選択から下 */
-		for (int i = 1; ; i++) {
-			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-			if (WINDOW_SIZE_Y < DrawY) { break; }
-
-			int DrawT = (command + i) % this->size();
-			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
-		}
-		/* 選択から上 */
-		for (int i = -1; ; i--) {
-			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-			if (DrawY < 0) { break; }
-
-			int DrawT = command + i;
-			while (DrawT < 0) { DrawT += this->size(); }
-			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
-		}
-	}
-
-	void clear(void) {
-		this->folder_str.clear();
-	}
-
-	void push_back(std::string val) {
-		this->folder_str.push_back(val);
-	}
-
-	size_t size(void) const {
-		return this->folder_str.size();
-	}
-};
-
 class FBDF_select_back_pic_c {
 private:
 	dxcur_pic_c back[3] = {
@@ -231,6 +166,7 @@ typedef struct FBDF_music_folder_node_s FBDF_music_folder_node_st;
 struct FBDF_music_folder_node_s {
 	std::string name;
 	bool is_music_folder = false;
+	FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
 	bool (*filter_func)(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) = nullptr;
 	std::vector<FBDF_music_folder_node_st*> children;
 };
@@ -420,45 +356,45 @@ private:
 
 #if 1 /* フォルダー定義 */
 
-	FBDF_music_folder_node_st fol_cleartype_noplay{   "No Play",     true, FBDF_Select_FolderFiltetClearTypeNoPlay,    {}};
-	FBDF_music_folder_node_st fol_cleartype_failed{   "Failed",      true, FBDF_Select_FolderFiltetClearTypeFailed,    {}};
-	FBDF_music_folder_node_st fol_cleartype_assist{   "Assist",      true, FBDF_Select_FolderFiltetClearTypeAssist,    {}};
-	FBDF_music_folder_node_st fol_cleartype_cleared{  "Cleared",     true, FBDF_Select_FolderFiltetClearTypeCleared,   {}};
-	FBDF_music_folder_node_st fol_cleartype_cakewalk{ "Cakewalk",    true, FBDF_Select_FolderFiltetClearTypeCakewalk,  {}};
-	FBDF_music_folder_node_st fol_cleartype_missless{ "Miss Less",   true, FBDF_Select_FolderFiltetClearTypeMissLess,  {}};
-	FBDF_music_folder_node_st fol_cleartype_fullchain{"Full Chain",  true, FBDF_Select_FolderFiltetClearTypeFullChain, {}};
-	FBDF_music_folder_node_st fol_cleartype_perfect{  "Perfect",     true, FBDF_Select_FolderFiltetClearTypePerfect,   {}};
-	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_assist, &fol_cleartype_failed, &fol_cleartype_noplay}};
+	FBDF_music_folder_node_st fol_cleartype_noplay{   "No Play",     true, GRAY_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetClearTypeNoPlay,    {}};
+	FBDF_music_folder_node_st fol_cleartype_failed{   "Failed",      true, GRAY_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetClearTypeFailed,    {}};
+	FBDF_music_folder_node_st fol_cleartype_assist{   "Assist",      true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetClearTypeAssist,    {}};
+	FBDF_music_folder_node_st fol_cleartype_cleared{  "Cleared",     true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetClearTypeCleared,   {}};
+	FBDF_music_folder_node_st fol_cleartype_cakewalk{ "Cakewalk",    true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetClearTypeCakewalk,  {}};
+	FBDF_music_folder_node_st fol_cleartype_missless{ "Miss Less",   true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetClearTypeMissLess,  {}};
+	FBDF_music_folder_node_st fol_cleartype_fullchain{"Full Chain",  true, YELLOW_MUSIC_LIST_BAR, FBDF_Select_FolderFiltetClearTypeFullChain, {}};
+	FBDF_music_folder_node_st fol_cleartype_perfect{  "Perfect",     true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetClearTypePerfect,   {}};
+	FBDF_music_folder_node_st fol_cleartype_set{      "Clear Type", false, BLUE_MUSIC_LIST_BAR,   nullptr, {&fol_cleartype_perfect, &fol_cleartype_fullchain, &fol_cleartype_missless, &fol_cleartype_cakewalk, &fol_cleartype_cleared, &fol_cleartype_assist, &fol_cleartype_failed, &fol_cleartype_noplay}};
 
-	FBDF_music_folder_node_st fol_score_f{  "Score F",   true, FBDF_Select_FolderFiltetScoreF,  {}};
-	FBDF_music_folder_node_st fol_score_d{  "Score D",   true, FBDF_Select_FolderFiltetScoreD,  {}};
-	FBDF_music_folder_node_st fol_score_c{  "Score C",   true, FBDF_Select_FolderFiltetScoreC,  {}};
-	FBDF_music_folder_node_st fol_score_b{  "Score B",   true, FBDF_Select_FolderFiltetScoreB,  {}};
-	FBDF_music_folder_node_st fol_score_a{  "Score A",   true, FBDF_Select_FolderFiltetScoreA,  {}};
-	FBDF_music_folder_node_st fol_score_ap{ "Score A+",  true, FBDF_Select_FolderFiltetScoreAP, {}};
-	FBDF_music_folder_node_st fol_score_s{  "Score S",   true, FBDF_Select_FolderFiltetScoreS,  {}};
-	FBDF_music_folder_node_st fol_score_sp{ "Score S+",  true, FBDF_Select_FolderFiltetScoreSP, {}};
-	FBDF_music_folder_node_st fol_score_x{  "Score X",   true, FBDF_Select_FolderFiltetScoreX,  {}};
-	FBDF_music_folder_node_st fol_score_xp{ "Score X+",  true, FBDF_Select_FolderFiltetScoreXP, {}};
-	FBDF_music_folder_node_st fol_score_p{  "Score P",   true, FBDF_Select_FolderFiltetScoreP,  {}};
-	FBDF_music_folder_node_st fol_score_set{"Score",    false, nullptr, {&fol_score_p, &fol_score_xp, &fol_score_x, &fol_score_sp, &fol_score_s, &fol_score_ap, &fol_score_a, &fol_score_b, &fol_score_c, &fol_score_d, &fol_score_f}};
+	FBDF_music_folder_node_st fol_score_f{  "Score F",   true, GRAY_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreF,  {}};
+	FBDF_music_folder_node_st fol_score_d{  "Score D",   true, GRAY_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreD,  {}};
+	FBDF_music_folder_node_st fol_score_c{  "Score C",   true, YELLOW_MUSIC_LIST_BAR, FBDF_Select_FolderFiltetScoreC,  {}};
+	FBDF_music_folder_node_st fol_score_b{  "Score B",   true, YELLOW_MUSIC_LIST_BAR, FBDF_Select_FolderFiltetScoreB,  {}};
+	FBDF_music_folder_node_st fol_score_a{  "Score A",   true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetScoreA,  {}};
+	FBDF_music_folder_node_st fol_score_ap{ "Score A+",  true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetScoreAP, {}};
+	FBDF_music_folder_node_st fol_score_s{  "Score S",   true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreS,  {}};
+	FBDF_music_folder_node_st fol_score_sp{ "Score S+",  true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreSP, {}};
+	FBDF_music_folder_node_st fol_score_x{  "Score X",   true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreX,  {}};
+	FBDF_music_folder_node_st fol_score_xp{ "Score X+",  true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreXP, {}};
+	FBDF_music_folder_node_st fol_score_p{  "Score P",   true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetScoreP,  {}};
+	FBDF_music_folder_node_st fol_score_set{"Score",    false, BLUE_MUSIC_LIST_BAR,   nullptr, {&fol_score_p, &fol_score_xp, &fol_score_x, &fol_score_sp, &fol_score_s, &fol_score_ap, &fol_score_a, &fol_score_b, &fol_score_c, &fol_score_d, &fol_score_f}};
 
-	FBDF_music_folder_node_st fol_level_10{ "Level over 10",  true, FBDF_Select_FolderFiltetLevel10, {}};
-	FBDF_music_folder_node_st fol_level_9{  "Level 9",        true, FBDF_Select_FolderFiltetLevel9,  {}};
-	FBDF_music_folder_node_st fol_level_8{  "Level 8",        true, FBDF_Select_FolderFiltetLevel8,  {}};
-	FBDF_music_folder_node_st fol_level_7{  "Level 7",        true, FBDF_Select_FolderFiltetLevel7,  {}};
-	FBDF_music_folder_node_st fol_level_6{  "Level 6",        true, FBDF_Select_FolderFiltetLevel6,  {}};
-	FBDF_music_folder_node_st fol_level_5{  "Level 5",        true, FBDF_Select_FolderFiltetLevel5,  {}};
-	FBDF_music_folder_node_st fol_level_4{  "Level 4",        true, FBDF_Select_FolderFiltetLevel4,  {}};
-	FBDF_music_folder_node_st fol_level_3{  "Level 3",        true, FBDF_Select_FolderFiltetLevel3,  {}};
-	FBDF_music_folder_node_st fol_level_2{  "Level 2",        true, FBDF_Select_FolderFiltetLevel2,  {}};
-	FBDF_music_folder_node_st fol_level_1{  "Level 1",        true, FBDF_Select_FolderFiltetLevel1,  {}};
-	FBDF_music_folder_node_st fol_level_0{  "Level under 0",  true, FBDF_Select_FolderFiltetLevel0,  {}};
-	FBDF_music_folder_node_st fol_level_set{"Level",         false, nullptr, {&fol_level_0, &fol_level_1, &fol_level_2, &fol_level_3, &fol_level_4, &fol_level_5, &fol_level_6, &fol_level_7, &fol_level_8, &fol_level_9, &fol_level_10}};
+	FBDF_music_folder_node_st fol_level_10{ "Level over 10",  true, YELLOW_MUSIC_LIST_BAR, FBDF_Select_FolderFiltetLevel10, {}};
+	FBDF_music_folder_node_st fol_level_9{  "Level 9",        true, YELLOW_MUSIC_LIST_BAR, FBDF_Select_FolderFiltetLevel9,  {}};
+	FBDF_music_folder_node_st fol_level_8{  "Level 8",        true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel8,  {}};
+	FBDF_music_folder_node_st fol_level_7{  "Level 7",        true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel7,  {}};
+	FBDF_music_folder_node_st fol_level_6{  "Level 6",        true, PINK_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel6,  {}};
+	FBDF_music_folder_node_st fol_level_5{  "Level 5",        true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetLevel5,  {}};
+	FBDF_music_folder_node_st fol_level_4{  "Level 4",        true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetLevel4,  {}};
+	FBDF_music_folder_node_st fol_level_3{  "Level 3",        true, GREEN_MUSIC_LIST_BAR,  FBDF_Select_FolderFiltetLevel3,  {}};
+	FBDF_music_folder_node_st fol_level_2{  "Level 2",        true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel2,  {}};
+	FBDF_music_folder_node_st fol_level_1{  "Level 1",        true, BLUE_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel1,  {}};
+	FBDF_music_folder_node_st fol_level_0{  "Level under 0",  true, GRAY_MUSIC_LIST_BAR,   FBDF_Select_FolderFiltetLevel0,  {}};
+	FBDF_music_folder_node_st fol_level_set{"Level",         false, BLUE_MUSIC_LIST_BAR,   nullptr, {&fol_level_0, &fol_level_1, &fol_level_2, &fol_level_3, &fol_level_4, &fol_level_5, &fol_level_6, &fol_level_7, &fol_level_8, &fol_level_9, &fol_level_10}};
 
-	FBDF_music_folder_node_st fol_all{"ALL MUSIC", true, FBDF_Select_FolderFilterAll, {}};
+	FBDF_music_folder_node_st fol_all{"ALL MUSIC", true, BLUE_MUSIC_LIST_BAR, FBDF_Select_FolderFilterAll, {}};
 
-	FBDF_music_folder_node_st fol_root{"DEFAULT", false, nullptr, {&fol_all, &fol_level_set, &fol_score_set, &fol_cleartype_set}};
+	FBDF_music_folder_node_st fol_root{"DEFAULT", false, BLUE_MUSIC_LIST_BAR, nullptr, {&fol_all, &fol_level_set, &fol_score_set, &fol_cleartype_set}};
 
 	folder_manager_c<FBDF_music_folder_node_st> folder_manager_class = folder_manager_c<FBDF_music_folder_node_st>(&fol_root);
 
@@ -575,6 +511,71 @@ public:
 };
 
 #endif /* 曲フォルダ―関連 */
+
+class FBDF_select_view_string_c {
+private:
+	std::vector<std::string> folder_str;
+	struct {
+		dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
+		dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
+		dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
+		dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
+	} pic;
+
+	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
+		int DrawX = WINDOW_SIZE_X / 2 - 30;
+		if (offset != 0) { DrawX += 50; }
+
+		/* bar_colorで色を変える */
+		DrawGraph(
+			DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, this->pic.blue.handle(), TRUE);
+		DrawFormatString(
+			DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
+		return;
+	}
+
+public:
+	void DrawList(int command) const {
+		if (this->folder_str.empty()) {
+			/* フォルダ内に項目がない。曲フォルダである場合が多い */
+			/* 上下の空きスペースに何か置きたい。イラストとか */
+			this->DrawOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR);
+			return;
+		}
+
+		/* 選択中 */
+		this->DrawOne(this->folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR);
+		/* 選択から下 */
+		for (int i = 1; ; i++) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (WINDOW_SIZE_Y < DrawY) { break; }
+
+			int DrawT = (command + i) % this->size();
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
+		}
+		/* 選択から上 */
+		for (int i = -1; ; i--) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (DrawY < 0) { break; }
+
+			int DrawT = command + i;
+			while (DrawT < 0) { DrawT += this->size(); }
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
+		}
+	}
+
+	void clear(void) {
+		this->folder_str.clear();
+	}
+
+	void push_back(std::string val) {
+		this->folder_str.push_back(val);
+	}
+
+	size_t size(void) const {
+		return this->folder_str.size();
+	}
+};
 
 static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
 	int Len = pals_scale(35, 300, 0, 0, count.c1);
