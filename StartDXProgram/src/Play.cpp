@@ -1204,36 +1204,6 @@ typedef struct FBDF_play_class_set_s {
 	FBDF_play_notes_draw_c notes_draw_class;
 } FBDF_play_class_set_t;
 
-#if 1 /* Draw系 */
-
-/**
- * @brief 押しキーランプの描画
- * @param[in] pkey キー入力情報
- * @return なし
- */
-static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
-	static const int baseX = 165;
-	static const int baseY = 575;
-	static const int sizeX =  60;
-	static const int sizeY =  15;
-	static const int   gap =  10;
-	if (IS_BETWEEN(1, pkey.D, 15)) {
-		DrawBox(baseX                      , baseY, baseX +     sizeX          , baseY + sizeY, NOTE_COLOR_1, TRUE);
-	}
-	if (IS_BETWEEN(1, pkey.F, 15)) {
-		DrawBox(baseX +     sizeX +     gap, baseY, baseX + 2 * sizeX +     gap, baseY + sizeY, NOTE_COLOR_2, TRUE);
-	}
-	if (IS_BETWEEN(1, pkey.J, 15)) {
-		DrawBox(baseX + 2 * sizeX + 2 * gap, baseY, baseX + 3 * sizeX + 2 * gap, baseY + sizeY, NOTE_COLOR_3, TRUE);
-	}
-	if (IS_BETWEEN(1, pkey.K, 15)) {
-		DrawBox(baseX + 3 * sizeX + 3 * gap, baseY, baseX + 4 * sizeX + 3 * gap, baseY + sizeY, NOTE_COLOR_4, TRUE);
-	}
-	return;
-}
-
-#endif
-
 #if 1 /* ノーツ判定系 */
 
 /**
@@ -1615,7 +1585,35 @@ static void FBDF_Play_KeyCheck(
 	return;
 }
 
-static void FBDF_Play_DrawScore(int x, int y, FBDF_score_st &score) {
+#if 1 /* Draw系 */
+
+/**
+ * @brief 押しキーランプの描画
+ * @param[in] pkey キー入力情報
+ * @return なし
+ */
+static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
+	static const int baseX = 165;
+	static const int baseY = 575;
+	static const int sizeX =  60;
+	static const int sizeY =  15;
+	static const int   gap =  10;
+	if (IS_BETWEEN(1, pkey.D, 15)) {
+		DrawBox(baseX                      , baseY, baseX +     sizeX          , baseY + sizeY, NOTE_COLOR_1, TRUE);
+	}
+	if (IS_BETWEEN(1, pkey.F, 15)) {
+		DrawBox(baseX +     sizeX +     gap, baseY, baseX + 2 * sizeX +     gap, baseY + sizeY, NOTE_COLOR_2, TRUE);
+	}
+	if (IS_BETWEEN(1, pkey.J, 15)) {
+		DrawBox(baseX + 2 * sizeX + 2 * gap, baseY, baseX + 3 * sizeX + 2 * gap, baseY + sizeY, NOTE_COLOR_3, TRUE);
+	}
+	if (IS_BETWEEN(1, pkey.K, 15)) {
+		DrawBox(baseX + 3 * sizeX + 3 * gap, baseY, baseX + 4 * sizeX + 3 * gap, baseY + sizeY, NOTE_COLOR_4, TRUE);
+	}
+	return;
+}
+
+static void FBDF_Play_DrawScore(int x, int y, const FBDF_score_st &score) {
 	uint all_point = score.point + score.chain_point;
 	int drawX = x;
 	if (all_point < 10) {
@@ -1641,6 +1639,35 @@ static void FBDF_Play_DrawScore(int x, int y, FBDF_score_st &score) {
 	}
 	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), all_point);
 }
+
+/**
+ * @brief プレイ画面に関するものを全て描画する。
+ */
+static void FBDF_Play_AllDraw(
+	const FBDF_play_class_set_t &play_class, const FBDF_score_st &score,
+	const FBDF_map_t &map, const FBDF_push_key_st &pkey,
+	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic,
+	const char *music_name)
+{
+	DrawGraph(0, 0, backPic.handle(), TRUE); /* 背景描画 */
+
+	/* ダンサー周り描画 */
+	play_class.dancer_class.DrawDance(500, 300);
+	FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
+
+	/* スコアバー周り描画 */
+	play_class.score_bar_class.draw_bar(167, 600, 928, 650);
+	FBDF_PlayDrawLamp(pkey);
+
+	/* プレイエリア周り描画 */
+	DrawGraph(0, 0, lanePic.handle(), TRUE);
+	DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), music_name);
+	play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
+	play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
+	if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
+}
+
+#endif /* Draw系 */
 
 /**
  * @brief プレイ画面のベース
@@ -1702,27 +1729,10 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 		play_class.score_bar_class.update_graph(map.Ntime);
 		cutin.update();
 
-		ClearDrawScreen(); /* 作画エリアここから */ {
-			DrawGraph(0, 0, backPic.handle(), TRUE); /* 背景描画 */
-
-			/* ダンサー周り描画 */
-			play_class.dancer_class.DrawDance(500, 300);
-			FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
-
-			/* スコアバー周り描画 */
-			play_class.score_bar_class.draw_bar(167, 600, 928, 650);
-			FBDF_PlayDrawLamp(pkey);
-
-			/* プレイエリア周り描画 */
-			DrawGraph(0, 0, lanePic.handle(), TRUE);
-			DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), nex_music.folder_name.c_str());
-			play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
-			play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
-			if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
-
-			cutin.DrawCut();
-
-		} ScreenFlip(); /* 作画エリアここまで */
+		ClearDrawScreen(); /* 作画エリアここから */
+		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, nex_music.folder_name.c_str());
+		cutin.DrawCut();
+		ScreenFlip(); /* 作画エリアここまで */
 
 		if (GetWindowUserCloseFlag(TRUE)) { // 閉じるボタンが押された
 			StopSoundMem(musicData.handle());
