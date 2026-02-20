@@ -62,13 +62,6 @@ typedef struct FBDF_music_detail_s {
 	FBDF_file_music_score_st user_highscore;
 } FBDF_music_detail_t;
 
-typedef struct FBDF_music_ber_pic_s {
-	dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
-	dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
-	dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
-	dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
-} FBDF_music_ber_pic_t;
-
 typedef struct FBDF_music_detail_base_s {
 	std::string name;
 	std::string artist;
@@ -81,7 +74,70 @@ typedef struct FBDF_music_detail_base_s {
 
 #endif /* struct */
 
-static std::vector<std::string> folder_str;
+class FBDF_select_view_string_c {
+private:
+	std::vector<std::string> folder_str;
+	struct {
+		dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
+		dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
+		dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
+		dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
+	} pic;
+
+	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
+		int DrawX = WINDOW_SIZE_X / 2 - 30;
+		if (offset != 0) { DrawX += 50; }
+
+		/* bar_colorで色を変える */
+		DrawGraph(
+			DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, this->pic.blue.handle(), TRUE);
+		DrawFormatString(
+			DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
+		return;
+	}
+
+public:
+	void DrawList(int command) const {
+		if (this->folder_str.empty()) {
+			/* フォルダ内に項目がない。曲フォルダである場合が多い */
+			/* 上下の空きスペースに何か置きたい。イラストとか */
+			this->DrawOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR);
+			return;
+		}
+
+		/* 選択中 */
+		this->DrawOne(this->folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR);
+		/* 選択から下 */
+		for (int i = 1; ; i++) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (WINDOW_SIZE_Y < DrawY) { break; }
+
+			int DrawT = (command + i) % this->size();
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
+		}
+		/* 選択から上 */
+		for (int i = -1; ; i--) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (DrawY < 0) { break; }
+
+			int DrawT = command + i;
+			while (DrawT < 0) { DrawT += this->size(); }
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
+		}
+	}
+
+	void clear(void) {
+		this->folder_str.clear();
+	}
+
+	void push_back(std::string val) {
+		this->folder_str.push_back(val);
+	}
+
+	size_t size(void) const {
+		return this->folder_str.size();
+	}
+};
 
 class FBDF_select_back_pic_c {
 private:
@@ -447,7 +503,7 @@ public:
 	 * @param[in] view_dif_type 今の難易度表示
 	 * @return なし
 	 */
-	void MakeMusicList(FBDF_music_list_c &musiclist, FBDF_dif_type_ec view_dif_type) {
+	void MakeMusicList(FBDF_music_list_c &musiclist, FBDF_select_view_string_c &folder_string, FBDF_dif_type_ec view_dif_type) {
 		/* 内部リスト操作 */
 		if (this->IsMusicFolderNow()) {
 			musiclist.Search(this->folder_manager_class.NowFolder()->filter_func, view_dif_type);
@@ -455,7 +511,7 @@ public:
 		}
 
 		/* リスト作成 */
-		folder_str.clear();
+		folder_string.clear();
 		if (this->IsMusicFolderNow()) {
 			for (int is = 0; is < musiclist.sort.size(); is++) {
 				std::string buf = musiclist[is].music_name;
@@ -470,12 +526,12 @@ public:
 					buf += "[hyper]";
 					break;
 				}
-				folder_str.push_back(buf);
+				folder_string.push_back(buf);
 			}
 		}
 		else {
 			for (size_t i = 0; i < this->folder_manager_class.NowFolder()->children.size(); i++) {
-				folder_str.push_back(this->folder_manager_class.NowFolder()->children[i]->name);
+				folder_string.push_back(this->folder_manager_class.NowFolder()->children[i]->name);
 			}
 		}
 		return;
@@ -519,49 +575,6 @@ public:
 };
 
 #endif /* 曲フォルダ―関連 */
-
-static void FBDF_SelectDrawMusicListOne(const char *name, int offset,
-	FBDF_music_list_bar_color_t bar_color, const FBDF_music_ber_pic_t &music_ber_pic)
-{
-	int DrawX = WINDOW_SIZE_X / 2 - 30;
-	if (offset != 0) { DrawX += 50; }
-
-	/* bar_colorで色を変える */
-	DrawGraph(
-		DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, music_ber_pic.blue.handle(), TRUE);
-	DrawFormatString(
-		DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
-	return;
-}
-
-static void FBDF_SelectDrawMusicList(int command, const FBDF_music_ber_pic_t &music_ber_pic) {
-	if (folder_str.empty()) {
-		/* フォルダ内に項目がない。曲フォルダである場合が多い */
-		/* 上下の空きスペースに何か置きたい。イラストとか */
-		FBDF_SelectDrawMusicListOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR, music_ber_pic);
-		return;
-	}
-
-	/* 選択中 */
-	FBDF_SelectDrawMusicListOne(folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR, music_ber_pic);
-	/* 選択から下 */
-	for (int i = 1; ; i++) {
-		int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-		if (WINDOW_SIZE_Y < DrawY) { break; }
-
-		int DrawT = (command + i) % folder_str.size();
-		FBDF_SelectDrawMusicListOne(folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
-	}
-	/* 選択から上 */
-	for (int i = -1; ; i--) {
-		int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-		if (DrawY < 0) { break; }
-
-		int DrawT = command + i;
-		while (DrawT < 0) { DrawT += folder_str.size(); }
-		FBDF_SelectDrawMusicListOne(folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR, music_ber_pic);
-	}
-}
 
 static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
 	int Len = pals_scale(35, 300, 0, 0, count.c1);
@@ -855,6 +868,7 @@ static void FBDF_select_KeyCheck(
 	bool &option_fg,
 	FBDF_dif_type_ec &view_dif_type,
 	FBDF_music_list_c &musiclist,
+	FBDF_select_view_string_c &folder_string,
 	FBDF_cutin_c &cutin
 ) {
 	size_t list_size = 0;
@@ -871,7 +885,7 @@ static void FBDF_select_KeyCheck(
 		}
 		else { /* サブフォルダである */
 			folder_manager.PushFolder(command);
-			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
 			command = 0;
 			if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
 				for (size_t i = 0; i < musiclist.sort.size(); i++) {
@@ -886,19 +900,19 @@ static void FBDF_select_KeyCheck(
 		break;
 	case KEY_INPUT_BACK:
 		if (folder_manager.PopFolder(poped_cmd)) {
-			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
 			command = poped_cmd;
 		}
 		break;
 	case KEY_INPUT_UP:
-		list_size = folder_str.size();
+		list_size = folder_string.size();
 		command = MOD_AVOID_ZERO((command + list_size - 1), list_size, 0);
 		if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
 			now_music = musiclist[command].music_name;
 		}
 		break;
 	case KEY_INPUT_DOWN:
-		list_size = folder_str.size();
+		list_size = folder_string.size();
 		command = MOD_AVOID_ZERO((command + 1), list_size, 0);
 		if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
 			now_music = musiclist[command].music_name;
@@ -907,7 +921,7 @@ static void FBDF_select_KeyCheck(
 	case KEY_INPUT_LEFT:
 		--view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
-			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
 			command = 0;
 			for (size_t i = 0; i < musiclist.sort.size(); i++) {
 				if (musiclist[i].music_name == now_music) {
@@ -921,7 +935,7 @@ static void FBDF_select_KeyCheck(
 	case KEY_INPUT_RIGHT:
 		++view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
-			folder_manager.MakeMusicList(musiclist, view_dif_type);
+			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
 			command = 0;
 			for (size_t i = 0; i < musiclist.sort.size(); i++) {
 				if (musiclist[i].music_name == now_music) {
@@ -939,8 +953,8 @@ static void FBDF_select_KeyCheck(
 }
 
 static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_manager_class,
-	const FBDF_music_list_c &musiclist, int cmd, const FBDF_select_back_pic_c &back_pic,
-	const FBDF_music_ber_pic_t &music_ber_pic)
+	const FBDF_music_list_c &musiclist, const FBDF_select_view_string_c &folder_string,
+	int cmd, const FBDF_select_back_pic_c &back_pic)
 {
 	back_pic.DrawPic();
 	DrawFormatString(5,  25, 0xffffffff, _T("%d"), cmd);
@@ -954,7 +968,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[cmd].user_highscore.clear_type);
 		FBDF_SelectDrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
-	FBDF_SelectDrawMusicList(cmd, music_ber_pic);
+	folder_string.DrawList(cmd);
 }
 
 /**
@@ -972,8 +986,8 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	std::string now_music;
 
 	FBDF_Select_MusicFolderManager_c folder_manager_class;
+	FBDF_select_view_string_c folder_string;
 	FBDF_music_list_c musiclist;
-	FBDF_music_ber_pic_t music_ber_pic;
 	FBDF_select_back_pic_c back_pic;
 	FBDF_option_pic_st option_pic;
 
@@ -985,7 +999,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	FBDF_Option_ReloadPic();
 	if (FBDF_Select_LoadMusicList(musiclist) == false) { return VIEW_SELECT; }
 	folder_manager_class.ReadFile(command, view_dif_type);
-	folder_manager_class.MakeMusicList(musiclist, view_dif_type);
+	folder_manager_class.MakeMusicList(musiclist, folder_string, view_dif_type);
 	/* view_dif_typeも保存したい */
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
@@ -995,7 +1009,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 			FBDF_Option_KeyAction(option_cmd, option_fg);
 		}
 		else {
-			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, cutin);
+			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, folder_string, cutin);
 		}
 
 		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; }
@@ -1005,7 +1019,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから
-		FBDF_Select_Draw(folder_manager_class, musiclist, command, back_pic, music_ber_pic);
+		FBDF_Select_Draw(folder_manager_class, musiclist, folder_string, command, back_pic);
 		if (option_fg) { FBDF_Option_Draw(option_cmd, option_pic); }
 		cutin.DrawCut();
 		ScreenFlip(); // 作画エリアここまで
