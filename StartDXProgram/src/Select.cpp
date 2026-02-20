@@ -181,7 +181,7 @@ public:
 		return true;
 	}
 
-	std::stack<uint32_t> GetCmdStack(void) {
+	std::stack<uint32_t> GetCmdStack(void) const {
 		return this->cmd_stack;
 	}
 };
@@ -485,7 +485,7 @@ public:
 		return;
 	}
 
-	bool ReadFile(void) {
+	bool ReadFile(int &cmd, FBDF_dif_type_ec &view_def) {
 		bool ret = false;
 		FILE *fp;
 		std::vector<uint32_t> vec;
@@ -494,6 +494,8 @@ public:
 		else {
 			ret = ReadFileForVector<uint32_t>(vec, fp);
 		}
+		fread(&cmd, sizeof(int), 1, fp);
+		fread(&view_def, sizeof(FBDF_dif_type_ec), 1, fp);
 		fclose(fp);
 
 		if (ret == true) {
@@ -504,7 +506,7 @@ public:
 		return ret;
 	}
 
-	bool WriteFile(void) {
+	bool WriteFile(int cmd, FBDF_dif_type_ec view_def) const {
 		bool ret = false;
 		FILE *fp;
 		std::vector<uint32_t> vec;
@@ -513,6 +515,8 @@ public:
 		else {
 			ret = WriteFileForStack<uint32_t>(folder_manager_class.GetCmdStack(), fp);
 		}
+		fwrite(&cmd, sizeof(int), 1, fp);
+		fwrite(&view_def, sizeof(FBDF_dif_type_ec), 1, fp);
 		fclose(fp);
 		return ret;
 	}
@@ -983,7 +987,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	FBDF_Option_ReloadPic();
 	if (FBDF_Select_LoadMusicList(musiclist) == false) { return VIEW_SELECT; }
-	folder_manager_class.ReadFile();
+	folder_manager_class.ReadFile(command, view_dif_type);
 	folder_manager_class.MakeMusicList(musiclist, view_dif_type);
 	/* view_dif_typeも保存したい */
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
@@ -1011,7 +1015,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 		WaitTimer(10); // ループウェイト
 	}
 
-	folder_manager_class.WriteFile();
+	folder_manager_class.WriteFile(command, view_dif_type);
 	FBDF_Save_WriteOption(&game_option);
 
 	nex_music.folder_name   = musiclist[command].folder_name;
