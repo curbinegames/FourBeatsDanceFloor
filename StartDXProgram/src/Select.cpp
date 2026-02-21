@@ -185,13 +185,13 @@ private:
 			DrawP = this->pic.blue.handle();
 			break;
 		case GREEN_MUSIC_LIST_BAR:
-			DrawP = this->pic.green.handle(); /* TODO: ‰æ‘œ‚ªŒ©‚Ã‚ç‚¢ */
+			DrawP = this->pic.green.handle();
 			break;
 		case PINK_MUSIC_LIST_BAR:
 			DrawP = this->pic.pink.handle();
 			break;
 		case YELLOW_MUSIC_LIST_BAR:
-			DrawP = this->pic.yellow.handle(); /* TODO: ‰æ‘œ‚ªŒ©‚Ã‚ç‚¢ */
+			DrawP = this->pic.yellow.handle();
 			break;
 		}
 
@@ -539,18 +539,22 @@ public:
 		if (this->IsMusicFolderNow()) {
 			for (int is = 0; is < musiclist.sort.size(); is++) {
 				std::string buf = musiclist[is].music_name;
+				FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
 				switch (musiclist[is].dif_type) {
 				case FBDF_dif_type_ec::LIGHT:
 					buf += "[light]";
+					color = GREEN_MUSIC_LIST_BAR;
 					break;
 				case FBDF_dif_type_ec::NORMAL:
 					buf += "[normal]";
+					color = YELLOW_MUSIC_LIST_BAR;
 					break;
 				case FBDF_dif_type_ec::HYPER:
 					buf += "[hyper]";
+					color = PINK_MUSIC_LIST_BAR;
 					break;
 				}
-				folder_string.push_back(buf, BLUE_MUSIC_LIST_BAR);
+				folder_string.push_back(buf, color);
 			}
 		}
 		else {
