@@ -160,6 +160,94 @@ public: /* 番地検索系 */
 	}
 };
 
+class FBDF_select_view_string_c {
+private:
+	std::vector<std::string> folder_str;
+	std::vector<FBDF_music_list_bar_color_t> folder_color;
+	struct {
+		dxcur_pic_c gray   = dxcur_pic_c(_T("pic/music_bar_gray.png"));
+		dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
+		dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
+		dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
+		dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
+	} pic;
+
+	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
+		int     DrawX = WINDOW_SIZE_X / 2 - 30;
+		DxPic_t DrawP = DXLIB_PIC_NULL;
+		if (offset != 0) { DrawX += 50; }
+
+		switch (bar_color) {
+		case GRAY_MUSIC_LIST_BAR:
+			DrawP = this->pic.gray.handle();
+			break;
+		case BLUE_MUSIC_LIST_BAR:
+			DrawP = this->pic.blue.handle();
+			break;
+		case GREEN_MUSIC_LIST_BAR:
+			DrawP = this->pic.green.handle(); /* TODO: 画像が見づらい */
+			break;
+		case PINK_MUSIC_LIST_BAR:
+			DrawP = this->pic.pink.handle();
+			break;
+		case YELLOW_MUSIC_LIST_BAR:
+			DrawP = this->pic.yellow.handle(); /* TODO: 画像が見づらい */
+			break;
+		}
+
+		/* bar_colorで色を変える */
+		DrawGraph(
+			DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, DrawP, TRUE);
+		DrawFormatString(
+			DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
+		return;
+	}
+
+public:
+	void DrawList(int command) const {
+		if (this->folder_str.empty()) {
+			/* フォルダ内に項目がない。曲フォルダである場合が多い */
+			/* 上下の空きスペースに何か置きたい。イラストとか */
+			this->DrawOne("該当する曲がありません", 0, GRAY_MUSIC_LIST_BAR);
+			return;
+		}
+
+		/* 選択中 */
+		this->DrawOne(this->folder_str[command].c_str(), 0, this->folder_color[command]);
+		/* 選択から下 */
+		for (int i = 1; ; i++) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (WINDOW_SIZE_Y < DrawY) { break; }
+
+			int DrawT = (command + i) % this->size();
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, this->folder_color[DrawT]);
+		}
+		/* 選択から上 */
+		for (int i = -1; ; i--) {
+			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
+			if (DrawY < 0) { break; }
+
+			int DrawT = command + i;
+			while (DrawT < 0) { DrawT += this->size(); }
+			this->DrawOne(this->folder_str[DrawT].c_str(), i, this->folder_color[DrawT]);
+		}
+	}
+
+	void clear(void) {
+		this->folder_str.clear();
+		this->folder_color.clear();
+	}
+
+	void push_back(std::string val, FBDF_music_list_bar_color_t color) {
+		this->folder_str.push_back(val);
+		this->folder_color.push_back(color);
+	}
+
+	size_t size(void) const {
+		return this->folder_str.size();
+	}
+};
+
 #if 1 /* 曲フォルダ―関連 */
 
 typedef struct FBDF_music_folder_node_s FBDF_music_folder_node_st;
@@ -462,12 +550,15 @@ public:
 					buf += "[hyper]";
 					break;
 				}
-				folder_string.push_back(buf);
+				folder_string.push_back(buf, BLUE_MUSIC_LIST_BAR);
 			}
 		}
 		else {
 			for (size_t i = 0; i < this->folder_manager_class.NowFolder()->children.size(); i++) {
-				folder_string.push_back(this->folder_manager_class.NowFolder()->children[i]->name);
+				folder_string.push_back(
+					this->folder_manager_class.NowFolder()->children[i]->name,
+					this->folder_manager_class.NowFolder()->children[i]->color
+				);
 			}
 		}
 		return;
@@ -511,71 +602,6 @@ public:
 };
 
 #endif /* 曲フォルダ―関連 */
-
-class FBDF_select_view_string_c {
-private:
-	std::vector<std::string> folder_str;
-	struct {
-		dxcur_pic_c blue   = dxcur_pic_c(_T("pic/music_bar_blue.png"));
-		dxcur_pic_c pink   = dxcur_pic_c(_T("pic/music_bar_pink.png"));
-		dxcur_pic_c green  = dxcur_pic_c(_T("pic/music_bar_green.png"));
-		dxcur_pic_c yellow = dxcur_pic_c(_T("pic/music_bar_yellow.png"));
-	} pic;
-
-	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
-		int DrawX = WINDOW_SIZE_X / 2 - 30;
-		if (offset != 0) { DrawX += 50; }
-
-		/* bar_colorで色を変える */
-		DrawGraph(
-			DrawX     , WINDOW_SIZE_Y / 2 - 13 + 45 * offset, this->pic.blue.handle(), TRUE);
-		DrawFormatString(
-			DrawX + 15, WINDOW_SIZE_Y / 2      + 45 * offset, 0xffffffff, _T("%s"), name);
-		return;
-	}
-
-public:
-	void DrawList(int command) const {
-		if (this->folder_str.empty()) {
-			/* フォルダ内に項目がない。曲フォルダである場合が多い */
-			/* 上下の空きスペースに何か置きたい。イラストとか */
-			this->DrawOne("該当する曲がありません", 0, BLUE_MUSIC_LIST_BAR);
-			return;
-		}
-
-		/* 選択中 */
-		this->DrawOne(this->folder_str[command].c_str(), 0, BLUE_MUSIC_LIST_BAR);
-		/* 選択から下 */
-		for (int i = 1; ; i++) {
-			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-			if (WINDOW_SIZE_Y < DrawY) { break; }
-
-			int DrawT = (command + i) % this->size();
-			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
-		}
-		/* 選択から上 */
-		for (int i = -1; ; i--) {
-			int DrawY = WINDOW_SIZE_Y / 2 + i * 45;
-			if (DrawY < 0) { break; }
-
-			int DrawT = command + i;
-			while (DrawT < 0) { DrawT += this->size(); }
-			this->DrawOne(this->folder_str[DrawT].c_str(), i, BLUE_MUSIC_LIST_BAR);
-		}
-	}
-
-	void clear(void) {
-		this->folder_str.clear();
-	}
-
-	void push_back(std::string val) {
-		this->folder_str.push_back(val);
-	}
-
-	size_t size(void) const {
-		return this->folder_str.size();
-	}
-};
 
 static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
 	int Len = pals_scale(35, 300, 0, 0, count.c1);
@@ -970,6 +996,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		FBDF_SelectDrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);
+	/* TODO: 操作方法も描きたい */
 }
 
 /**
