@@ -1193,6 +1193,71 @@ public:
 	}
 };
 
+class FBDF_play_chain_draw_c {
+private:
+	uint chain = 0;
+	DxTime_t Stime = 0;
+	dxcur_pic_c strpic = dxcur_pic_c(_T("pic/play/chainstr.png"));
+	dxcur_divpic_c numpic = dxcur_divpic_c(_T("pic/play/chainnum.png"), 10, 5, 2);
+
+	                        /* 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 */
+	const int strsize[10] = { 80,40,60,55,65,60,70,75,65,75 };
+	const int picsizeX    =   80;
+	const int picsizeY    =   88;
+
+	/* x座標は勝手に進むので注意 */
+	void DrawNumOnce(int &x, int y, uint num, double size) const {
+		num = betweens(0, num, 9);
+		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+			this->numpic.handle(num), TRUE);
+		x += this->strsize[num] * size;
+	}
+
+	/* x座標は勝手に進むので注意 */
+	void DrawNumOnceStr(int &x, int y, char num, double size) const {
+		num = betweens('0', num, '9');
+		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+			this->numpic.handle(num - '0'), TRUE);
+		x += this->strsize[num - '0'] * size;
+	}
+
+	uint GetPicSize(uint num, double size) const {
+		uint ret = 0;
+		while (num != 0) {
+			ret += this->strsize[num % 10];
+			num /= 10;
+		}
+		return (uint)(ret * size);
+	}
+
+	void DrawNum(int x, int y, uint num) const {
+		char buf[5];
+		double size_p = lins_scale(4, 0.4, 200, 0.8, num) + lins_scale(0, 0.1, 100, 0, GetNowCount() - Stime);
+		int DrawX = x;
+		int DrawY = y - this->picsizeY * size_p;
+		strnums(buf, num, 5);
+		for (size_t i = 0; buf[i] != '\0'; i++) {
+			this->DrawNumOnceStr(DrawX, DrawY, buf[i], size_p);
+		}
+	}
+
+public:
+	void DrawChain(int x, int y) const {
+		if (this->Stime + 750 < GetNowCount()) { return; }
+		if (this->chain < 4) { return; }
+
+		int DrawX = x;
+		this->DrawNum(x, y, this->chain);
+		DrawX = x + this->GetPicSize(this->chain, lins_scale(4, 0.4, 200, 0.8, this->chain) + lins_scale(0, 0.1, 100, 0, GetNowCount() - Stime));
+		DrawGraph(DrawX, y - 36, this->strpic.handle(), TRUE);
+	}
+
+	void SetChain(uint chain) {
+		this->Stime = GetNowCount();
+		this->chain = chain;
+	}
+};
+
 #endif /* class */
 
 /* プレイ画面に関するクラスをまとめたもの */
@@ -1202,6 +1267,7 @@ typedef struct FBDF_play_class_set_s {
 	FBDF_score_bar_c score_bar_class;
 	FBDF_gap_bar_c gap_bar_class;
 	FBDF_play_notes_draw_c notes_draw_class;
+	FBDF_play_chain_draw_c chain_draw_class;
 } FBDF_play_class_set_t;
 
 #if 1 /* ノーツ判定系 */
@@ -1277,6 +1343,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
 	FBDF_score_bar_c       &score_bar_class  = play_class.score_bar_class;
 	FBDF_gap_bar_c         &gap_bar_class    = play_class.gap_bar_class;
 	FBDF_play_notes_draw_c &notes_draw_class = play_class.notes_draw_class;
+	FBDF_play_chain_draw_c &chain_draw_class = play_class.chain_draw_class;
 
 	while (!judge_event.empty()) {
 		buf = judge_event.front();
@@ -1316,8 +1383,10 @@ static void FBDF_Play_NoteJudgeEventAntion(
 			}
 		}
 
-		/* コンボ計算 */
-		if (buf.mat != JUDGE_MISS) { score.chain++; }
+		/* チェイン計算 */
+		if (buf.mat == JUDGE_MISS) { score.chain = 0; }
+		else { score.chain++; }
+		chain_draw_class.SetChain(score.chain);
 
 		/* スコア計算 */
 		score.point += buf.score;
@@ -1664,6 +1733,9 @@ static void FBDF_Play_AllDraw(
 	DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), music_name);
 	play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
 	play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
+	if (game_option.chain_draw_en) {
+		play_class.chain_draw_class.DrawChain(180, 490);
+	}
 	if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 }
 
