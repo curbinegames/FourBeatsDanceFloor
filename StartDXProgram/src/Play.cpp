@@ -66,9 +66,11 @@ typedef struct FBDF_score_s {
 	uint  hit  = 0;
 	uint save  = 0;
 	uint drop  = 0;
-	uint point = 0; /* 理論値 = 184 * ノーツ数 */
 	uint chain = 0;
-	uint chain_point = 0; /* 理論値 = 1~ノーツ数までの和 */
+	uint base_point = 0; /* 難易度補正をかける前の得点。理論値 = 184 * ノーツ数 */
+	uint scale_point = 0; /* base_pointに難易度補正をかけた後の得点。スコアバーで使用する */
+	uint chain_point = 0; /* チェインによる得点。理論値 = 1~ノーツ数までの和 */
+	uint all_point = 0; /* 最終的な得点 */
 } FBDF_score_st;
 
 typedef struct FBDF_judge_event_s {
@@ -907,14 +909,14 @@ public:
 	 * @return なし
 	 */
 	void update_score(const FBDF_score_st &score, uint noteN) {
-		uint hit_notes = score.crit + score.hit + score.drop;
+		uint hit_notes = score.crit + score.hit + score.save + score.drop;
 		uint remain_notes = noteN - hit_notes;
-		this->score_bar.bar_70 = 100 * (score.point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_90 = 100 * (score.point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_96 = 100 * (score.point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_98 = 100 * (score.point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_bar.bar_99 = 100 * (score.point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
-		this->score_ave = DIV_AVOID_ZERO(100 * score.point, hit_notes * CRIT_SCORE, 100.00);
+		this->score_bar.bar_70 = 100 * (score.scale_point + (70.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_90 = 100 * (score.scale_point + (90.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_96 = 100 * (score.scale_point + (96.0 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_98 = 100 * (score.scale_point + (98.5 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_bar.bar_99 = 100 * (score.scale_point + (99.1 / 100.0) * remain_notes * CRIT_SCORE) / (double)(noteN * CRIT_SCORE);
+		this->score_ave = DIV_AVOID_ZERO(100 * score.scale_point, hit_notes * CRIT_SCORE, 100.00);
 	}
 
 	/**
@@ -1201,7 +1203,7 @@ private:
 	dxcur_divpic_c numpic = dxcur_divpic_c(_T("pic/play/chainnum.png"), 10, 5, 2);
 
 	                        /* 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 */
-	const int strsize[10] = { 80,40,60,55,65,60,70,75,65,75 };
+	const int strsize[10] = { 80,38,62,55,65,60,70,75,65,75 };
 	const int picsizeX    =   80;
 	const int picsizeY    =   88;
 
@@ -1302,24 +1304,6 @@ static void FBDF_Play_OneNoteJudgeAfterKeyDetect(FBDF_judge_event_st &buf, bool 
 	else {
 		buf.mat = JUDGE_MISS;
 	}
-
-	switch (game_option.play_style) {
-	case FBDF_PLAYSTYLE_ASSIST_PLUS:
-		buf.score = buf.score * 90 / 100;
-		break;
-	case FBDF_PLAYSTYLE_ASSIST:
-		buf.score = buf.score * 95 / 100;
-		break;
-	case FBDF_PLAYSTYLE_NORMAL:
-		buf.score = buf.score * 99 / 100;
-		break;
-	case FBDF_PLAYSTYLE_BLANC:
-		buf.score = buf.score * 995 / 1000;
-		break;
-	case FBDF_PLAYSTYLE_BLANC_PLUS:
-		/* buf.score *= 1.00; */
-		break;
-	}
 	return;
 }
 
@@ -1389,8 +1373,26 @@ static void FBDF_Play_NoteJudgeEventAntion(
 		chain_draw_class.SetChain(score.chain);
 
 		/* スコア計算 */
-		score.point += buf.score;
+		score.base_point += buf.score;
 		if (FBDF_PLAYSTYLE_NORMAL <= game_option.play_style) { score.chain_point += score.chain; }
+		switch (game_option.play_style) {
+		case FBDF_PLAYSTYLE_ASSIST_PLUS:
+			score.scale_point = score.base_point * 90 / 100; /* 90% */
+			break;
+		case FBDF_PLAYSTYLE_ASSIST:
+			score.scale_point = score.base_point * 95 / 100; /* 95% */
+			break;
+		case FBDF_PLAYSTYLE_NORMAL:
+			score.scale_point = score.base_point * 99 / 100; /* 99% */
+			break;
+		case FBDF_PLAYSTYLE_BLANC:
+			score.scale_point = score.base_point * 995 / 1000; /* 99.5% */
+			break;
+		case FBDF_PLAYSTYLE_BLANC_PLUS:
+			score.scale_point = score.base_point; /* 100% */
+			break;
+		}
+		score.all_point = score.scale_point + score.chain_point;
 
 		/* キャラモーション変更 */
 		if (buf.mat == JUDGE_MISS) {
@@ -1478,7 +1480,7 @@ static void FBDF_PlayNoteJudge(
 		map.note.stepNo();
 	}
 
-	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map.note.size(), se);
+	FBDF_Play_NoteJudgeEventAntion(judge_event, play_class, score, map.note.size() - 1, se);
 	return;
 }
 
@@ -1532,7 +1534,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF
 	result_data.artist_name = map.artist_name;
 	result_data.folder_name = nex_music.folder_name;
 	result_data.level       = 0;
-	result_data.score       = score.point + score.chain_point;
+	result_data.score       = score.all_point;
 	result_data.acc         = play_class.score_bar_class.GetScore_ave();
 	result_data.crit        = score.crit;
 	result_data.hit         = score.hit;
@@ -1547,7 +1549,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF
 /**
  * @brief 譜面を読み込む
  * @param[out] map 格納場所
- * @param[in] map_file_name 譜面のファイル名
+ * @param[in] folder_name フォルダ名
  * @param[in] dif 難易度
  * @return bool true=成功, false=失敗
  */
@@ -1682,30 +1684,29 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
 }
 
 static void FBDF_Play_DrawScore(int x, int y, const FBDF_score_st &score) {
-	uint all_point = score.point + score.chain_point;
 	int drawX = x;
-	if (all_point < 10) {
+	if (score.all_point < 10) {
 		drawX = x - 28;
 	}
-	else if (all_point < 100) {
+	else if (score.all_point < 100) {
 		drawX = x - 28 * 2;
 	}
-	else if (all_point < 1000) {
+	else if (score.all_point < 1000) {
 		drawX = x - 28 * 3;
 	}
-	else if (all_point < 10000) {
+	else if (score.all_point < 10000) {
 		drawX = x - 28 * 4;
 	}
-	else if (all_point < 100000) {
+	else if (score.all_point < 100000) {
 		drawX = x - 28 * 5;
 	}
-	else if (all_point < 1000000) {
+	else if (score.all_point < 1000000) {
 		drawX = x - 28 * 6;
 	}
-	else if (all_point < 10000000) {
+	else if (score.all_point < 10000000) {
 		drawX = x - 28 * 7;
 	}
-	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), all_point);
+	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.all_point);
 }
 
 /**

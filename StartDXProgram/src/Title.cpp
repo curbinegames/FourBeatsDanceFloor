@@ -52,12 +52,13 @@ private:
 	 * @return ‚È‚µ
 	 */
 	void dequeue(void) {
-		for (int i = 0; i < particle.size(); i++) {
-			if (FBDF_TITLE_PART_LIFETIME + particle[i].STime < GetNowCount() + this->ATime) {
-				particle.erase(particle.begin() + i);
-				i--;
-			}
-		}
+		particle.erase(
+			std::remove_if(particle.begin(), particle.end(),
+				[&](const FBDF_title_particle_mat_t& p) {
+					return FBDF_TITLE_PART_LIFETIME + p.STime < GetNowCount() + this->ATime;
+				}),
+			particle.end()
+		);
 	}
 
 	/**
@@ -66,7 +67,7 @@ private:
 	 * @return ‚È‚µ
 	 */
 	void inqueue(void) {
-		for (int i = particle.size(); i < max_count; i++) {
+		for (size_t i = particle.size(); i < max_count; i++) {
 			FBDF_title_particle_mat_t buf;
 			buf.STime  =  this->Next_Gene_time;
 			buf.SXpos  =  GetRand(WINDOW_SIZE_X);
@@ -126,11 +127,14 @@ public:
 	 * @return ‚È‚µ
 	 */
 	void init(void) {
-		this->BTime = GetNowCount();
-		this->Next_Gene_time = GetNowCount() + DIV_AVOID_ZERO(FBDF_TITLE_PART_LIFETIME, (double)max_count, 0);
-		for (int i = 0; i < max_count; i++) {
+		DxTime_t Ntime = GetNowCount();
+		this->BTime = Ntime;
+		this->Next_Gene_time = Ntime + DIV_AVOID_ZERO(FBDF_TITLE_PART_LIFETIME, (double)max_count, 0);
+		this->particle.clear();
+		this->particle.reserve(max_count);
+		for (size_t i = 0; i < max_count; i++) {
 			FBDF_title_particle_mat_t buf;
-			buf.STime  =  GetNowCount() - i * DIV_AVOID_ZERO(FBDF_TITLE_PART_LIFETIME, (double)max_count, 0);
+			buf.STime  =  Ntime - i * DIV_AVOID_ZERO(FBDF_TITLE_PART_LIFETIME, (double)max_count, 0);
 			buf.SXpos  =  GetRand(WINDOW_SIZE_X);
 			buf.EXpos  =  buf.SXpos + GetRand(300) - 150;
 			buf.SYpos  =  WINDOW_SIZE_Y + GetRand(75);
@@ -150,7 +154,7 @@ public:
 	void update(void) {
 		this->dequeue();
 		this->inqueue();
-		for (int i = 0; i < particle.size(); i++) {
+		for (size_t i = 0; i < particle.size(); i++) {
 			particle[i].Nrot += particle[i].divrot;
 		}
 		this->ATime += (this->simTime - 1) * (GetNowCount() - this->BTime);
@@ -163,12 +167,13 @@ public:
 	 * @return ‚È‚µ
 	 */
 	void draw(void) const {
-		for (int i = 0; i < particle.size(); i++) {
-			int    DXpos = pals(      FBDF_TITLE_PART_LIFETIME, particle[i].EXpos, 0,            particle[i].SXpos, GetNowCount() - particle[i].STime + this->ATime);
-			int    DYpos = lins(      FBDF_TITLE_PART_LIFETIME, particle[i].EYpos, 0,            particle[i].SYpos, GetNowCount() - particle[i].STime + this->ATime);
-			double Dsize = lins_scale(FBDF_TITLE_PART_LIFETIME, 0, FBDF_TITLE_PART_LIFETIME / 2, particle[i].Ssize, GetNowCount() - particle[i].STime + this->ATime);
+		DxTime_t Ntime = GetNowCount();
+		for (size_t i = 0; i < particle.size(); i++) {
+			int    DXpos = pals(      FBDF_TITLE_PART_LIFETIME, particle[i].EXpos, 0,            particle[i].SXpos, Ntime - particle[i].STime + this->ATime);
+			int    DYpos = lins(      FBDF_TITLE_PART_LIFETIME, particle[i].EYpos, 0,            particle[i].SYpos, Ntime - particle[i].STime + this->ATime);
+			double Dsize = lins_scale(FBDF_TITLE_PART_LIFETIME, 0, FBDF_TITLE_PART_LIFETIME / 2, particle[i].Ssize, Ntime - particle[i].STime + this->ATime);
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA,
-				min(abs(sin((GetNowCount() - particle[i].STime + this->ATime) / 1000.0 + particle[i].STime)) * 400, 255)
+				min(abs(sin((Ntime - particle[i].STime + this->ATime) / 1000.0 + particle[i].STime)) * 400, 255)
 			);
 			DrawDeformationPic(DXpos, DYpos, Dsize, Dsize, particle[i].Nrot, this->pic.handle());
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
