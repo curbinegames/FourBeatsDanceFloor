@@ -472,8 +472,9 @@ static std::vector<FBDF_option_item_base_c *> s_op_list = {
 };
 
 static void FBDF_Option_DrawItemOne(int no, int x, int y, const FBDF_option_pic_st &pic) {
-    DrawFormatString(x, y,      COLOR_WHITE, _T("%s"), s_op_list.at(no)->item_name.c_str());
-    DrawFormatString(x, y + 20, COLOR_WHITE, _T("%s"), s_op_list.at(no)->GetParamName().c_str());
+    DrawGraph(       x,     y,      pic.box.handle(), TRUE);
+    DrawFormatString(x + 9, y + 10, COLOR_WHITE, _T("%s"), s_op_list.at(no)->item_name.c_str());
+    DrawFormatString(x + 9, y + 37, COLOR_WHITE, _T("%s"), s_op_list.at(no)->GetParamName().c_str());
 }
 
 /**
@@ -517,12 +518,26 @@ void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
  * @param[in] cmd コマンド
  */
 void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic) {
+    int DrawY = WINDOW_SIZE_Y / 2;
+    int DrawC = cmd;
     /* 後ろの選曲画面を暗くする */
     DrawGraph(0, 0, pic.back.handle(), TRUE);
     /* 項目を描く */
-    // FBDF_Option_DrawItemOne(cmd - 1, 5 - 20, 5);
-    FBDF_Option_DrawItemOne(cmd, 15, 15, pic);
-    // FBDF_Option_DrawItemOne(cmd + 1, 5 + 20, 5);
+    DrawC = cmd;
+    DrawY = WINDOW_SIZE_Y / 2;
+    for (size_t i = 0; i < 5; i++) {
+        DrawC = LOOP_SUB(DrawC, s_op_list.size());
+        DrawY -= 80;
+        FBDF_Option_DrawItemOne(DrawC, 15, DrawY, pic);
+    }
+    FBDF_Option_DrawItemOne(cmd, 15 + 50, WINDOW_SIZE_Y / 2, pic);
+    DrawC = cmd;
+    DrawY = WINDOW_SIZE_Y / 2;
+    for (size_t i = 0; i < 5; i++) {
+        DrawC = LOOP_ADD(DrawC, s_op_list.size());
+        DrawY += 80;
+        FBDF_Option_DrawItemOne(DrawC, 15, DrawY, pic);
+    }
     /* 説明の画像を描く */
     DrawGraph(0, 0, s_op_list.at(cmd)->GetPicHandle(), TRUE);
     /* 詳細を描く */
