@@ -102,6 +102,7 @@ typedef struct FBDT_hit_snd_s {
 
 class FBDF_judge_c {
 private:
+	bool is_fast = false;
 	int Xsize = 0;
 	int Ysize = 0;
 	DxTime_t Jtime = 0;
@@ -112,6 +113,8 @@ private:
 		dxcur_pic_c  hit = dxcur_pic_c(_T("pic/play/JudgeHit.png"));
 		dxcur_pic_c save = dxcur_pic_c(_T("pic/play/JudgeSave.png"));
 		dxcur_pic_c drop = dxcur_pic_c(_T("pic/play/JudgeDrop.png"));
+		dxcur_pic_c fast = dxcur_pic_c(_T("pic/play/JudgeFast.png"));
+		dxcur_pic_c slow = dxcur_pic_c(_T("pic/play/JudgeSlow.png"));
 	} pic;
 
 public:
@@ -137,11 +140,28 @@ public:
 	}
 
 	/**
+	* @brief ”»’è‚Ì•`‰æ
+	* @param[in] x •`‰æ‰¡ˆÊ’u
+	* @param[in] y •`‰æcˆÊ’u
+	* @return ‚È‚µ
+	*/
+	void DrawFastSlow(int x, int y) const {
+		if (this->Jmat == JUDGE_CRIT) { return; }
+		if (this->Jmat == JUDGE_MISS) { return; }
+		const double zoom = 0.5;
+		if (this->Jtime + 750 < GetNowCount()) { return; }
+		DrawDeformationPic(x, y, zoom, zoom, 0,
+			(this->is_fast) ? (this->pic.fast.handle()) : (this->pic.slow.handle())
+		);
+	}
+
+	/**
 	 * @brief ”»’è‚ðƒZƒbƒg‚·‚é
 	 * @param[in] mat ƒZƒbƒg‚·‚é”»’è
+	 * @param[in] gap ”»’è‚Ì·
 	 * @return ‚È‚µ
 	 */
-	void SetJudge(FBDF_judge_mat_et mat) {
+	void SetJudge(FBDF_judge_mat_et mat, int gap) {
 		this->Jtime = GetNowCount();
 		this->Jmat = mat;
 		switch (this->Jmat) {
@@ -158,6 +178,7 @@ public:
 			this->Npic = this->pic.drop.handle();
 			break;
 		}
+		this->is_fast = (0 < gap);
 		return;
 	}
 };
@@ -1335,7 +1356,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
 
 		if (buf.mat == JUDGE_NONE) { continue; }
 
-		judge_class.SetJudge(buf.mat);
+		judge_class.SetJudge(buf.mat, buf.gap);
 
 		/* ”»’è”’Ç‰Á */
 		switch (buf.mat) {
@@ -1506,7 +1527,7 @@ static void FBDF_Play_NoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st
 	}
 
 	if (0 < remain_notes) {
-		judge_class.SetJudge(JUDGE_MISS);
+		judge_class.SetJudge(JUDGE_MISS, 0);
 		score.drop += remain_notes;
 		dancer_class.SetMissState();
 		score_bar_class.update_score(score, map.note.size());
@@ -1733,10 +1754,20 @@ static void FBDF_Play_AllDraw(
 	DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), music_name);
 	play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
 	play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
-	if (game_option.chain_draw_en) {
-		play_class.chain_draw_class.DrawChain(180, 490);
+	{
+		uint Yoffset = 0;
+		if (game_option.judge_draw_en) {
+			play_class.judge_class.DrawJudge(     270, 530);
+			Yoffset += 70;
+		}
+		if (game_option.fast_slow_en ) {
+			play_class.judge_class.DrawFastSlow(  230, 545 - Yoffset);
+			Yoffset += 40;
+		}
+		if (game_option.chain_draw_en) {
+			play_class.chain_draw_class.DrawChain(180, 560 - Yoffset);
+		}
 	}
-	if (game_option.judge_draw_en) { play_class.judge_class.DrawJudge(270, 530); }
 }
 
 #endif /* DrawŒn */

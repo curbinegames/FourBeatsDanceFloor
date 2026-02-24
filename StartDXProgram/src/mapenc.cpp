@@ -88,11 +88,12 @@ static FBDF_note_motion_assign_et GetMotionAssign(char c) {
 /**
  * 再帰関数。0 <= block <= 6 で終了。
  * block は再帰されるたびに半分または1/3になる。
- * block 99 -> 33 -> 11 --> 5or6
- * block 98 -> 
+ * block 26 -> 13,13 -> 7,6,7,6 -> 4,3,6,4,3,6
+ * block 45 -> 15,15,15 -> 5,5,5,5,5,5,5,5,5
+ * block 49 -> 24,25 -> 8,8,8,12,13 -> 4,4,4,4,4,4,4,4,4,7,6 -> 4,4,4,4,4,4,4,4,4,4,3,6
  */
 static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
-	FBDF_Play_note_btn_et ret;
+	FBDF_Play_note_btn_et ret = FBDF_PLAY_NOTE_BTN_1;
 	switch (block) {
 	case 0: /* ???? */
 	case 1: /* 1 */
