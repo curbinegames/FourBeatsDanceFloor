@@ -1432,7 +1432,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
  * @param[in] se 効果音情報
  * @return なし
  */
-static void FBDF_PlayNoteJudge(
+static void FBDF_Play_NoteJudge(
 	FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map,
 	const FBDF_push_key_st &pkey, const FBDT_hit_snd_t &se)
 {
@@ -1491,7 +1491,7 @@ static void FBDF_PlayNoteJudge(
  * @param[out] map マップデータ
  * @return なし
  */
-static void FBDF_PlayNoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map) {
+static void FBDF_Play_NoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map) {
 	size_t remain_notes = 0;
 	FBDF_judge_c           &judge_class      = play_class.judge_class;
 	FBDF_dancer_c          &dancer_class     = play_class.dancer_class;
@@ -1600,7 +1600,7 @@ static void FBDF_Play_KeyCheck(
 	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
 ) {
 	if (!cutin.IsClosing() && (CheckHitKey(KEY_INPUT_ESCAPE) == 1)) {
-		FBDF_PlayNoteTrash(play_class, score, map);
+		FBDF_Play_NoteTrash(play_class, score, map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
 	}
@@ -1794,7 +1794,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 			cutin.SetIo(CUT_FRAG_IN);
 		}
 
-		FBDF_PlayNoteJudge(play_class, score, map, pkey, se);
+		FBDF_Play_NoteJudge(play_class, score, map, pkey, se);
 
 		/* update系 */
 		play_class.dancer_class.Update();

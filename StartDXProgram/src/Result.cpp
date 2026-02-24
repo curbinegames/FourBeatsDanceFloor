@@ -22,7 +22,7 @@
  * @param[in] rank スコアランク
  * @return なし
  */
-static void FBDF_ResultDrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
+static void FBDF_Result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
 	int all_left  = VIEW_MARGIN;
 	int all_up    = VIEW_MARGIN;
 	int all_right = VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
@@ -47,7 +47,7 @@ static void FBDF_ResultDrawScoreGraph(const FBDF_score_bar_st *src, const char *
  * @param[in] acc 最終精度
  * @return なし
  */
-static void FBDF_ResultDrawFinalBar(double acc) {
+static void FBDF_Result_DrawFinalBar(double acc) {
 	int all_left  = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
 	int all_up    =     VIEW_MARGIN;
 	int all_right = 2 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE;
@@ -77,7 +77,7 @@ static void FBDF_ResultDrawFinalBar(double acc) {
  * @param[in] data プレイデータ
  * @return view_num_t 次の画面
  */
-static view_num_t FBDF_ResultView(const FBDF_result_data_t &data) {
+static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
@@ -132,10 +132,10 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t &data) {
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, back.handle(), TRUE);
 
 		/* スコアグラフ */
-		FBDF_ResultDrawScoreGraph(data.score_graph, score_rank_char.c_str());
+		FBDF_Result_DrawScoreGraph(data.score_graph, score_rank_char.c_str());
 
 		/* スコアグラフの横 */
-		FBDF_ResultDrawFinalBar(data.acc);
+		FBDF_Result_DrawFinalBar(data.acc);
 		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN     , COLOR_WHITE, _T("%s / %s")    , data.music_name.c_str(), data.artist_name.c_str());
 		DrawFormatString(3 * VIEW_MARGIN + SCORE_GRAPH_X_SIZE + SCORE_FINAL_BAR_XSIZE, VIEW_MARGIN + 20, COLOR_WHITE, _T("level: %.2f"), data.level);
 
@@ -163,7 +163,7 @@ static view_num_t FBDF_ResultView(const FBDF_result_data_t &data) {
  * @param[in] data プレイデータ
  * @return FBDF_clear_type_et クリアタイプ
  */
-static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t &data) {
+static FBDF_clear_type_et FBDF_Result_JudgeClearType(const FBDF_result_data_t &data) {
 	if (data.acc < 70.0)             { return FBDF_CLEAR_TYPE_FAILED;    } /* acc70%未満 */
 	if (game_option.play_style <= FBDF_PLAYSTYLE_ASSIST)
 	                                 { return FBDF_CLEAR_TYPE_ASSIST;    } /* acc70%以上 & アシストあり */
@@ -172,8 +172,8 @@ static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t &da
 	if ( 0 < data.drop)              { return FBDF_CLEAR_TYPE_MISSLESS;  } /* acc70%以上 & アシストなし & ( 0 < drop数 <=  5) */
 	if ( 0 < data.save ||
 		game_option.play_style <  FBDF_PLAYSTYLE_BLANC_PLUS)
-		                             { return FBDF_CLEAR_TYPE_FULLCOMBO; } /* acc70%以上 & アシストなし & drop数=0 & (save数1以上 or ノーマルモード)) */
-	return FBDF_CLEAR_TYPE_PERFECT; /* acc70%以上 & アシストなし & drop数=0 & save数=0 & ブランモード */
+		                             { return FBDF_CLEAR_TYPE_FULLCOMBO; } /* acc70%以上 & アシストなし & drop数=0 & (save数1以上 or ブラン+モードではない)) */
+	return FBDF_CLEAR_TYPE_PERFECT; /* acc70%以上 & アシストなし & drop数=0 & save数=0 & ブラン+モード */
 }
 
 /**
@@ -181,10 +181,10 @@ static FBDF_clear_type_et FBDF_ResultJudgeClearType(const FBDF_result_data_t &da
  * @param[in] data プレイデータ
  * @return bool true=成功, false=失敗
  */
-static bool FBDF_ResultSaveMusicScore(const FBDF_result_data_t &data) {
+static bool FBDF_Result_SaveMusicScore(const FBDF_result_data_t &data) {
 	FBDF_file_music_score_st this_time_score;
 	this_time_score.acc        = data.acc;
-	this_time_score.clear_type = FBDF_ResultJudgeClearType(data);
+	this_time_score.clear_type = FBDF_Result_JudgeClearType(data);
 	this_time_score.score      = data.score;
 	return FBDF_Save_UpdateScoreOneDif(this_time_score, data.folder_name.c_str(), data.dif_type);
 }
@@ -195,10 +195,10 @@ static bool FBDF_ResultSaveMusicScore(const FBDF_result_data_t &data) {
  * @return view_num_t 次の画面
  */
 view_num_t FirstResultView(const FBDF_result_data_t &data) {
-	if (FBDF_ResultSaveMusicScore(data) == false) {
+	if (FBDF_Result_SaveMusicScore(data) == false) {
 		std::string msg = data.music_name;
 		msg += ": スコアの保存に失敗しました。";
 		FBDF_ErrorLogWrite(msg.c_str());
 	}
-	return FBDF_ResultView(data);
+	return FBDF_Result_View(data);
 }

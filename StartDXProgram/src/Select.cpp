@@ -607,7 +607,7 @@ public:
 
 #endif /* 曲フォルダ―関連 */
 
-static void FBDF_SelectDrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
+static void FBDF_Select_DrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
 	int Len = pals_scale(35, 300, 0, 0, count.c1);
 	int BaseY = y;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
@@ -716,7 +716,7 @@ static bool FBDF_Select_LoadMusicList(FBDF_music_list_c &musiclist) {
  * @param[out] cutin カットイン管理クラス
  * @return なし
  */
-static void FBDF_select_KeyCheck(
+static void FBDF_Select_KeyCheck(
 	FBDF_Select_MusicFolderManager_c &folder_manager,
 	std::string &now_music,
 	int &command,
@@ -821,7 +821,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[cmd].user_highscore.score);
 		DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[cmd].user_highscore.acc);
 		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), musiclist[cmd].user_highscore.clear_type);
-		FBDF_SelectDrawColorCount(5, 660, (musiclist[cmd].color_count));
+		FBDF_Select_DrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);
 	/* TODO: 操作方法も描きたい */
@@ -865,7 +865,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 			FBDF_Option_KeyAction(option_cmd, option_fg);
 		}
 		else {
-			FBDF_select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, folder_string, cutin);
+			FBDF_Select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, folder_string, cutin);
 		}
 
 		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; }
