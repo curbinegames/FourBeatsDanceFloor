@@ -1203,7 +1203,7 @@ private:
 	dxcur_divpic_c numpic = dxcur_divpic_c(_T("pic/play/chainnum.png"), 10, 5, 2);
 
 	                        /* 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 */
-	const int strsize[10] = { 80,38,62,55,65,60,70,75,65,75 };
+	const int strsize[10] = { 80,38,65,55,65,60,70,75,65,72 };
 	const int picsizeX    =   80;
 	const int picsizeY    =   88;
 

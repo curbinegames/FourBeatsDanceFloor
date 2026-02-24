@@ -42,6 +42,157 @@ typedef struct FBDF_map_enc_s {
 	double scrool       = 1; // nps 専用
 } FBDF_map_enc_t;
 
+static FBDF_note_motion_assign_et GetMotionAssign(char c) {
+	FBDF_note_motion_assign_et ret = FBDF_NOTE_MOTION_ASSIGN_NONE;
+	switch (c) {
+	case 'u':
+		ret = FBDF_NOTE_MOTION_ASSIGN_UP;
+		break;
+	case 'd':
+		ret = FBDF_NOTE_MOTION_ASSIGN_DOWN;
+		break;
+	case 'l':
+		ret = FBDF_NOTE_MOTION_ASSIGN_LEFT;
+		break;
+	case 'r':
+		ret = FBDF_NOTE_MOTION_ASSIGN_RIGHT;
+		break;
+	case 'f':
+		ret = FBDF_NOTE_MOTION_ASSIGN_FRONT;
+		break;
+	case 'b':
+		ret = FBDF_NOTE_MOTION_ASSIGN_BACK;
+		break;
+	case 'j':
+		ret = FBDF_NOTE_MOTION_ASSIGN_JUMP;
+		break;
+	case 'c':
+		ret = FBDF_NOTE_MOTION_ASSIGN_CLAP;
+		break;
+	case '1':
+		ret = FBDF_NOTE_MOTION_ASSIGN_1;
+		break;
+	case '2':
+		ret = FBDF_NOTE_MOTION_ASSIGN_2;
+		break;
+	case '3':
+		ret = FBDF_NOTE_MOTION_ASSIGN_3;
+		break;
+	case '4':
+		ret = FBDF_NOTE_MOTION_ASSIGN_4;
+		break;
+	}
+	return ret;
+}
+
+/**
+ * 再帰関数。0 <= block <= 6 で終了。
+ * block は再帰されるたびに半分または1/3になる。
+ * block 99 -> 33 -> 11 --> 5or6
+ * block 98 -> 
+ */
+static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
+	FBDF_Play_note_btn_et ret;
+	switch (block) {
+	case 0: /* ???? */
+	case 1: /* 1 */
+		ret = FBDF_PLAY_NOTE_BTN_1;
+		break;
+	case 2: /* 13 */
+		switch (ic) {
+		case 0:
+			ret = FBDF_PLAY_NOTE_BTN_1;
+			break;
+		case 1:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		}
+		break;
+	case 3: /* 123 */
+	case 4: /* 1234 */
+		switch (ic) {
+		case 0:
+			ret = FBDF_PLAY_NOTE_BTN_1;
+			break;
+		case 1:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		case 2:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 3:
+			ret = FBDF_PLAY_NOTE_BTN_4;
+			break;
+		}
+		break;
+	case 5: /* 12343 */
+		switch (ic) {
+		case 0:
+			ret = FBDF_PLAY_NOTE_BTN_1;
+			break;
+		case 1:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		case 2:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 3:
+			ret = FBDF_PLAY_NOTE_BTN_4;
+			break;
+		case 4:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		}
+		break;
+	case 6: /* 123432 */
+		switch (ic) {
+		case 0:
+			ret = FBDF_PLAY_NOTE_BTN_1;
+			break;
+		case 1:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		case 2:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 3:
+			ret = FBDF_PLAY_NOTE_BTN_4;
+			break;
+		case 4:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 5:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		}
+		break;
+	default:
+		if ((block % 3) == 0) {
+			/* 3等分して再計算 */
+			uint next_block = block / 3;
+			while (next_block <= ic) { ic -= next_block; }
+			ret = GetNoteButton(next_block, ic);
+		}
+		else if ((block % 2) == 0) {
+			/* 半分に分けて再計算 */
+			uint next_block = block / 2;
+			if (next_block <= ic) { ic -= next_block; }
+			ret = GetNoteButton(next_block, ic);
+		}
+		else {
+			/* 半分に分けて再計算。余った分は前半に適用 */
+			uint next_block = block / 2 + 1;
+			if (next_block <= ic) {
+				ic -= next_block;
+				next_block - 1;
+			}
+			ret = GetNoteButton(next_block, ic);
+		}
+		break;
+	}
+	return ret;
+}
+
 /**
  * @brief ノーツ情報を読み込む。ブロック版。
  * @param[out] map 格納先
@@ -68,99 +219,9 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 	for (size_t ic = 0; ic < option.now_block; ic++) {
 		FBDF_note_t buf_note;
 		if (buf[ic] != '.') {
-			switch (buf[ic]) {
-			case 'u':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_UP;
-				break;
-			case 'd':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_DOWN;
-				break;
-			case 'l':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_LEFT;
-				break;
-			case 'r':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_RIGHT;
-				break;
-			case 'f':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_FRONT;
-				break;
-			case 'b':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_BACK;
-				break;
-			case 'j':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_JUMP;
-				break;
-			case 'c':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_CLAP;
-				break;
-			case '1':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_1;
-				break;
-			case '2':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_2;
-				break;
-			case '3':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_3;
-				break;
-			case '4':
-				buf_note.motion = FBDF_NOTE_MOTION_ASSIGN_4;
-				break;
-			}
+			buf_note.motion = GetMotionAssign(buf[ic]);
 			buf_note.pos = option.now_shutpos + ic;
-			switch (option.now_block) {
-			case 2:
-				buf_note.btn = (ic == 1) ? FBDF_PLAY_NOTE_BTN_3 : FBDF_PLAY_NOTE_BTN_1;
-				break;
-			case 3:
-			case 4:
-				buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
-				break;
-			case 5:
-				switch (ic) {
-				case 4:
-					buf_note.btn = FBDF_PLAY_NOTE_BTN_3;
-					break;
-				default:
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
-					break;
-				}
-				break;
-			case 6:
-				switch (ic) {
-				case 4:
-					buf_note.btn = FBDF_PLAY_NOTE_BTN_3;
-					break;
-				case 5:
-					buf_note.btn = FBDF_PLAY_NOTE_BTN_2;
-					break;
-				default:
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
-					break;
-				}
-				break;
-			case 7:
-				if (ic <= 3) {
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
-				}
-				else {
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 2);
-				}
-				break;
-			case 9:
-				if (ic <= 2) {
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic + 1);
-				}
-				else if (ic <= 5) {
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 2);
-				}
-				else {
-					buf_note.btn = static_cast<FBDF_Play_note_btn_et>(ic - 5);
-				}
-				break;
-			default:
-				buf_note.btn = static_cast<FBDF_Play_note_btn_et>((ic) % 4 + 1);
-				break;
-			}
+			buf_note.btn = GetNoteButton(option.now_block, ic);
 			buf_note.len = 99;
 			if (!map.note.empty()) {
 				FBDF_note_t before_note = map.note.lastData();
