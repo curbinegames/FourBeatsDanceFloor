@@ -1491,9 +1491,10 @@ static void FBDF_PlayNoteJudge(
  */
 static void FBDF_PlayNoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map) {
 	size_t remain_notes = 0;
-	FBDF_judge_c     *judge_class     = &play_class.judge_class;
-	FBDF_dancer_c    *dancer_class    = &play_class.dancer_class;
-	FBDF_score_bar_c *score_bar_class = &play_class.score_bar_class;
+	FBDF_judge_c           &judge_class      = play_class.judge_class;
+	FBDF_dancer_c          &dancer_class     = play_class.dancer_class;
+	FBDF_score_bar_c       &score_bar_class  = play_class.score_bar_class;
+	FBDF_play_chain_draw_c &chain_draw_class = play_class.chain_draw_class;
 
 	FBDF_judge_event_st buf;
 
@@ -1503,10 +1504,11 @@ static void FBDF_PlayNoteTrash(FBDF_play_class_set_t &play_class, FBDF_score_st 
 	}
 
 	if (0 < remain_notes) {
-		judge_class->SetJudge(JUDGE_MISS);
+		judge_class.SetJudge(JUDGE_MISS);
 		score.drop += remain_notes;
-		dancer_class->SetMissState();
-		score_bar_class->update_score(score, map.note.size());
+		dancer_class.SetMissState();
+		score_bar_class.update_score(score, map.note.size());
+		chain_draw_class.SetChain(0);
 	}
 
 	return;
@@ -1527,7 +1529,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF
 	const FBDF_map_t &map, const FBDF_score_st &score, const FBDF_play_class_set_t &play_class
 ) {
 	result_data.music_name  = nex_music.folder_name;
-	result_data.artist_name = map.artist;
+	result_data.artist_name = map.artist_name;
 	result_data.folder_name = nex_music.folder_name;
 	result_data.level       = 0;
 	result_data.score       = score.point + score.chain_point;
@@ -1544,17 +1546,14 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF
 
 /**
  * @brief 譜面を読み込む
- * @param[in] folder_name フォルダ名
+ * @param[out] map 格納場所
  * @param[in] map_file_name 譜面のファイル名
+ * @param[in] dif 難易度
  * @return bool true=成功, false=失敗
  */
-static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, const TCHAR *map_file_name) {
+static bool FBDF_Play_MapLoad(FBDF_map_t &map, const TCHAR *folder_name, FBDF_dif_type_ec dif) {
 	FBDF_mapenc_error_et ret;
-	std::string path = "music/";
-	path += folder_name;
-	path += '/';
-	path += map_file_name;
-	ret = FBDF_MapLoadOne(map, path.c_str());
+	ret = FBDF_MapLoadOne(map, folder_name, dif);
 	if (ret != FBDF_MAPENC_ERROR_NONE) {
 		/* エラーメッセージか何かを残したい */
 		if (ret == FBDF_MAPENC_ERROR_FILE) {
@@ -1764,14 +1763,14 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	DxTime_t FinishTime = 0;
 
 	/* 譜面読み込み系 */
-	if (FBDF_Play_MapLoad(map, nex_music.folder_name.c_str(), nex_music.map_file_name.c_str()) == false) { return VIEW_SELECT; }
+	if (FBDF_Play_MapLoad(map, nex_music.folder_name.c_str(), nex_music.dif_type) == false) { return VIEW_SELECT; }
 	map.note.resetNo();
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
-	FBDF_Play_Loadmusic(musicData, nex_music.folder_name.c_str(), map.music_file);
+	FBDF_Play_Loadmusic(musicData, nex_music.folder_name.c_str(), map.music_file_name.c_str());
 	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
 
 	/* 曲再生後にやるべき初期化 */

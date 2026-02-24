@@ -638,30 +638,19 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 /**
  * @brief ファイル名から楽曲を読み込む
  * @param[out] detail 読み込んだリストの保存先
- * @param[in] music_detail_base 全難易度共通部分のデータ
  * @param[in] d_name PCフォルダー名
- * @param[in] file ファイル名
  * @param[in] dif 難易度タイプ
  * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
  * @return なし
  */
 static void FBDF_Select_MapLoadMusicGetDetail(
-	std::vector<FBDF_music_detail_t> &detail, const FBDF_music_detail_base_st &music_detail_base,
-	const char *d_name, const char *file, FBDF_dif_type_ec dif
+	std::vector<FBDF_music_detail_t> &detail, const char *d_name, FBDF_dif_type_ec dif
 ) {
 	FBDF_mapenc_error_et ret;
 	FBDF_map_t map;
 	FBDF_music_detail_t buf;
-	std::string map_path;
 
-	if (file[0] == '\0') { return; }
-
-	map_path  = "music/";
-	map_path += d_name;
-	map_path += '/';
-	map_path += file;
-
-	ret = FBDF_MapLoadOne(map, map_path.c_str());
+	ret = FBDF_MapLoadOne(map, d_name, dif);
 	if (ret != FBDF_MAPENC_ERROR_NONE) {
 		/* エラーメッセージか何かを残したい */
 		if (ret == FBDF_MAPENC_ERROR_FILE) {
@@ -673,188 +662,21 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	}
 
 	buf.folder_name        = d_name;
-	buf.music_name         = d_name;
-	buf.artist             = map.artist;
+	buf.music_name         = map.music_name;
+	buf.artist             = map.artist_name;
 	buf.Length             = FBDF_CalMapLength(map);
 	buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(&map);
 	buf.auto_cal_dif.color = FBDF_CalMapColorDif(&map);
 	buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(&map);
 	buf.auto_cal_dif.all   = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
-	buf.user_dif           = music_detail_base.level;
-	buf.map_file_name      = file;
+	buf.user_dif           = map.user_level;
+	buf.map_file_name      = map.map_file_name;
 	buf.dif_type           = dif;
 	FBDF_CalMapMostColorPat(buf.most_colorpat, &map);
 	FBDF_CountMapColor(&buf.color_count, &map, buf.Length);
 	FBDF_Save_ReadScoreOneDif(buf.user_highscore, d_name, dif);
 
 	detail.push_back(buf);
-}
-
-/**
- * @brief PCフォルダー名から楽曲のリストを読み込む
- * @param[out] musiclist 譜面リスト
- * @param[in] d_name PCフォルダー名。 "asd" とすると "music/asd" フォルダーから楽曲のリストを読み込む
- * @return なし
- */
-static void FBDF_Select_MapLoadMusic(FBDF_music_list_c &musiclist, const char *d_name) {
-	char str_buf[256] = "";
-	FBDF_map_t map;
-	FBDF_music_detail_t buf;
-
-	FBDF_music_detail_base_st detail_base[3];
-
-	FILE *fp = NULL;
-
-	std::string map_path;
-
-	/* base.txtがあるか確認 */ {
-		map_path  = "music/";
-		map_path += d_name;
-		map_path += "/base.txt";
-		fopen_s(&fp, map_path.c_str(), "r");
-		if (fp != NULL) {
-			int write_mode = -1; /* -1:all, 0:light, 1:normal, 2:hyper */
-			while (fgets(str_buf, 256, fp) != NULL) {
-				if (strands(str_buf, "[all]")) {
-					write_mode = -1;
-				}
-				else if (strands(str_buf, "[light]")) {
-					write_mode = 0;
-				}
-				else if (strands(str_buf, "[normal]")) {
-					write_mode = 1;
-				}
-				else if (strands(str_buf, "[hyper]")) {
-					write_mode = 2;
-				}
-				else if (strands(str_buf, "NAME:")) {
-					strmods(str_buf, 5);
-					if (write_mode == -1) {
-						detail_base[0].name = str_buf;
-						/* 改行消し */
-						for (int ic = 0; ic < detail_base[0].name.size(); ic++) {
-							if (detail_base[0].name[ic] == '\n') {
-								detail_base[0].name.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[0].name = UTF8_converter(detail_base[0].name);
-						/* 複製 */
-						detail_base[2].name = detail_base[1].name = detail_base[0].name;
-					}
-					else {
-						detail_base[write_mode].name = str_buf;
-						/* 改行消し */
-						for (int ic = 0; ic < detail_base[write_mode].name.size(); ic++) {
-							if (detail_base[write_mode].name[ic] == '\n') {
-								detail_base[write_mode].name.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[write_mode].name = UTF8_converter(detail_base[write_mode].name);
-					}
-				}
-				else if (strands(str_buf, "ARTIST:")) {
-					strmods(str_buf, 7);
-					if (write_mode == -1) {
-						detail_base[0].artist = str_buf;
-						/* 改行消し */
-						for (int ic = 0; ic < detail_base[0].artist.size(); ic++) {
-							if (detail_base[0].artist[ic] == '\n') {
-								detail_base[0].artist.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[0].artist = UTF8_converter(detail_base[0].artist);
-						/* 複製 */
-						detail_base[2].artist = detail_base[1].artist = detail_base[0].artist;
-					}
-					else {
-						detail_base[write_mode].artist = str_buf;
-						/* 改行消し */
-						for (int ic = 0; ic < detail_base[write_mode].artist.size(); ic++) {
-							if (detail_base[write_mode].artist[ic] == '\n') {
-								detail_base[write_mode].artist.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[write_mode].artist = UTF8_converter(detail_base[write_mode].artist);
-					}
-				}
-				else if (strands(str_buf, "BPM:")) {
-					strmods(str_buf, 4);
-					if (write_mode == -1) {
-						detail_base[2].BPM = detail_base[1].BPM = detail_base[0].BPM = strtod(str_buf, NULL);
-					}
-					else {
-						detail_base[write_mode].BPM = strtod(str_buf, NULL);
-					}
-				}
-				else if (strands(str_buf, "OFFSET:")) {
-					strmods(str_buf, 7);
-					if (write_mode == -1) {
-						detail_base[2].offset = detail_base[1].offset = detail_base[0].offset = strtol(str_buf, NULL, 10);
-					}
-					else {
-						detail_base[write_mode].offset = strtol(str_buf, NULL, 10);
-					}
-				}
-				else if (strands(str_buf, "MAP:")) {
-					strmods(str_buf, 4);
-					if (write_mode == -1) {
-						detail_base[1].map_path = str_buf;
-						/* 改行消し */
-						for (int ic = 1; ic < detail_base[1].map_path.size(); ic++) {
-							if (detail_base[1].map_path[ic] == '\n') {
-								detail_base[1].map_path.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[1].map_path = UTF8_converter(detail_base[1].map_path);
-					}
-					else {
-						detail_base[write_mode].map_path = str_buf;
-						/* 改行消し */
-						for (int ic = 0; ic < detail_base[write_mode].map_path.size(); ic++) {
-							if (detail_base[write_mode].map_path[ic] == '\n') {
-								detail_base[write_mode].map_path.pop_back();
-							}
-						}
-						/* 日本語補正 */
-						detail_base[write_mode].map_path = UTF8_converter(detail_base[write_mode].map_path);
-					}
-				}
-				else if (strands(str_buf, "LEVEL:")) {
-					strmods(str_buf, 6);
-					if (write_mode == -1) {
-						detail_base[2].level = detail_base[1].level = detail_base[0].level = strtol(str_buf, NULL, 10);
-					}
-					else {
-						detail_base[write_mode].level = strtol(str_buf, NULL, 10);
-					}
-				}
-			}
-			fclose(fp);
-		}
-		else { /* なかったらmap.txtだけ探す */
-			detail_base[1].map_path = "map.txt";
-		}
-
-		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist.detail, detail_base[0], d_name, detail_base[0].map_path.c_str(),
-			FBDF_dif_type_ec::LIGHT
-		);
-		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist.detail, detail_base[1], d_name, detail_base[1].map_path.c_str(),
-			FBDF_dif_type_ec::NORMAL
-		);
-		FBDF_Select_MapLoadMusicGetDetail(
-			musiclist.detail, detail_base[2], d_name, detail_base[2].map_path.c_str(),
-			FBDF_dif_type_ec::HYPER
-		);
-	}
-
-	return;
 }
 
 /**
@@ -872,7 +694,9 @@ static bool FBDF_Select_LoadMusicList(FBDF_music_list_c &musiclist) {
 		dirs = readdir(dir);
 		if (dirs == NULL) { break; }
 		if (dirs->d_name[0] == '.') { continue; }
-		FBDF_Select_MapLoadMusic(musiclist, dirs->d_name);
+		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::LIGHT );
+		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::NORMAL);
+		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::HYPER );
 	}
 
 	closedir(dir);

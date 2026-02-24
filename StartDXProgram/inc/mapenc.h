@@ -9,6 +9,8 @@
 #include <dxcur.h>
 #include <datacur.h>
 
+#include <save.h>
+
 typedef enum FBDF_Play_note_button_e {
 	FBDF_PLAY_NOTE_BTN_NONE,
 	FBDF_PLAY_NOTE_BTN_1,
@@ -55,15 +57,20 @@ typedef struct FBDF_note_s {
 
 typedef struct FBDF_map_s {
 	datacur_cursor_vector<FBDF_note_t>note;
-	std::string artist;
-	uint     blockNo = 0;
-	double   bpm     = 120;
-	int      offset  = 2000; /* 譜面スタート時間。相対時間 */
-	int      song_offset = 2000; // nps 専用
-	uint     Stime   = 0; /* 曲開始時間。絶対時間 */
-	DxTime_t Ntime   = 0; /* 今の時間。相対時間 */
-	uint     Etime   = 0; /* 譜面が終わる時間。相対時間 */
-	TCHAR    music_file[256]=_T("music.mp3"); // rrs osu tja nps 専用
+	std::string music_name;
+	std::string artist_name;
+	std::string map_file_name   = "map.txt";
+	std::string music_file_name = "music.mp3";
+	uint     blockNo     = 0;
+	double   bpm         = 120;
+	int      offset      = 2000; /* 譜面スタート時間。相対時間 */
+	int      song_offset = 2000;
+	uint     Stime       = 0; /* 曲開始時間。絶対時間 */
+	DxTime_t Ntime       = 0; /* 今の時間。相対時間 */
+	uint     Etime       = 0; /* 譜面が終わる時間。相対時間 */
+	int      user_level  = 0;
 } FBDF_map_t;
 
-extern FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music);
+extern FBDF_mapenc_error_et FBDF_MapLoadOne(
+	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
+);

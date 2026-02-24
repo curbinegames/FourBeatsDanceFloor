@@ -5,6 +5,7 @@
 #include <DxLib.h>
 
 #include <sancur.h>
+#include <stdcur.h>
 #include <strcur.h>
 #include <datacur.h>
 #include <UTF8_conv.h>
@@ -219,7 +220,7 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t &map, const char *buf, FBDF_m
  * @param[in] nex_music 譜面ファイルのパス
  * @return FBDF_mapenc_error_et エラー情報
  */
-FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
+static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
@@ -251,15 +252,15 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 		}
 		else if (strands(buf, "ARTIST:")) {
 			strmods(buf, 7);
-			map.artist = buf;
+			map.artist_name = buf;
 			/* 改行消し */
-			for (int ic = 0; ic < map.artist.size(); ic++) {
-				if (map.artist[ic] == '\n') {
-					map.artist.pop_back();
+			for (int ic = 0; ic < map.artist_name.size(); ic++) {
+				if (map.artist_name[ic] == '\n') {
+					map.artist_name.pop_back();
 				}
 			}
 			/* 日本語補正 */
-			map.artist = UTF8_converter(map.artist);
+			map.artist_name = UTF8_converter(map.artist_name);
 		}
 		else {
 			break;
@@ -297,4 +298,93 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(FBDF_map_t &map, const char *nex_music) {
 	}
 
 	return err;
+}
+
+/**
+ * @brief 譜面を読み込む
+ * @param[out] map 格納先
+ * @param[in] folder_name フォルダーの名前
+ * @param[in] dif_type 難易度
+ * @return FBDF_mapenc_error_et エラー情報
+ */
+FBDF_mapenc_error_et FBDF_MapLoadOne(
+	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
+) {
+	bool match_dif = true;
+	char str_buf[256] = "";
+	FILE *fp = NULL;
+	std::string base_path = "";
+	std::string map_path = "";
+
+	map.music_name = folder_name; /* 初期値として登録 */
+
+	base_path = "music/";
+	base_path += folder_name;
+	base_path += "/base.txt";
+	fopen_s(&fp, base_path.c_str(), "r");
+
+	if (fp == NULL) { /* base.txtがなかったら、map.txtをNORMAL譜面として読み込む */
+		if (dif_type != FBDF_dif_type_ec::NORMAL) { return FBDF_MAPENC_ERROR_FILE; }
+		map_path = "music/";
+		map_path += folder_name;
+		map_path += "/map.txt";
+		return FBDF_MapLoadOneCap(map, map_path.c_str());
+	}
+
+	while (fgets(str_buf, 256, fp) != NULL) {
+		if (strands(str_buf, "[all]")) {
+			match_dif = true;
+		}
+		else if (strands(str_buf, "[light]")) {
+			match_dif = (dif_type == FBDF_dif_type_ec::LIGHT);
+		}
+		else if (strands(str_buf, "[normal]")) {
+			match_dif = (dif_type == FBDF_dif_type_ec::NORMAL);
+		}
+		else if (strands(str_buf, "[hyper]")) {
+			match_dif = (dif_type == FBDF_dif_type_ec::HYPER);
+		}
+
+		if (!match_dif) { continue; }
+
+		if (strands(str_buf, "NAME:")) {
+			strmods(str_buf, 5);
+			map.music_name = str_buf;
+			if (map.music_name.back() == '\n') { map.music_name.pop_back(); }
+			map.music_name = UTF8_converter(map.music_name);
+		}
+		else if (strands(str_buf, "ARTIST:")) {
+			strmods(str_buf, 7);
+			map.artist_name = str_buf;
+			if (map.artist_name.back() == '\n') { map.artist_name.pop_back(); }
+			map.artist_name = UTF8_converter(map.artist_name);
+		}
+		else if (strands(str_buf, "BPM:")) {
+			strmods(str_buf, 4);
+			map.bpm = strtod(str_buf, NULL);
+		}
+		else if (strands(str_buf, "OFFSET:")) {
+			strmods(str_buf, 7);
+			map.offset = strtol(str_buf, NULL, 10);
+		}
+		else if (strands(str_buf, "MAP:")) {
+			strmods(str_buf, 4);
+			map.map_file_name = str_buf;
+			if (map.map_file_name.back() == '\n') { map.map_file_name.pop_back(); }
+			map.map_file_name = UTF8_converter(map.map_file_name);
+		}
+		else if (strands(str_buf, "LEVEL:")) {
+			strmods(str_buf, 6);
+			map.user_level = strtol(str_buf, NULL, 10);
+		}
+	}
+
+	fclose(fp);
+
+	map_path = "music/";
+	map_path += folder_name;
+	map_path += '/';
+	map_path += map.map_file_name;
+
+	return FBDF_MapLoadOneCap(map, map_path.c_str());
 }
