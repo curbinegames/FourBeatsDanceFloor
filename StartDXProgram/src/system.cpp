@@ -18,6 +18,36 @@
 
 FBDF_game_option_st game_option; /* ゲームオプション、option.cpp以外で変更されない、他の場所では読み込み専用 */
 
+/* 前置インクリメントの定義 */
+FBDF_dif_type_ec &operator++(FBDF_dif_type_ec &val) {
+    switch (val) {
+    case FBDF_dif_type_ec::NONE: /* 例外 */
+        val = FBDF_dif_type_ec::LIGHT;
+        break;
+    case FBDF_dif_type_ec::HYPER: /* 上限 */
+        val = FBDF_dif_type_ec::HYPER;
+        break;
+    default:
+        val = static_cast<FBDF_dif_type_ec>(static_cast<int>(val) + 1);
+    }
+    return val;
+}
+
+/* 前置デクリメントの定義 */
+FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
+    switch (val) {
+    case FBDF_dif_type_ec::NONE: /* 例外 */
+        val = FBDF_dif_type_ec::HYPER;
+        break;
+    case FBDF_dif_type_ec::LIGHT: /* 下限 */
+        val = FBDF_dif_type_ec::LIGHT;
+        break;
+    default:
+        val = static_cast<FBDF_dif_type_ec>(static_cast<int>(val) - 1);
+    }
+    return val;
+}
+
 #if 1 /* DrawScoreBar系 */
 
 /**

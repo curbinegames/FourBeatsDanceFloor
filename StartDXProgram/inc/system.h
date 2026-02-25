@@ -19,7 +19,39 @@
 #define FBDF_PLAYSTYLE_BLANC       3
 #define FBDF_PLAYSTYLE_BLANC_PLUS  4
 
+#define FBDF_SCORE_RANK_P_BORDER 100.0
+#define FBDF_SCORE_RANK_XP_BORDER 99.5
+#define FBDF_SCORE_RANK_X_BORDER  99.0
+#define FBDF_SCORE_RANK_SP_BORDER 98.0
+#define FBDF_SCORE_RANK_S_BORDER  97.0
+#define FBDF_SCORE_RANK_AP_BORDER 95.0
+#define FBDF_SCORE_RANK_A_BORDER  90.0
+#define FBDF_SCORE_RANK_B_BORDER  80.0
+#define FBDF_SCORE_RANK_C_BORDER  70.0
+#define FBDF_SCORE_RANK_D_BORDER  60.0
+
 #define LANGUAGE_CHOOSE(jp, en) ((game_option.language == 0) ? (jp) : (en))
+
+typedef enum FBDF_clear_type_e {
+    FBDF_CLEAR_TYPE_NOPLAY,
+    FBDF_CLEAR_TYPE_FAILED,
+    FBDF_CLEAR_TYPE_ASSIST,
+    FBDF_CLEAR_TYPE_CLEARED,
+    FBDF_CLEAR_TYPE_CAKEWALK,
+    FBDF_CLEAR_TYPE_MISSLESS,
+    FBDF_CLEAR_TYPE_FULLCOMBO,
+    FBDF_CLEAR_TYPE_PERFECT
+} FBDF_clear_type_et;
+
+enum class FBDF_dif_type_ec {
+    NONE,
+    LIGHT,
+    NORMAL,
+    HYPER
+};
+
+FBDF_dif_type_ec &operator++(FBDF_dif_type_ec &val);
+FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val);
 
 typedef struct FBDF_game_option_s {
 	 int empty_val  = 0; /* nullptr‚Ì‘ã‚í‚è */
