@@ -77,20 +77,20 @@ typedef struct FBDF_music_colorpat_count_s {
 } FBDF_music_colorpat_count_t;
 
 /* notes“ïˆÕ“x‚ðŒvŽZ‚·‚é */
-double FBDF_CalMapNotesDif(const FBDF_map_t *map) {
+double FBDF_CalMapNotesDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
 	double ret = 0.0;
 	std::vector<uint> BasePointQueue;
 
-	if (map->note.size() < 3) { return 0; }
+	if (notes.size() < 3) { return 0; }
 
-	for (uint i = 2; i < map->note.size(); i++) {
-		int FirstTime  = map->note[i].time     - map->note[i - 1].time;
-		int SecondTime = map->note[i - 1].time - map->note[i - 2].time;
+	for (uint i = 2; i < notes.size(); i++) {
+		int FirstTime  = notes[i].time     - notes[i - 1].time;
+		int SecondTime = notes[i - 1].time - notes[i - 2].time;
 
 		uint BasePoint = 10;
 
 		DxTime_t TimeGap = 0;
-		TimeGap = 2000 / maxs_2(1, map->note[i].time - map->note[i - 1].time);
+		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
 		BasePointQueue.push_back(BasePoint);
 		if (50 <= BasePointQueue.size()) {

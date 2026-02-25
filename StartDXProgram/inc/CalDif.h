@@ -84,7 +84,7 @@ typedef struct FBDF_music_colorcount_s {
 	double c4 = 0;
 } FBDF_music_colorcount_t;
 
-extern double FBDF_CalMapNotesDif(const FBDF_map_t *map);
+extern double FBDF_CalMapNotesDif(const datacur_cursor_vector<FBDF_note_t> &notes);
 extern double FBDF_CalMapColorDif(const FBDF_map_t *map);
 extern double FBDF_CalMapTrickDif(const FBDF_map_t *map);
 extern void FBDF_CalMapMostColorPat(FBDF_music_most_colorpat_t *mostpat, const FBDF_map_t *map);
