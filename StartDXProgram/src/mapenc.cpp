@@ -486,7 +486,10 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 	}
 	for (size_t ic = 0; ic < option.now_block; ic++) { /* 歌詞に関係しない文字が一個でもあったらダメ */
 		if (!ISLYRICS(buf[ic])) {
-			FBDF_ErrorLogWrite("歌詞に関係ない文字が混ざっています。");
+			std::string log = "歌詞に関係ない文字が混ざっています。 (";
+			log += buf[ic];
+			log += ")";
+			FBDF_ErrorLogWrite(log.c_str());
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
@@ -514,7 +517,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 				buf_lyrics.mat = FBDF_LYRICS_MAT_N;
 				break;
 			case 'f':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_NONE;
+				buf_lyrics.mat = FBDF_LYRICS_MAT_FREE;
 				break;
 			}
 			buf_lyrics.time = (

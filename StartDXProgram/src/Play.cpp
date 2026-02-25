@@ -847,6 +847,11 @@ private: /* updateŒn */
 		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("‚¤")), 0.0);
 		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("‚¦")), 0.0);
 		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("‚¨")), 0.0);
+		if ((this->Nstate == FBDF_DANCER_STATE_MISS) ||
+		    (this->Nstate == FBDF_DANCER_STATE_AFK)) {
+			return;
+		}
+
 		switch (now_data.mat) {
 		case FBDF_LYRICS_MAT_A:
 			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("‚ ")), now_blend);
