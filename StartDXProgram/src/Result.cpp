@@ -16,13 +16,90 @@
 
 #define SCORE_FINAL_BAR_XSIZE 15
 
+class FBDF_result_scorerank_pic_c {
+private:
+	dxcur_pic_c pic;
+
+public:
+	FBDF_result_scorerank_pic_c(void) = delete;
+	FBDF_result_scorerank_pic_c(double acc) {
+		if (acc >= 100) {
+			this->pic.reload(_T("pic/result/scorerank_P.png"));
+		}
+		else if (acc >= 99.5) {
+			this->pic.reload(_T("pic/result/scorerank_XP.png"));
+		}
+		else if (acc >= 99.0) {
+			this->pic.reload(_T("pic/result/scorerank_X.png"));
+		}
+		else if (acc >= 98.0) {
+			this->pic.reload(_T("pic/result/scorerank_SP.png"));
+		}
+		else if (acc >= 97.0) {
+			this->pic.reload(_T("pic/result/scorerank_S.png"));
+		}
+		else if (acc >= 95.0) {
+			this->pic.reload(_T("pic/result/scorerank_AP.png"));
+		}
+		else if (acc >= 90.0) {
+			this->pic.reload(_T("pic/result/scorerank_A.png"));
+		}
+		else if (acc >= 80.0) {
+			this->pic.reload(_T("pic/result/scorerank_B.png"));
+		}
+		else if (acc >= 70.0) {
+			this->pic.reload(_T("pic/result/scorerank_C.png"));
+		}
+		else if (acc >= 60.0) {
+			this->pic.reload(_T("pic/result/scorerank_D.png"));
+		}
+		else {
+			this->pic.reload(_T("pic/result/scorerank_F.png"));
+		}
+	}
+
+	DxPic_t handle(void) const {
+		return this->pic.handle();
+	}
+};
+
+class FBDF_result_chara_pic_c {
+private:
+	dxcur_pic_c pic;
+
+public:
+	FBDF_result_chara_pic_c(void) {
+		switch (game_option.chara) {
+		case FBDF_DANCER_UNIOW:
+			this->pic.reload(_T("pic/result/uniow.png"));
+			break;
+		case FBDF_DANCER_NEIDA:
+			this->pic.reload(_T("pic/result/neida.png"));
+			break;
+		case FBDF_DANCER_TRIMBA:
+			this->pic.reload(_T("pic/result/trimba.png"));
+			break;
+		case FBDF_DANCER_QUATTRO:
+			this->pic.reload(_T("pic/result/quattro.png"));
+			break;
+		default:
+			this->pic.reload(_T("pic/result/uniow.png"));
+			break;
+		}
+	}
+
+	DxPic_t handle(void) const {
+		return this->pic.handle();
+	}
+};
+
 /**
  * @brief スコアバーの推移を書く
  * @param[in] src スコアバーの推移データ
  * @param[in] rank スコアランク
  * @return なし
  */
-static void FBDF_Result_DrawScoreGraph(const FBDF_score_bar_st *src, const char *rank) {
+static void FBDF_Result_DrawScoreGraph(const FBDF_score_bar_st *src, DxPic_t rank_pic) {
 	int all_left  = VIEW_MARGIN;
 	int all_up    = VIEW_MARGIN;
 	int all_right = VIEW_MARGIN + SCORE_GRAPH_X_SIZE;
@@ -38,7 +115,7 @@ static void FBDF_Result_DrawScoreGraph(const FBDF_score_bar_st *src, const char 
 
 	DrawLine(all_left, all_y_middle, all_right, all_y_middle, COLOR_RED);
 	DrawBox(all_left, all_up, all_right, all_down, COLOR_WHITE, FALSE);
-	DrawFormatString(2 * VIEW_MARGIN, 2 * VIEW_MARGIN, COLOR_WHITE, _T("scoreRank: %s"), rank);
+	DrawGraph(2 * VIEW_MARGIN, 2 * VIEW_MARGIN, rank_pic, TRUE);
 	return;
 }
 
@@ -81,44 +158,8 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 	int keybox[1] = { KEY_INPUT_RETURN };
 
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
-
-	std::string score_rank_char = "F";
-
-#if 1 /* ランク実装 */
-	if (data.acc >= 100) {
-		score_rank_char = "P";
-	}
-	else if (data.acc >= 99.5) {
-		score_rank_char = "X+";
-	}
-	else if (data.acc >= 99.0) {
-		score_rank_char = "X";
-	}
-	else if (data.acc >= 98.0) {
-		score_rank_char = "S+";
-	}
-	else if (data.acc >= 97.0) {
-		score_rank_char = "S";
-	}
-	else if (data.acc >= 95.0) {
-		score_rank_char = "A+";
-	}
-	else if (data.acc >= 90.0) {
-		score_rank_char = "A";
-	}
-	else if (data.acc >= 80.0) {
-		score_rank_char = "B";
-	}
-	else if (data.acc >= 70.0) {
-		score_rank_char = "C";
-	}
-	else if (data.acc >= 60.0) {
-		score_rank_char = "D";
-	}
-	else {
-		score_rank_char = "F";
-	}
-#endif /* ランク実装 */
+	FBDF_result_scorerank_pic_c scorerank_pic(data.acc);
+	FBDF_result_chara_pic_c chara_pic;
 
 	while (1) {
 		switch (keycur(keybox, 1)) { /* これは古い実装、治す */
@@ -132,7 +173,7 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, back.handle(), TRUE);
 
 		/* スコアグラフ */
-		FBDF_Result_DrawScoreGraph(data.score_graph, score_rank_char.c_str());
+		FBDF_Result_DrawScoreGraph(data.score_graph, scorerank_pic.handle());
 
 		/* スコアグラフの横 */
 		FBDF_Result_DrawFinalBar(data.acc);
@@ -149,7 +190,7 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 6, COLOR_WHITE, _T("ave: %+.2f")   , data.gap_ave);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 7, COLOR_WHITE, _T("chara: %d")    , game_option.chara);
 
-		/* キャラ描画、イラスト描いてない */
+		DrawGraph(WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2, chara_pic.handle(), TRUE);
 
 		ScreenFlip(); // 作画エリアここまで
 		if (GetWindowUserCloseFlag(TRUE)) { break; } // 閉じるボタンが押された
