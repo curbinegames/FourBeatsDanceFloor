@@ -32,6 +32,17 @@
 	(c) == '4'      \
 )
 
+#define ISLYRICS(c) ( \
+	(c) == '.' ||   \
+	(c) == 'f' ||   \
+	(c) == 'a' ||   \
+	(c) == 'i' ||   \
+	(c) == 'u' ||   \
+	(c) == 'e' ||   \
+	(c) == 'o' ||   \
+	(c) == 'n'      \
+)
+
 typedef struct FBDF_map_enc_s {
 	double now_bpm      = 120;
 	uint   now_block    = 4;
@@ -41,6 +52,8 @@ typedef struct FBDF_map_enc_s {
 	uint   measure_u    = 4; // tja nps 専用
 	double scrool       = 1; // nps 専用
 } FBDF_map_enc_t;
+
+#if 1 /* ノーツデータ系 */
 
 static FBDF_note_motion_assign_et GetMotionAssign(char c) {
 	FBDF_note_motion_assign_et ret = FBDF_NOTE_MOTION_ASSIGN_NONE;
@@ -68,6 +81,12 @@ static FBDF_note_motion_assign_et GetMotionAssign(char c) {
 		break;
 	case 'c':
 		ret = FBDF_NOTE_MOTION_ASSIGN_CLAP;
+		break;
+	case 'v':
+		ret = FBDF_NOTE_MOTION_ASSIGN_VPOSE;
+		break;
+	case 't':
+		ret = FBDF_NOTE_MOTION_ASSIGN_TURN;
 		break;
 	case '1':
 		ret = FBDF_NOTE_MOTION_ASSIGN_1;
@@ -450,3 +469,147 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 
 	return FBDF_MapLoadOneCap(map, map_path.c_str());
 }
+
+#endif /* ノーツデータ系 */
+
+#if 1 /* 歌詞データ系 */
+
+static FBDF_mapenc_error_et GetLyricsBlock(
+	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, char const *buf, FBDF_map_enc_t &option
+) {
+	if (lyrics.isfull()) { /* 歌詞数が2000に達していたらこれ以上読み込まない */
+		FBDF_ErrorLogWrite("歌詞数が多すぎます!");
+		return FBDF_MAPENC_ERROR_NOTE_FULL;
+	}
+	if (option.now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
+		FBDF_ErrorLogWrite("ブロック数に0を指定してノーツを読み込もうとしました。");
+		return FBDF_MAPENC_ERROR_OPTION;
+	}
+	for (size_t ic = 0; ic < option.now_block; ic++) { /* 歌詞に関係しない文字が一個でもあったらダメ */
+		if (!ISLYRICS(buf[ic])) {
+			FBDF_ErrorLogWrite("歌詞に関係ない文字が混ざっています。");
+			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
+		}
+	}
+
+	for (size_t ic = 0; ic < option.now_block; ic++) {
+		FBDF_mapenc_lyrics_st buf_lyrics;
+		if (buf[ic] != '.') {
+			switch (buf[ic]) {
+			case 'a':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_A;
+				break;
+			case 'i':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_I;
+				break;
+			case 'u':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_U;
+				break;
+			case 'e':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_E;
+				break;
+			case 'o':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_O;
+				break;
+			case 'n':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_N;
+				break;
+			case 'f':
+				buf_lyrics.mat = FBDF_LYRICS_MAT_NONE;
+				break;
+			}
+			buf_lyrics.time = (
+				60000 * 4 * ic /
+				(option.now_bpm * option.scrool * option.measure_u * option.now_block) +
+				game_option.note_offset_timing + option.now_shuttime
+			);
+
+			lyrics.push_back(buf_lyrics);
+
+			lyrics.stepNo();
+			if (lyrics.isfull()) {
+				FBDF_ErrorLogWrite("歌詞数が多すぎます!");
+				return FBDF_MAPENC_ERROR_NOTE_FULL;
+			}
+		}
+	}
+	option.now_shutpos += option.now_block;
+	option.now_shuttime += 60000 * 4 / (double)(option.now_bpm * option.scrool * option.measure_u);
+	return FBDF_MAPENC_ERROR_NONE;
+}
+
+static FBDF_mapenc_error_et GetLyricsLine(
+	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *buf, FBDF_map_enc_t &option
+) {
+	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
+	std::string strbuf = buf;
+
+	while (0 < strbuf.size()) {
+		err = GetLyricsBlock(lyrics, strbuf.c_str(), option);
+		if (err != FBDF_MAPENC_ERROR_NONE) {
+			return err;
+		}
+		strbuf.erase(0, option.now_block);
+	}
+
+	return FBDF_MAPENC_ERROR_NONE;
+}
+
+FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
+	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
+) {
+	char buf[256] = "";
+	FILE *fp;
+	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
+	FBDF_map_enc_t option;
+
+	lyrics.clear();
+	lyrics.push_back({FBDF_LYRICS_MAT_FREE, 0});
+
+	fopen_s(&fp, file_path, "r");
+	if (fp == nullptr) { return FBDF_MAPENC_ERROR_FILE; }
+	
+	while (fgets(buf, 256, fp) != NULL) {
+		if (strands(buf, "BPM:")) {
+			strmods(buf, 4);
+			option.now_bpm = strsansD(buf, 256);
+		}
+		else if (strands(buf, "OFFSET:")) {
+			strmods(buf, 7);
+			option.now_shuttime = strtol(buf, NULL, 10);
+		}
+		else {
+			break;
+		}
+	}
+
+	while (fgets(buf, 256, fp) != NULL) {
+		if (buf[0] == _T(';')) {
+			; // nothing
+		}
+		else if (strands(buf, "BLOCK:")) {
+			strmods(buf, 6);
+			option.now_block = strtol(buf, NULL, 10);
+		}
+		else if (strands(buf, "BPM:")) {
+			strmods(buf, 4);
+			option.now_bpm = strtod(buf, NULL);
+		}
+		else {
+			for (size_t i = 0; buf[i] != '\0'; i++) {
+				if (buf[i] == '\n') {
+					buf[i] = '\0';
+					break;
+				}
+			}
+			FBDF_mapenc_error_et err_buf = GetLyricsLine(lyrics, buf, option);
+			if (err_buf != FBDF_MAPENC_ERROR_NONE) { err = err_buf; } /* エラーあっても最後まで読み切る */
+		}
+	}
+
+	fclose(fp);
+
+	return FBDF_MAPENC_ERROR_NONE;
+}
+
+#endif /* 歌詞データ系 */

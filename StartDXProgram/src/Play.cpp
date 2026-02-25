@@ -381,7 +381,7 @@ private:
 		return retval;
 	}
 
-	void SetShapeAll(void) {
+	void UpdateEyesShape(void) {
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
@@ -824,13 +824,85 @@ private: /* update系 */
 		UpdateAttachAnimMat();
 	}
 
+	/* 口のシェイプキーの更新 */
+	void UpdateMouthShape(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
+		bool change_fg = false;
+		while (((lyrics.nowNo() + 1) <= lyrics.size()) && (lyrics.offsetData(1).time <= Ntime)) {
+			lyrics.stepNo();
+			change_fg = true;
+		}
+		
+		switch (lyrics.nowData().mat) {
+		case FBDF_LYRICS_MAT_A:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 1.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_I:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 1.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_U:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 1.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_E:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 1.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_O:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 1.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_N:
+			if (change_fg) {
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+			}
+			break;
+		case FBDF_LYRICS_MAT_NONE:
+		case FBDF_LYRICS_MAT_FREE:
+		default:
+			/* 指定なし、キャラの気分で勝手に動く */
+			/* TODO: ↑の実装をする */
+			break;
+		}
+	}
+
 public: /* update系 */
 	/**
 	 * @brief 内部情報の更新、最低でも描画前に呼んで。
-	 * @param なし
+	 * @param[out] lyrics 歌詞/口パクデータ
 	 * @return なし
 	 */
-	void Update(void) {
+	void Update(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
 		/* missは自動解消されない */
 		if (0 <= this->len) {
 			/* long->idle */
@@ -848,7 +920,8 @@ public: /* update系 */
 		}
 		this->UpdateState();
 		this->UpdateAnimTime();
-		this->SetShapeAll();
+		this->UpdateEyesShape();
+		this->UpdateMouthShape(lyrics, Ntime);
 		return;
 	}
 #endif /* update系 */
@@ -1799,6 +1872,8 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	map.note.resetNo();
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
+	
+	FBDF_Mapenc_LyricsEnc(map.lyrics, "lyrics.txt"); /* TODO: ファイル名は仮名 */
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
@@ -1826,7 +1901,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 		FBDF_Play_NoteJudge(play_class, score, map, pkey, se);
 
 		/* update系 */
-		play_class.dancer_class.Update();
+		play_class.dancer_class.Update(map.lyrics, map.Ntime);
 		play_class.score_bar_class.update_graph(map.Ntime);
 		cutin.update();
 

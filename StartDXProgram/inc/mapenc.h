@@ -8,7 +8,6 @@
 #include <sancur.h>
 #include <dxcur.h>
 #include <datacur.h>
-
 #include <save.h>
 
 typedef enum FBDF_Play_note_button_e {
@@ -45,6 +44,17 @@ typedef enum FBDF_note_motion_assign_e {
 	FBDF_NOTE_MOTION_ASSIGN_VPOSE  /* ピースサインを作る。2とは区別される、一応ね */
 } FBDF_note_motion_assign_et;
 
+typedef enum FBDF_lyrics_mat_e {
+	FBDF_LYRICS_MAT_NONE,
+	FBDF_LYRICS_MAT_FREE,
+	FBDF_LYRICS_MAT_A,
+	FBDF_LYRICS_MAT_I,
+	FBDF_LYRICS_MAT_U,
+	FBDF_LYRICS_MAT_E,
+	FBDF_LYRICS_MAT_O,
+	FBDF_LYRICS_MAT_N
+} FBDF_lyrics_mat_et;
+
 typedef struct FBDF_note_s {
 	DxTime_t time = 0; /* 押すタイミング 0: none, [ms] */
 	uint pos = 0; /* %4 */
@@ -55,8 +65,14 @@ typedef struct FBDF_note_s {
 	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
 } FBDF_note_t;
 
+typedef struct FBDF_mapenc_lyrics_s {
+	FBDF_lyrics_mat_et mat = FBDF_LYRICS_MAT_NONE;
+	uint time = 0;
+} FBDF_mapenc_lyrics_st;
+
 typedef struct FBDF_map_s {
 	datacur_cursor_vector<FBDF_note_t>note;
+	datacur_cursor_vector<FBDF_mapenc_lyrics_st> lyrics;
 	std::string music_name;
 	std::string artist_name;
 	std::string map_file_name   = "map.txt";
@@ -73,4 +89,7 @@ typedef struct FBDF_map_s {
 
 extern FBDF_mapenc_error_et FBDF_MapLoadOne(
 	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
+);
+extern FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
+	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
 );
