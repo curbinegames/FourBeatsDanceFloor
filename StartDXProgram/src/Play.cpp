@@ -827,72 +827,77 @@ private: /* update系 */
 	/* 口のシェイプキーの更新 */
 	void UpdateMouthShape(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
 		bool change_fg = false;
+		double now_blend = 1.0;
+		double nex_blend = 0.0;
+		FBDF_mapenc_lyrics_st now_data;
+		FBDF_mapenc_lyrics_st nex_data;
+
 		while (((lyrics.nowNo() + 1) <= lyrics.size()) && (lyrics.offsetData(1).time <= Ntime)) {
 			lyrics.stepNo();
 			change_fg = true;
 		}
+
+		now_data = lyrics.nowData();
+		nex_data = lyrics.offsetData(1);
+		now_blend = lins_scale(-100, 1.0, 0, 0.0, Ntime - (int)nex_data.time);
+		nex_blend = lins_scale(-100, 0.0, 0, 1.0, Ntime - (int)nex_data.time);
 		
-		switch (lyrics.nowData().mat) {
+		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+		switch (now_data.mat) {
 		case FBDF_LYRICS_MAT_A:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 1.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
-			}
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), now_blend);
 			break;
 		case FBDF_LYRICS_MAT_I:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 1.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
-			}
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), now_blend);
 			break;
 		case FBDF_LYRICS_MAT_U:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 1.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
-			}
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), now_blend);
 			break;
 		case FBDF_LYRICS_MAT_E:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 1.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
-			}
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), now_blend);
 			break;
 		case FBDF_LYRICS_MAT_O:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 1.0);
-			}
+			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), now_blend);
 			break;
 		case FBDF_LYRICS_MAT_N:
-			if (change_fg) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
-			}
+			/* 口閉じなので何もしない */
 			break;
 		case FBDF_LYRICS_MAT_NONE:
 		case FBDF_LYRICS_MAT_FREE:
 		default:
-			/* 指定なし、キャラの気分で勝手に動く */
+			/* 指定なし、キャラの気分で勝手に動く。change_fgは無視 */
 			/* TODO: ↑の実装をする */
 			break;
+		}
+
+		if (nex_data.time <= Ntime + 100) {
+			switch (nex_data.mat) {
+			case FBDF_LYRICS_MAT_A:
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), nex_blend);
+				break;
+			case FBDF_LYRICS_MAT_I:
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), nex_blend);
+				break;
+			case FBDF_LYRICS_MAT_U:
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), nex_blend);
+				break;
+			case FBDF_LYRICS_MAT_E:
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), nex_blend);
+				break;
+			case FBDF_LYRICS_MAT_O:
+				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), nex_blend);
+				break;
+			case FBDF_LYRICS_MAT_N:
+			case FBDF_LYRICS_MAT_NONE:
+			case FBDF_LYRICS_MAT_FREE:
+			default:
+				/* 何もしない */
+				break;
+			}
 		}
 	}
 
@@ -1874,7 +1879,11 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 	
-	FBDF_Mapenc_LyricsEnc(map.lyrics, "lyrics.txt"); /* TODO: ファイル名は仮名 */
+	std::string lyrics_path = "music/";
+	lyrics_path += nex_music.folder_name;
+	lyrics_path += '/';
+	lyrics_path += "lyrics.txt";
+	FBDF_Mapenc_LyricsEnc(map.lyrics, lyrics_path.c_str());
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 

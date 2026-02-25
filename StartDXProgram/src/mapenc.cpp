@@ -523,9 +523,8 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 				game_option.note_offset_timing + option.now_shuttime
 			);
 
-			lyrics.push_back(buf_lyrics);
+			if (lyrics.lastData().mat != buf_lyrics.mat) { lyrics.push_back(buf_lyrics); }
 
-			lyrics.stepNo();
 			if (lyrics.isfull()) {
 				FBDF_ErrorLogWrite("歌詞数が多すぎます!");
 				return FBDF_MAPENC_ERROR_NOTE_FULL;
@@ -569,7 +568,10 @@ FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
 	if (fp == nullptr) { return FBDF_MAPENC_ERROR_FILE; }
 	
 	while (fgets(buf, 256, fp) != NULL) {
-		if (strands(buf, "BPM:")) {
+		if (buf[0] == _T(';')) {
+			; // nothing
+		}
+		else if (strands(buf, "BPM:")) {
 			strmods(buf, 4);
 			option.now_bpm = strsansD(buf, 256);
 		}
@@ -577,22 +579,9 @@ FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
 			strmods(buf, 7);
 			option.now_shuttime = strtol(buf, NULL, 10);
 		}
-		else {
-			break;
-		}
-	}
-
-	while (fgets(buf, 256, fp) != NULL) {
-		if (buf[0] == _T(';')) {
-			; // nothing
-		}
 		else if (strands(buf, "BLOCK:")) {
 			strmods(buf, 6);
 			option.now_block = strtol(buf, NULL, 10);
-		}
-		else if (strands(buf, "BPM:")) {
-			strmods(buf, 4);
-			option.now_bpm = strtod(buf, NULL);
 		}
 		else {
 			for (size_t i = 0; buf[i] != '\0'; i++) {
