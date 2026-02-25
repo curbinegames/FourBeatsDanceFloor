@@ -860,16 +860,13 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
-	while (1) {
+	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		if (option_fg) {
 			FBDF_Option_KeyAction(option_cmd, option_fg);
 		}
 		else {
 			FBDF_Select_KeyCheck(folder_manager_class, now_music, command, option_fg, view_dif_type, musiclist, folder_string, cutin);
 		}
-
-		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; }
-		if (cutin.IsEndAnim()) { break; }
 
 		back_pic.UpdateState();
 		cutin.update();
@@ -881,6 +878,8 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 		ScreenFlip(); // 作画エリアここまで
 		WaitTimer(10); // ループウェイト
 	}
+
+	if (GetWindowUserCloseFlag()) { return VIEW_EXIT; }
 
 	folder_manager_class.WriteFile(command, view_dif_type);
 	FBDF_Save_WriteOption(&game_option);

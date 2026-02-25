@@ -38,7 +38,7 @@ static void GameMain(void) {
 		default:
 			return;
 		}
-		if (GetWindowUserCloseFlag(TRUE)) { // 閉じるボタンが押された
+		if (GetWindowUserCloseFlag()) { // 閉じるボタンが押された
 			break;
 		}
 		WaitTimer(10); // ループウェイト

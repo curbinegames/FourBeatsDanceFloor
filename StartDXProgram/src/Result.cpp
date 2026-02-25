@@ -161,14 +161,7 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 	FBDF_result_scorerank_pic_c scorerank_pic(data.acc);
 	FBDF_result_chara_pic_c chara_pic;
 
-	while (1) {
-		switch (keycur(keybox, 1)) { /* これは古い実装、治す */
-		case KEY_INPUT_RETURN:
-			return VIEW_SELECT;
-			break;
-		default:
-			break;
-		}
+	while (!GetWindowUserCloseFlag() && (GetKeyPushOnce(true) != KEY_INPUT_RETURN)) {
 		ClearDrawScreen(); // 作画エリアここから
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, back.handle(), TRUE);
 
@@ -188,15 +181,15 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 4, COLOR_WHITE, _T("save: %4d")    , data.save);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 5, COLOR_WHITE, _T("drop: %4d")    , data.drop);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 6, COLOR_WHITE, _T("ave: %+.2f")   , data.gap_ave);
-		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 7, COLOR_WHITE, _T("chara: %d")    , game_option.chara);
 
 		DrawGraph(WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2, chara_pic.handle(), TRUE);
 
 		ScreenFlip(); // 作画エリアここまで
-		if (GetWindowUserCloseFlag(TRUE)) { break; } // 閉じるボタンが押された
 		WaitTimer(10); // ループウェイト
 	}
-	return VIEW_EXIT;
+
+	if (GetWindowUserCloseFlag()) { return VIEW_EXIT; } /* 閉じるボタンが押された */
+	return VIEW_SELECT;
 }
 
 /**

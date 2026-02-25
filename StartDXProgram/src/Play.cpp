@@ -1810,9 +1810,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	map.Stime = GetNowCount();
 
 	/* ゲーム実行ループ */
-	while (1) {
-		if (cutin.IsEndAnim()) { break; }
-
+	while (!cutin.IsEndAnim() && !GetWindowUserCloseFlag()) {
 		map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
 
 		FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
@@ -1837,15 +1835,12 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 		cutin.DrawCut();
 		ScreenFlip(); /* 作画エリアここまで */
 
-		if (GetWindowUserCloseFlag(TRUE)) { // 閉じるボタンが押された
-			StopSoundMem(musicData.handle());
-			return VIEW_EXIT;
-		}
 		WaitTimer(10); // ループウェイト
 	}
 
 	StopSoundMem(musicData.handle());
 
+	if (GetWindowUserCloseFlag()) { return VIEW_EXIT; } /* 閉じるボタンが押された */
 	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
 	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);

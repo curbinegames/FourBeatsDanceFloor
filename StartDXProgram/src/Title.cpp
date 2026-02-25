@@ -205,7 +205,7 @@ view_num_t FBDF_TitleView(void) {
 	intro_bgm.PlaySound();
 
 	while (CheckSoundMem(intro_bgm.handle()) == 1) {
-		if (GetWindowUserCloseFlag(TRUE)) { return VIEW_EXIT; } // 閉じるボタンが押された
+		if (GetWindowUserCloseFlag()) { return VIEW_EXIT; } // 閉じるボタンが押された
 		WaitTimer(1000 / 30); // ループウェイト
 	}
 
@@ -222,18 +222,9 @@ view_num_t FBDF_TitleView(void) {
 	particle_pent.init();
 	particle_dot.init();
 
-	while (1) {
-		if (cutin.IsEndAnim()) { return VIEW_SELECT; }
-
-		if (!cutin.IsClosing()) {
-			switch (keycur(keybox, 1)) { /* これは古い実装、治す */
-			case KEY_INPUT_RETURN:
-				cutin.SetIo(CUT_FRAG_IN);
-				break;
-			default:
-				break;
-			}
-		}
+	while (!GetWindowUserCloseFlag() & !cutin.IsEndAnim()) {
+		InputAllKeyHold();
+		if (GetKeyHold(KEY_INPUT_RETURN)) { cutin.SetIo(CUT_FRAG_IN); }
 
 		particle_pent.SetSimTime(lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));
 		particle_dot.SetSimTime( lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));
@@ -259,8 +250,8 @@ view_num_t FBDF_TitleView(void) {
 		cutin.DrawCut();
 
 		ScreenFlip(); // 作画エリアここまで
-		if (GetWindowUserCloseFlag(TRUE)) { break; } // 閉じるボタンが押された
 		WaitTimer(1000 / 30); // ループウェイト
 	}
-	return VIEW_EXIT;
+	if (GetWindowUserCloseFlag()) { return VIEW_EXIT; } // 閉じるボタンが押された
+	return VIEW_SELECT;
 }
