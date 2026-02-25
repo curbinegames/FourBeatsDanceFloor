@@ -1,8 +1,7 @@
 
+#include <string>
 #include <DxLib.h>
-
 #include <sancur.h>
-
 #include <system.h>
 
 #define FBDF_PLAY_SCOREBAR_COLOR_RED60     0xFFEB3324 /* 70  - 60 */
@@ -256,3 +255,34 @@ void FBDF_DrawScoreBarVertQuad(const FBDF_score_bar_st &score_bar1, const FBDF_s
 }
 
 #endif
+
+std::string FBDF_ClearTypeToString(FBDF_clear_type_et type) {
+    std::string ret = "";
+    switch (type) {
+    case FBDF_CLEAR_TYPE_NOPLAY:
+        ret = "NO PLAY";
+        break;
+    case FBDF_CLEAR_TYPE_FAILED:
+        ret = "FAILED";
+        break;
+    case FBDF_CLEAR_TYPE_ASSIST:
+        ret = "ASSIST";
+        break;
+    case FBDF_CLEAR_TYPE_CLEARED:
+        ret = "CLEARED";
+        break;
+    case FBDF_CLEAR_TYPE_CAKEWALK:
+        ret = "CAKEWALK";
+        break;
+    case FBDF_CLEAR_TYPE_MISSLESS:
+        ret = "MISS LESS";
+        break;
+    case FBDF_CLEAR_TYPE_FULLCOMBO:
+        ret = "FULL COMBO";
+        break;
+    case FBDF_CLEAR_TYPE_PERFECT:
+        ret = "PERFECT";
+        break;
+    }
+    return ret;
+}
