@@ -176,7 +176,7 @@ bool FBDF_ErrorLogWrite(const char *message) {
 
     fseek(fp, 0, SEEK_END);
     file_size = ftell(fp);
-    if (0xffffff < file_size) { return false; }
+    if (0x3fffff < file_size) { return false; } /* だいたい4MB */
 
     /* ファイル操作エリア */ {
         /* 年は不要 */
