@@ -820,7 +820,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		DrawFormatString(5, 125, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.all);
 		DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[cmd].user_highscore.score);
 		DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[cmd].user_highscore.acc);
-		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %d"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
+		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
 		FBDF_Select_DrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);

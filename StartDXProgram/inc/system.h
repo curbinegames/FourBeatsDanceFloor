@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <sancur.h>
 
 /**
@@ -84,3 +85,5 @@ extern void FBDF_DrawScoreBarVert(const FBDF_score_bar_st &score_bar, int pos_le
 extern void FBDF_DrawScoreBarVertQuad(const FBDF_score_bar_st &score_bar1, const FBDF_score_bar_st &score_bar2,
     int pos_left, int pos_up, int pos_right, int pos_down
 );
+
+extern std::string FBDF_ClearTypeToString(FBDF_clear_type_et type);
