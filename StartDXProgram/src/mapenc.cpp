@@ -260,7 +260,6 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 			buf_note.bpm = option.now_bpm;
 			map.note.push_back(buf_note);
 			map.Etime = buf_note.time;
-			map.note.stepNo();
 			if (map.note.isfull()) {
 				FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
 				return FBDF_MAPENC_ERROR_NOTE_FULL;

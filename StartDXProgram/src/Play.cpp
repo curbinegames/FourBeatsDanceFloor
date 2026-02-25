@@ -369,7 +369,7 @@ private:
 			retval = lins_scale(0, 0, min(this->mtime, 750), this->motion_len, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_MISS:
-			return lins_scale(0, 0, 500, this->motion_len / 2, GetNowCount() - this->Stime);
+			retval = lins_scale(0, 0, 500, this->motion_len / 2, GetNowCount() - this->Stime);
 			break;
 		case FBDF_DANCER_STATE_AFK:
 			retval = lins_scale(5000, this->motion_len / 2, 6000, this->motion_len, GetNowCount() - this->Stime);
@@ -1757,6 +1757,7 @@ static void FBDF_Play_KeyCheck(
  * @return ‚È‚µ
  */
 static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
+	/* TODO: ‰æ‘œ‚É‚µ‚½‚¢B */
 	static const int baseX = 165;
 	static const int baseY = 575;
 	static const int sizeX =  60;

@@ -812,15 +812,15 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 	int cmd, const FBDF_select_back_pic_c &back_pic)
 {
 	back_pic.DrawPic();
-	DrawFormatString(5,  25, 0xffffffff, _T("%d"), cmd);
 	if (folder_manager_class.IsMusicFolderNow() && !musiclist.sort.empty()) {
-		DrawFormatString(5,  65, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.notes);
-		DrawFormatString(5,  85, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.color);
-		DrawFormatString(5, 105, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.trick);
-		DrawFormatString(5, 125, 0xffffffff, _T("%3.2f"), musiclist[cmd].auto_cal_dif.all);
-		DrawFormatString(5, 145, 0xffffffff, _T("score: %d"), musiclist[cmd].user_highscore.score);
-		DrawFormatString(5, 165, 0xffffffff, _T("acc: %6.2f"), musiclist[cmd].user_highscore.acc);
-		DrawFormatString(5, 185, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
+		DrawFormatString(5,   5, 0xffffffff, _T("notes: %3.2f"),   musiclist[cmd].auto_cal_dif.notes  );
+		DrawFormatString(5,  25, 0xffffffff, _T("color: %3.2f"),   musiclist[cmd].auto_cal_dif.color  );
+		DrawFormatString(5,  45, 0xffffffff, _T("trick: %3.2f"),   musiclist[cmd].auto_cal_dif.trick  );
+		DrawFormatString(5,  65, 0xffffffff, _T(" mdif: %3.2f"),   musiclist[cmd].auto_cal_dif.all    );
+		DrawFormatString(5,  85, 0xffffffff, _T("score: %d"),      musiclist[cmd].user_highscore.score);
+		DrawFormatString(5, 105, 0xffffffff, _T("  acc: %6.2f%%"), musiclist[cmd].user_highscore.acc  );
+		DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
+		DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
 		FBDF_Select_DrawColorCount(5, 660, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);
