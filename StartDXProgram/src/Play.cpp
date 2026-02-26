@@ -29,7 +29,6 @@
 #define NOTE_COLOR_3 0xFFFF62FB
 #define NOTE_COLOR_4 0xFFFFFF00
 
-#define NOTE_HEIGHT 15
 #define NOTE_SPEED   4
 
 typedef enum FBDF_judge_mat_e {
@@ -222,6 +221,7 @@ public: /* コンストラクタ系 */
 	FBDF_dancer_c(void) : FBDF_dancer_c(FBDF_DANCER_UNIOW) {} /* ユニオとして初期化 */
 
 	FBDF_dancer_c(size_t n) {
+		float model_size = lins(0, 0, 720, 2, WINDOW_SIZE_Y);
 		std::string chara_name;
 		std::string folder_path = "dancer/";
 #if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
@@ -267,9 +267,9 @@ public: /* コンストラクタ系 */
 		MV1SetPosition(this->n3Dmodel_handle, VGet(
 			lins(0, 0, 2000, WINDOW_SIZE_X, 1000),
 			lins(0, 0, 2000, WINDOW_SIZE_Y,  300),
-			500
+			lins(0, 0,  720, 500,  WINDOW_SIZE_Y)
 		));
-		MV1SetScale(this->n3Dmodel_handle, VGet(2, 2, 2));
+		MV1SetScale(this->n3Dmodel_handle, VGet(model_size, model_size, model_size));
 		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
 		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
@@ -1075,8 +1075,8 @@ public:
 	 * @param[in]  down 描画下位置
 	 * @return なし
 	 */
-	void draw_bar(int x1, int y1, int x2, int y2) const {
-		FBDF_DrawScoreBarHori(this->score_bar, x1, y1, x2, y2);
+	void draw_bar(int left, int up, int right, int down) const {
+		FBDF_DrawScoreBarHori(this->score_bar, left, up, right, down);
 	}
 
 	/**
@@ -1159,6 +1159,7 @@ public:
 class FBDF_play_notes_draw_c {
 private:
 	bool is_missing = false;
+	const uint note_height = lins(0, 0, 720, 15, WINDOW_SIZE_Y);
 	DxTime_t wave_time = 0;
 	FBDF_Play_note_pic_st note_pic;
 
@@ -1261,27 +1262,27 @@ public:
 
 			/* 描画縦位置 */ {
 				int time_gap = map.note[in].time - map.Ntime;
-				DrawYpos = down - NOTE_HEIGHT -
+				DrawYpos = down - this->note_height -
 					(int)((time_gap - 16 + game_option.note_offset_draw) *
 					game_option.lane_speed) / 50;
 			}
-			if (NOTE_HEIGHT + DrawYpos < 0) { break; } /* 画面外break */
+			if (this->note_height + DrawYpos < 0) { break; } /* 画面外break */
 
 			/* 描画処理 */
 			switch (game_option.play_style) {
         	case FBDF_PLAYSTYLE_ASSIST_PLUS:
         	case FBDF_PLAYSTYLE_ASSIST:
         	case FBDF_PLAYSTYLE_NORMAL:
-				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
+				DrawExtendGraph(DrawLeft, this->note_height + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 				break;
         	case FBDF_PLAYSTYLE_BLANC:
-				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
+				DrawExtendGraph(DrawLeft, this->note_height + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
 				SetDrawBlendMode(DX_BLENDMODE_ALPHA, this->GetNotesAlpha());
-				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
+				DrawExtendGraph(DrawLeft, this->note_height + DrawYpos, DrawRight, DrawYpos, Npic, TRUE);
 				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 				break;
         	case FBDF_PLAYSTYLE_BLANC_PLUS:
-				DrawExtendGraph(DrawLeft, NOTE_HEIGHT + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
+				DrawExtendGraph(DrawLeft, this->note_height + DrawYpos, DrawRight, DrawYpos, this->note_pic.white.handle(), TRUE);
 				break;
 			}
 		}
@@ -1768,10 +1769,10 @@ static void FBDF_Play_KeyCheck(
  */
 static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
 	/* TODO: 画像にしたい。 */
-	static const int baseX = 165;
-	static const int baseY = 575;
-	static const int sizeX =  60;
-	static const int sizeY =  15;
+	static const int baseX = lins(0, 0, 960, 165, WINDOW_SIZE_X);
+	static const int baseY = lins(0, 0, 720, 575, WINDOW_SIZE_Y);
+	static const int sizeX = lins(0, 0, 960,  60, WINDOW_SIZE_X);
+	static const int sizeY = lins(0, 0, 720,  15, WINDOW_SIZE_Y);
 	static const int   gap =  10;
 	if (IS_BETWEEN(1, pkey.D, 15)) {
 		DrawBox(baseX                      , baseY, baseX +     sizeX          , baseY + sizeY, NOTE_COLOR_1, TRUE);
@@ -1823,33 +1824,57 @@ static void FBDF_Play_AllDraw(
 	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic,
 	const char *music_name)
 {
-	DrawGraph(0, 0, backPic.handle(), TRUE); /* 背景描画 */
+	DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, backPic.handle(), TRUE); /* 背景描画 */
 
 	/* ダンサー周り描画 */
 	play_class.dancer_class.DrawDance(500, 300);
 	FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
 
 	/* スコアバー周り描画 */
-	play_class.score_bar_class.draw_bar(167, 600, 928, 650);
+	play_class.score_bar_class.draw_bar(
+		lins(0, 0, 960, 167, WINDOW_SIZE_X),
+		lins(0, 0, 720, 600, WINDOW_SIZE_Y),
+		WINDOW_SIZE_X - 10,
+		lins(0, 0, 720, 650, WINDOW_SIZE_Y)
+	);
 	FBDF_PlayDrawLamp(pkey);
 
 	/* プレイエリア周り描画 */
-	DrawGraph(0, 0, lanePic.handle(), TRUE);
-	DrawFormatString(166, 663, COLOR_WHITE, _T("%s"), music_name);
-	play_class.notes_draw_class.DrawNotes(42, 42 + 110, 570, map);
-	play_class.gap_bar_class.DrawBar(40, 576, 155, 691);
+	DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, lanePic.handle(), TRUE);
+	DrawFormatString(
+		lins(0, 0, 960, 166, WINDOW_SIZE_X), lins(0, 0, 720, 653, WINDOW_SIZE_Y) + 10,
+		COLOR_WHITE, _T("%s"), music_name
+	);
+	play_class.notes_draw_class.DrawNotes(
+		lins(0, 0, 960, 42      , WINDOW_SIZE_X),
+		lins(0, 0, 960, 42 + 110, WINDOW_SIZE_X),
+		lins(0, 0, 720, 570     , WINDOW_SIZE_Y),
+		map
+	);
+	play_class.gap_bar_class.DrawBar(
+		lins(0, 0, 960,  40, WINDOW_SIZE_X),
+		lins(0, 0, 720, 576, WINDOW_SIZE_Y),
+		lins(0, 0, 960, 155, WINDOW_SIZE_X),
+		lins(0, 0, 720, 691, WINDOW_SIZE_Y)
+	);
 	{
 		uint Yoffset = 0;
 		if (game_option.judge_draw_en) {
-			play_class.judge_class.DrawJudge(     270, 530);
+			play_class.judge_class.DrawJudge(
+				lins(0, 120, 960, 270, WINDOW_SIZE_X), lins(0, 0, 720, 530, WINDOW_SIZE_Y)
+			);
 			Yoffset += 70;
 		}
 		if (game_option.fast_slow_en ) {
-			play_class.judge_class.DrawFastSlow(  230, 545 - Yoffset);
+			play_class.judge_class.DrawFastSlow(
+				lins(0, 50, 960, 230, WINDOW_SIZE_X), lins(0, 0, 720, 545, WINDOW_SIZE_Y) - Yoffset
+			);
 			Yoffset += 40;
 		}
 		if (game_option.chain_draw_en) {
-			play_class.chain_draw_class.DrawChain(180, 560 - Yoffset);
+			play_class.chain_draw_class.DrawChain(
+				lins(0, 0, 960, 180, WINDOW_SIZE_X), lins(0, 0, 720, 560, WINDOW_SIZE_Y) - Yoffset
+			);
 		}
 	}
 }

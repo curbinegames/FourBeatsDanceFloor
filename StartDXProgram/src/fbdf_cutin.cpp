@@ -7,6 +7,8 @@
 #include <sancur.h>
 #include <strcur.h>
 
+#include <main.h>
+
 /* own include */
 #include <fbdf_cutin.h>
 
@@ -17,7 +19,7 @@
  */
 void FBDF_cutin_c::DrawCut(void) const {
 	if (this->sequence == 0) { return; }
-	int Xoffset = lins(0, 600, 1000, 0, this->sequence);
+	int Xoffset = lins(0, lins(0, 0, 960, 600, WINDOW_SIZE_X), 1000, 0, this->sequence);
 	DrawExtendGraph(-Xoffset, 0, -Xoffset + this->x_window_size, this->y_window_size, this->leftpic.handle() , TRUE);
 	DrawExtendGraph( Xoffset, 0,  Xoffset + this->x_window_size, this->y_window_size, this->rightpic.handle(), TRUE);
 	return;

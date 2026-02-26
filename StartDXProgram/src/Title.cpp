@@ -212,17 +212,21 @@ view_num_t FBDF_TitleView(void) {
 	loop_bgm.PlaySound(true);
 	STime = GetNowCount();
 
-	particle_pent.SetSize(0.03, 0.12);
+	particle_pent.SetSize(
+		lins(0, 0, 960, 0.03, WINDOW_SIZE_X), lins(0, 0, 960, 0.12, WINDOW_SIZE_X)
+	);
 	particle_pent.SetMaxCount(500);
 	particle_pent.SetSimTime(2);
-	particle_dot.SetSize(0.01, 0.15);
+	particle_dot.SetSize(
+		lins(0, 0, 960, 0.01, WINDOW_SIZE_X), lins(0, 0, 960, 0.15, WINDOW_SIZE_X)
+	);
 	particle_dot.SetMaxCount(500);
 	particle_dot.SetSimTime(2);
 
 	particle_pent.init();
 	particle_dot.init();
 
-	while (!GetWindowUserCloseFlag() & !cutin.IsEndAnim()) {
+	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		InputAllKeyHold();
 		if (GetKeyHold(KEY_INPUT_RETURN)) { cutin.SetIo(CUT_FRAG_IN); }
 
@@ -245,7 +249,7 @@ view_num_t FBDF_TitleView(void) {
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, ring_pic.handle(), TRUE);
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 
-		DrawGraph(0, 0, title_pic.handle(), TRUE);
+		DrawExtendGraph(5, 5, WINDOW_SIZE_X - 5, 5 + (WINDOW_SIZE_X - 10) * 367 / 967, title_pic.handle(), TRUE);
 
 		cutin.DrawCut();
 

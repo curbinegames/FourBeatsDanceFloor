@@ -58,16 +58,20 @@
  * 相対時間: ある基準点から経過した時間。[GetNowCount() - <基準となる絶対時間>]となっていることが多い。
  */
 
-#define WINDOW_SIZE_MODE 0 // 0~2 を切り替えながら使ってね
+#define WINDOW_SIZE_MODE 0 // 0~4 を切り替えながら使ってね
 
 #define TOOL_NAME "Four Beat Dance Floor" // ツールの名前
 
-#if WINDOW_SIZE_MODE == 0
+#if WINDOW_SIZE_MODE == 0 /* いつもの */
 #define WINDOW_SIZE_X 960 // ウィンドウの横のサイズ
-#elif WINDOW_SIZE_MODE == 1
+#elif WINDOW_SIZE_MODE == 1 /* ちいさめ */
 #define WINDOW_SIZE_X 640 // ウィンドウの横のサイズ
-#elif WINDOW_SIZE_MODE == 2
+#elif WINDOW_SIZE_MODE == 2 /* 横長 */
 #define WINDOW_SIZE_X 960 // ウィンドウの横のサイズ
+#elif WINDOW_SIZE_MODE == 3 /* でかい */
+#define WINDOW_SIZE_X 1920 // ウィンドウの横のサイズ
+#elif WINDOW_SIZE_MODE == 4 /* チビ */
+#define WINDOW_SIZE_X 320 // ウィンドウの横のサイズ
 #endif
 
 #if WINDOW_SIZE_MODE == 0
@@ -76,6 +80,10 @@
 #define WINDOW_SIZE_Y (WINDOW_SIZE_X * 3 / 4) // ウィンドウの縦のサイズ
 #elif WINDOW_SIZE_MODE == 2
 #define WINDOW_SIZE_Y (WINDOW_SIZE_X * 9 / 20) // ウィンドウの縦のサイズ
+#elif WINDOW_SIZE_MODE == 3
+#define WINDOW_SIZE_Y (WINDOW_SIZE_X * 9 / 16) // ウィンドウの縦のサイズ
+#elif WINDOW_SIZE_MODE == 4
+#define WINDOW_SIZE_Y (WINDOW_SIZE_X * 3 / 4) // ウィンドウの縦のサイズ
 #endif
 
 typedef   signed int sint;

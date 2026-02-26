@@ -609,7 +609,7 @@ public:
 
 static void FBDF_Select_DrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
 	int Len = pals_scale(35, 300, 0, 0, count.c1);
-	int BaseY = y;
+	int BaseY = y - 60;
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
 	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_1, FALSE);
 	Len = pals_scale(35, 300, 0, 0, count.c2);
@@ -821,7 +821,7 @@ static void FBDF_Select_Draw(const FBDF_Select_MusicFolderManager_c &folder_mana
 		DrawFormatString(5, 105, 0xffffffff, _T("  acc: %6.2f%%"), musiclist[cmd].user_highscore.acc  );
 		DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
 		DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
-		FBDF_Select_DrawColorCount(5, 660, (musiclist[cmd].color_count));
+		FBDF_Select_DrawColorCount(5, WINDOW_SIZE_Y - 5, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);
 	/* TODO: ëÄçÏï˚ñ@Ç‡ï`Ç´ÇΩÇ¢ */
