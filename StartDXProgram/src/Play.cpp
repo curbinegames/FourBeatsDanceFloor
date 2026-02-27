@@ -214,6 +214,15 @@ private:
 	Dx3Danim_t n3Dmotion_dance_ath = -1;
 #endif /* 3Dモデル */
 
+	int n3Dshape_blick_hdl = -1;
+	int n3Dshape_smile_hdl = -1;
+	int n3Dshape_surps_hdl = -1;
+	int n3Dshape_a_hdl = -1;
+	int n3Dshape_i_hdl = -1;
+	int n3Dshape_u_hdl = -1;
+	int n3Dshape_e_hdl = -1;
+	int n3Dshape_o_hdl = -1;
+
 	std::vector<size_t> searched_motion;
 	std::vector<FBDF_Play_motion_st> motion_data;
 
@@ -272,6 +281,14 @@ public: /* コンストラクタ系 */
 		MV1SetScale(this->n3Dmodel_handle, VGet(model_size, model_size, model_size));
 		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
 		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
+		this->n3Dshape_blick_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("まばたき"));
+		this->n3Dshape_smile_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("笑い"));
+		this->n3Dshape_surps_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("点目"));
+		this->n3Dshape_a_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("あ"));
+		this->n3Dshape_i_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("い"));
+		this->n3Dshape_u_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("う"));
+		this->n3Dshape_e_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("え"));
+		this->n3Dshape_o_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("お"));
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
@@ -382,30 +399,27 @@ private:
 	}
 
 	void UpdateEyesShape(void) {
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 0.0);
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
 			/* FIXME: ユニオ専用の設定になってる */
 			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 1.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 1.0);
 			}
 			else if (GetNowCount() - this->Stime < 5000) {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.5);
 			}
 			else {
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
 			}
 			break;
 		default:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("まばたき")), 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("笑い")), 0.0);
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("点目")), 0.0);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
 			break;
 		}
 	}
@@ -842,11 +856,11 @@ private: /* update系 */
 		now_blend = lins_scale(-100, 1.0, 0, 0.0, Ntime - (int)nex_data.time);
 		nex_blend = lins_scale(-100, 0.0, 0, 1.0, Ntime - (int)nex_data.time);
 		
-		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, 0.0);
 		if ((this->Nstate == FBDF_DANCER_STATE_MISS) ||
 		    (this->Nstate == FBDF_DANCER_STATE_AFK)) {
 			return;
@@ -854,19 +868,19 @@ private: /* update系 */
 
 		switch (now_data.mat) {
 		case FBDF_LYRICS_MAT_A:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), now_blend);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, now_blend);
 			break;
 		case FBDF_LYRICS_MAT_I:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), now_blend);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, now_blend);
 			break;
 		case FBDF_LYRICS_MAT_U:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), now_blend);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, now_blend);
 			break;
 		case FBDF_LYRICS_MAT_E:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), now_blend);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, now_blend);
 			break;
 		case FBDF_LYRICS_MAT_O:
-			MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), now_blend);
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, now_blend);
 			break;
 		case FBDF_LYRICS_MAT_N:
 			/* 口閉じなので何もしない */
@@ -882,19 +896,19 @@ private: /* update系 */
 		if (nex_data.time <= Ntime + 100) {
 			switch (nex_data.mat) {
 			case FBDF_LYRICS_MAT_A:
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("あ")), nex_blend);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, nex_blend);
 				break;
 			case FBDF_LYRICS_MAT_I:
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("い")), nex_blend);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, nex_blend);
 				break;
 			case FBDF_LYRICS_MAT_U:
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("う")), nex_blend);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, nex_blend);
 				break;
 			case FBDF_LYRICS_MAT_E:
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("え")), nex_blend);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, nex_blend);
 				break;
 			case FBDF_LYRICS_MAT_O:
-				MV1SetShapeRate(this->n3Dmodel_handle, MV1SearchShape(this->n3Dmodel_handle, _T("お")), nex_blend);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, nex_blend);
 				break;
 			case FBDF_LYRICS_MAT_N:
 			case FBDF_LYRICS_MAT_NONE:
