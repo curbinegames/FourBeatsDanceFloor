@@ -40,6 +40,12 @@
 	(c) == 'u' ||   \
 	(c) == 'e' ||   \
 	(c) == 'o' ||   \
+	(c) == 's' ||   \
+	(c) == 't' ||   \
+	(c) == 'm' ||   \
+	(c) == 'w' ||   \
+	(c) == 'b' ||   \
+	(c) == 'p' ||   \
 	(c) == 'n'      \
 )
 
@@ -502,9 +508,12 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 				buf_lyrics.mat = FBDF_LYRICS_MAT_A;
 				break;
 			case 'i':
+			case 's':
+			case 't':
 				buf_lyrics.mat = FBDF_LYRICS_MAT_I;
 				break;
 			case 'u':
+			case 'w':
 				buf_lyrics.mat = FBDF_LYRICS_MAT_U;
 				break;
 			case 'e':
@@ -514,6 +523,9 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 				buf_lyrics.mat = FBDF_LYRICS_MAT_O;
 				break;
 			case 'n':
+			case 'm':
+			case 'b':
+			case 'p':
 				buf_lyrics.mat = FBDF_LYRICS_MAT_N;
 				break;
 			case 'f':
