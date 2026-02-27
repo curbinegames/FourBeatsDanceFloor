@@ -53,6 +53,7 @@ typedef struct FBDF_music_detail_s {
 	std::string map_file_name;
 	std::string music_name;
 	std::string artist;
+	std::string jucket_name;
 	uint Length = 0;
 	FBDF_music_dif_t auto_cal_dif;
 	int user_dif = 0;
@@ -75,6 +76,27 @@ typedef struct FBDF_music_detail_base_s {
 #endif /* struct */
 
 #if 1 /* class */
+
+class FBDF_select_jacket_viewer_c {
+private:
+	std::string path;
+	dxcur_pic_c pic;
+
+public:
+	void draw(int x, int y) const {
+		DrawGraph(x, y, this->pic.handle(), TRUE);
+	}
+
+	void update(std::string folder_name, std::string image_name) {
+		std::string new_path = "music/";
+		new_path += folder_name;
+		new_path += '/';
+		new_path += image_name;
+		if (new_path == this->path) { return; }
+		this->path = new_path;
+		this->pic.reload(this->path.c_str());
+	}
+};
 
 class FBDF_select_back_pic_c {
 private:
@@ -611,6 +633,7 @@ public:
 
 /* セレクト画面に関するクラスをまとめたもの */
 typedef struct FBDF_select_class_set_s {
+	FBDF_select_jacket_viewer_c jacket_viewer;
 	FBDF_select_back_pic_c back_pic;
 	FBDF_music_list_c music_list;
 	FBDF_select_view_string_c view_string;
@@ -676,6 +699,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	buf.folder_name        = d_name;
 	buf.music_name         = map.music_name;
 	buf.artist             = map.artist_name;
+	buf.jucket_name        = map.jacket_file_name;
 	buf.Length             = FBDF_CalMapLength(map);
 	buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
 	buf.auto_cal_dif.color = FBDF_CalMapColorDif(&map);
@@ -737,6 +761,7 @@ static void FBDF_Select_KeyCheck(
 	FBDF_Select_MusicFolderManager_c &folder_manager = select_class.folder_manager;
 	FBDF_music_list_c &musiclist = select_class.music_list;
 	FBDF_select_view_string_c &folder_string = select_class.view_string;
+	FBDF_select_jacket_viewer_c &jacket_viewer = select_class.jacket_viewer;
 
 	if (cutin.IsClosing()) { return; } /* カットイン中なのでキー入力無効 */
 
@@ -821,6 +846,7 @@ static void FBDF_Select_Draw(const FBDF_select_class_set_t &select_class, int cm
 	const FBDF_Select_MusicFolderManager_c &folder_manager_class = select_class.folder_manager;
 	const FBDF_music_list_c &musiclist = select_class.music_list;
 	const FBDF_select_view_string_c &folder_string = select_class.view_string;
+	const FBDF_select_jacket_viewer_c &jacket_viewer = select_class.jacket_viewer;
 	const FBDF_select_back_pic_c &back_pic = select_class.back_pic;
 
 	back_pic.DrawPic();
