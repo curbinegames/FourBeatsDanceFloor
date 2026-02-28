@@ -115,7 +115,7 @@ double FBDF_CalMapNotesDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
 }
 
 /* color難易度を計算する */
-double FBDF_CalMapColorDif(const FBDF_map_t *map) {
+double FBDF_CalMapColorDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
 	const int point_stairLen =  2;
 	const int point_step_11  = 10;
 	const int point_step_13  = 12;
@@ -135,17 +135,17 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 	double ret = 0.0;
 	std::vector<uint> BasePointQueue;
 
-	if (map->note.size() < 3) { return 0; }
+	if (notes.size() < 3) { return 0; }
 
-	for (uint i = 2; i < map->note.size(); i++) {
-		int FirstTime  = map->note[i].time     - map->note[i - 1].time;
-		int SecondTime = map->note[i - 1].time - map->note[i - 2].time;
+	for (uint i = 2; i < notes.size(); i++) {
+		int FirstTime  = notes[i].time     - notes[i - 1].time;
+		int SecondTime = notes[i - 1].time - notes[i - 2].time;
 		uint BasePoint;
 		bool skipFG = false;
 
-		switch (map->note[i].btn) {
+		switch (notes[i].btn) {
 		case FBDF_PLAY_NOTE_BTN_1:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 1: /* 11ステップ */
 				BasePoint = point_step_11;
 				break;
@@ -156,7 +156,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				BasePoint = point_step_13;
 				break;
 			case 4: /* 階段 */
-				if (map->note[i - 2].btn != 3) {
+				if (notes[i - 2].btn != 3) {
 					BasePoint = point_stair4;
 				}
 				else {
@@ -166,7 +166,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 			}
 			break;
 		case FBDF_PLAY_NOTE_BTN_2:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 2: /* 22ステップ */
 				BasePoint = point_step_22;
 				break;
@@ -177,7 +177,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				BasePoint = point_step_24;
 				break;
 			case 1: /* 階段 */
-				if (map->note[i - 2].btn != 4) {
+				if (notes[i - 2].btn != 4) {
 					BasePoint = point_stair1;
 				}
 				else {
@@ -187,7 +187,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 			}
 			break;
 		case FBDF_PLAY_NOTE_BTN_3:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 3: /* 33ステップ */
 				BasePoint = point_step_33;
 				break;
@@ -198,7 +198,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				BasePoint = point_step_13;
 				break;
 			case 2: /* 階段 */
-				if (map->note[i - 2].btn != 3) {
+				if (notes[i - 2].btn != 3) {
 					BasePoint = point_stair2;
 				}
 				else {
@@ -208,7 +208,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 			}
 			break;
 		case FBDF_PLAY_NOTE_BTN_4:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 4: /* 44ステップ */
 				BasePoint = point_step_44;
 				break;
@@ -219,7 +219,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 				BasePoint = point_step_24;
 				break;
 			case 3: /* 階段 */
-				if (map->note[i - 2].btn != 2) {
+				if (notes[i - 2].btn != 2) {
 					BasePoint = point_stair3;
 				}
 				else {
@@ -234,7 +234,7 @@ double FBDF_CalMapColorDif(const FBDF_map_t *map) {
 
 #if 1
 		DxTime_t TimeGap = 0;
-		TimeGap = 2000 / maxs_2(1, map->note[i].time - map->note[i - 1].time);
+		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
 #endif
 		BasePointQueue.push_back(BasePoint);
