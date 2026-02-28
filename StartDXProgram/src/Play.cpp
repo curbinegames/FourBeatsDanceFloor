@@ -195,12 +195,12 @@ class FBDF_dancer_c {
 private:
 	const size_t motion_len = 120;
 
-	 int len = 0; // -1:miss 0:idle, 1~4:tip, 5~:long
-	DxTime_t mtime = 0; /* モーション長さ */
-	 int Stime = 0; /* モーションスタート絶対時間 */
-	 int offset = 0; /* 待機ステップ開始時間 */
-	size_t Nmotion_picNo = 0; /* 今のダンスモーション番号 */
-	double bpm = 120;
+	int      len    = 0; /* -1:miss 0 : idle, 1~4 : tip, 5~: long */
+	DxTime_t mtime  = 0; /* モーション長さ */
+	int      Stime  = 0; /* モーションスタート絶対時間 */
+	int      offset = 0; /* 待機ステップ開始時間 */
+	size_t   Nmotion_picNo = 0; /* 今のダンスモーション番号 */
+	double   bpm = 120;
 	FBDF_Play_note_btn_et btn = FBDF_PLAY_NOTE_BTN_1;
 	FBDF_dancer_state_et Nstate = FBDF_DANCER_STATE_IDLE;
 
@@ -398,31 +398,6 @@ private:
 		return retval;
 	}
 
-	void UpdateEyesShape(void) {
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 0.0);
-		switch (this->Nstate) {
-		case FBDF_DANCER_STATE_MISS:
-		case FBDF_DANCER_STATE_AFK:
-			/* FIXME: ユニオ専用の設定になってる */
-			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 1.0);
-			}
-			else if (GetNowCount() - this->Stime < 5000) {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.5);
-			}
-			else {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
-			}
-			break;
-		default:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
-			break;
-		}
-	}
 #endif /* 3Dモデル */
 
 #if 1 /* デバッグ描画 */
@@ -838,9 +813,35 @@ private: /* update系 */
 		UpdateAttachAnimMat();
 	}
 
+	/* 目のシェイプキーの更新 */
+	void UpdateEyesShape(void) const {
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.0);
+		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 0.0);
+		switch (this->Nstate) {
+		case FBDF_DANCER_STATE_MISS:
+		case FBDF_DANCER_STATE_AFK:
+			/* FIXME: ユニオ専用の設定になってる */
+			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 1.0);
+			}
+			else if (GetNowCount() - this->Stime < 5000) {
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.5);
+			}
+			else {
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
+				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
+			}
+			break;
+		default:
+			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
+			break;
+		}
+	}
+
 	/* 口のシェイプキーの更新 */
-	void UpdateMouthShape(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
-		bool change_fg = false;
+	void UpdateMouthShape(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) const {
 		double now_blend = 1.0;
 		double nex_blend = 0.0;
 		FBDF_mapenc_lyrics_st now_data;
@@ -848,7 +849,6 @@ private: /* update系 */
 
 		while (((lyrics.nowNo() + 1) <= lyrics.size()) && (lyrics.offsetData(1).time <= Ntime)) {
 			lyrics.stepNo();
-			change_fg = true;
 		}
 
 		now_data = lyrics.nowData();
@@ -888,7 +888,7 @@ private: /* update系 */
 		case FBDF_LYRICS_MAT_NONE:
 		case FBDF_LYRICS_MAT_FREE:
 		default:
-			/* 指定なし、キャラの気分で勝手に動く。change_fgは無視 */
+			/* 指定なし、キャラの気分で勝手に動く。 */
 			/* TODO: ↑の実装をする */
 			break;
 		}
@@ -1774,6 +1774,31 @@ static void FBDF_Play_KeyCheck(
 	return;
 }
 
+static void FBDF_Play_AllUpdate(
+	FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map,
+	FBDF_push_key_st &pkey, DxTime_t &FinishTime, FBDF_cutin_c &cutin,
+	DxSnd_t music_hand, FBDT_hit_snd_t &se
+) {
+	map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
+
+	FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
+
+	/* ノーツ全処理判定 */
+	if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
+
+	/* 譜面終了判定 */
+	if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(music_hand))) {
+		cutin.SetIo(CUT_FRAG_IN);
+	}
+
+	FBDF_Play_NoteJudge(play_class, score, map, pkey, se);
+
+	/* update系 */
+	play_class.dancer_class.Update(map.lyrics, map.Ntime);
+	play_class.score_bar_class.update_graph(map.Ntime);
+	cutin.update();
+}
+
 #if 1 /* Draw系 */
 
 /**
@@ -1940,30 +1965,11 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 
 	/* ゲーム実行ループ */
 	while (!cutin.IsEndAnim() && !GetWindowUserCloseFlag()) {
-		map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
-
-		FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
-
-		/* ノーツ全処理判定 */
-		if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
-
-		/* 譜面終了判定 */
-		if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(musicData.handle()))) {
-			cutin.SetIo(CUT_FRAG_IN);
-		}
-
-		FBDF_Play_NoteJudge(play_class, score, map, pkey, se);
-
-		/* update系 */
-		play_class.dancer_class.Update(map.lyrics, map.Ntime);
-		play_class.score_bar_class.update_graph(map.Ntime);
-		cutin.update();
-
+		FBDF_Play_AllUpdate(play_class, score, map, pkey, FinishTime, cutin, musicData.handle(), se);
 		ClearDrawScreen(); /* 作画エリアここから */
 		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, nex_music.folder_name.c_str());
 		cutin.DrawCut();
 		ScreenFlip(); /* 作画エリアここまで */
-
 		WaitTimer(10); // ループウェイト
 	}
 
