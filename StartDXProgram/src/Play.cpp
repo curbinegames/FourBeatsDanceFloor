@@ -195,7 +195,7 @@ class FBDF_dancer_c {
 private:
 	const size_t motion_len = 120;
 
-	int      len    = 0; /* -1:miss 0 : idle, 1~4 : tip, 5~: long */
+	int      len    = 0; /* -1:miss, 0:idle, 1~4:tip, 5~:long */
 	DxTime_t mtime  = 0; /* モーション長さ */
 	int      Stime  = 0; /* モーションスタート絶対時間 */
 	int      offset = 0; /* 待機ステップ開始時間 */
@@ -332,6 +332,11 @@ private:
 		return 0; /* 通らないけど一応明記 */
 	}
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
+	/**
+	 * @brief 待機モーションのアニメ番号を取得する
+	 * @param なし
+	 * @return アニメ番号
+	 */
 	size_t GetIdleMotionAnimNo(void) const {
 		double loop_time = 4 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
 		int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
@@ -341,6 +346,11 @@ private:
 		return (int)(lins(0, 0, loop_time, motion_len * 2, in_time)) % (motion_len * 2);
 	}
 
+	/**
+	 * @brief 今のモーションのアニメ番号を取得する
+	 * @param なし
+	 * @return アニメ番号
+	 */
 	size_t GetMotionAnimNo(void) const {
 		size_t retval = 0;
 		size_t start = 0;
@@ -813,7 +823,11 @@ private: /* update系 */
 		UpdateAttachAnimMat();
 	}
 
-	/* 目のシェイプキーの更新 */
+	/**
+	 * @brief 目のシェイプキーを更新する
+	 * @param なし
+	 * @return なし
+	 */
 	void UpdateEyesShape(void) const {
 		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.0);
 		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.0);

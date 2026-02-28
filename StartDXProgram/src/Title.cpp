@@ -228,7 +228,7 @@ view_num_t FBDF_TitleView(void) {
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		InputAllKeyHold();
-		if (GetKeyHold(KEY_INPUT_RETURN)) { cutin.SetIo(CUT_FRAG_IN); }
+		if (!cutin.IsClosing() && GetKeyHold(KEY_INPUT_RETURN)) { cutin.SetIo(CUT_FRAG_IN); }
 
 		particle_pent.SetSimTime(lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));
 		particle_dot.SetSimTime( lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));

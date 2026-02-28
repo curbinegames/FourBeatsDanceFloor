@@ -255,7 +255,11 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 				before_note.len = buf_note.pos - before_note.pos;
 				map.note.push_back(before_note);
 			}
-			buf_note.time = option.now_shuttime + 60000 * 4 * ic / (option.now_bpm * option.scrool * option.measure_u * option.now_block) + game_option.note_offset_timing;
+			buf_note.time = (
+				60000 * 4 * ic /
+				(option.now_bpm * option.scrool * option.measure_u * option.now_block) +
+				game_option.note_offset_timing + option.now_shuttime
+			);
 			buf_note.mtime = 750;
 			if (!map.note.empty()) {
 				FBDF_note_t before_note = map.note.lastData();
