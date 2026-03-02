@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sancur.h>
+#include <dxcur.h>
 
 /**
  * 初期の案では画像で表示する予定だった。思い出で残してる。
@@ -76,6 +77,18 @@ typedef struct FBDF_score_bar_s {
 	double bar_98 = 98.5;
 	double bar_99 = 99.1;
 } FBDF_score_bar_st;
+
+class FBDF_usage_c {
+private:
+    std::string usage = "";
+    dxcur_pic_c pic{_T("pic/select/usage.png")};
+
+public:
+    FBDF_usage_c(void);
+    FBDF_usage_c(const char *str);
+
+    void draw(int left, int down) const;
+};
 
 extern FBDF_game_option_st game_option; /* ゲームオプション、option.cpp以外で変更されない、他の場所では読み込み専用 */
 

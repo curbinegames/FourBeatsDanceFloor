@@ -638,6 +638,7 @@ typedef struct FBDF_select_class_set_s {
 	FBDF_music_list_c music_list;
 	FBDF_select_view_string_c view_string;
 	FBDF_Select_MusicFolderManager_c folder_manager;
+	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
 } FBDF_select_class_set_t;
 
 #endif /* class */
@@ -859,9 +860,10 @@ static void FBDF_Select_Draw(const FBDF_select_class_set_t &select_class, int cm
 		DrawFormatString(5, 105, 0xffffffff, _T("  acc: %6.2f%%"), musiclist[cmd].user_highscore.acc  );
 		DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
 		DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
-		FBDF_Select_DrawColorCount(5, WINDOW_SIZE_Y - 5, (musiclist[cmd].color_count));
+		FBDF_Select_DrawColorCount(5, WINDOW_SIZE_Y - 50, (musiclist[cmd].color_count));
 	}
 	folder_string.DrawList(cmd);
+	select_class.usage.draw(0, WINDOW_SIZE_Y);
 	/* TODO: 操作方法も描きたい */
 }
 
@@ -879,6 +881,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	std::string now_music;
 	FBDF_select_class_set_t select_class;
 	FBDF_option_pic_st option_pic;
+	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る");
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 	FBDF_cutin_c cutin;
 
@@ -906,7 +909,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 		ClearDrawScreen(); // 作画エリアここから
 		FBDF_Select_Draw(select_class, command);
-		if (option_fg) { FBDF_Option_Draw(option_cmd, option_pic); }
+		if (option_fg) { FBDF_Option_Draw(option_cmd, option_pic, option_usage); }
 		cutin.DrawCut();
 		ScreenFlip(); // 作画エリアここまで
 		WaitTimer(10); // ループウェイト

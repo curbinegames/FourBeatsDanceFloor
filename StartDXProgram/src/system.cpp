@@ -47,6 +47,14 @@ FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
     return val;
 }
 
+FBDF_usage_c::FBDF_usage_c(void) {}
+FBDF_usage_c::FBDF_usage_c(const char *str) : usage(str) {}
+
+void FBDF_usage_c::draw(int left, int down) const {
+    DrawGraph(left, down - 48, this->pic.handle(), TRUE);
+    DrawFormatString(left + 5, down - 40, COLOR_WHITE, _T("%s"), this->usage.c_str());
+}
+
 #if 1 /* DrawScoreBarån */
 
 /**

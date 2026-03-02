@@ -14,6 +14,8 @@ typedef enum FBDF_param_type_e {
 
 #if 1 /* class */
 
+#if 1 /* 項目系 */
+
 /* 継承前提、テンプレートは実装できなかった */
 class FBDF_option_item_base_c {
 protected:
@@ -276,7 +278,11 @@ public:
     }
 
     std::string GetParamName(void) const override {
-        return std::to_string(*(int *)(this->option_p)) + "ms";
+        std::string ret = "";
+        ret += (0 < *(int *)(this->option_p)) ? ("+") : ("");
+        ret += std::to_string(*(int *)(this->option_p));
+        ret += "ms";
+        return ret;
     }
 
     void ReloadPic(void) override {
@@ -297,7 +303,11 @@ public:
     }
 
     std::string GetParamName(void) const override {
-        return std::to_string(*(int *)(this->option_p)) + "ms";
+        std::string ret = "";
+        ret += (0 < *(int *)(this->option_p)) ? ("+") : ("");
+        ret += std::to_string(*(int *)(this->option_p));
+        ret += "ms";
+        return ret;
     }
 
     void ReloadPic(void) override {
@@ -455,6 +465,8 @@ public:
     }
 };
 
+#endif /* 項目系 */
+
 #endif /* class */
 
 static std::vector<FBDF_option_item_base_c *> s_op_list = {
@@ -491,9 +503,6 @@ void FBDF_Option_ReloadPic(void) {
 void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
 	InputAllKeyHold();
     switch (GetKeyPushOnce()) {
-    case KEY_INPUT_RETURN: /* bool項目の切り替え */
-        s_op_list.at(cmd)->ChangeBool();
-        break;
     case KEY_INPUT_Z:
     case KEY_INPUT_BACK: /* セレクトに戻る */
         option_fg = false;
@@ -517,22 +526,22 @@ void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
  * @brief オプション画面を描く。セレクト画面の上に直書きするイメージ。
  * @param[in] cmd コマンド
  */
-void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic) {
-    int DrawY = WINDOW_SIZE_Y / 2;
+void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic, const FBDF_usage_c &usage) {
+    int DrawY = (WINDOW_SIZE_Y - 120) / 2 - 32;
     int DrawC = cmd;
     /* 後ろの選曲画面を暗くする */
     DrawGraph(0, 0, pic.back.handle(), TRUE);
     /* 項目を描く */
     DrawC = cmd;
-    DrawY = WINDOW_SIZE_Y / 2;
+    DrawY = (WINDOW_SIZE_Y - 120) / 2 - 32;
     for (size_t i = 0; i < 5; i++) {
         DrawC = LOOP_SUB(DrawC, s_op_list.size());
         DrawY -= 80;
         FBDF_Option_DrawItemOne(DrawC, 15, DrawY, pic);
     }
-    FBDF_Option_DrawItemOne(cmd, 15 + 50, WINDOW_SIZE_Y / 2, pic);
+    FBDF_Option_DrawItemOne(cmd, 15 + 50, (WINDOW_SIZE_Y - 120) / 2 - 32, pic);
     DrawC = cmd;
-    DrawY = WINDOW_SIZE_Y / 2;
+    DrawY = (WINDOW_SIZE_Y - 120) / 2 - 32;
     for (size_t i = 0; i < 5; i++) {
         DrawC = LOOP_ADD(DrawC, s_op_list.size());
         DrawY += 80;
@@ -540,7 +549,10 @@ void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic) {
     }
     /* 説明の画像を描く */
     DrawGraph(0, 0, s_op_list.at(cmd)->GetPicHandle(), TRUE);
+    /* 操作説明を描く */
+    usage.draw(0, WINDOW_SIZE_Y - 70);
     /* 詳細を描く */
-    DrawFormatString(5, WINDOW_SIZE_Y - 5 - 60, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
-    DrawFormatString(5, WINDOW_SIZE_Y - 5 - 40, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
+    DrawExtendGraph( 0, WINDOW_SIZE_Y - 75, WINDOW_SIZE_X, WINDOW_SIZE_Y, pic.detail.handle(), TRUE);
+    DrawFormatString(5, WINDOW_SIZE_Y - 65, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
+    DrawFormatString(5, WINDOW_SIZE_Y - 40, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
 }
