@@ -88,8 +88,10 @@ public:
 		}
 	}
 
-	DxPic_t handle(void) const {
-		return this->pic.handle();
+	void draw(void) const {
+		int drawLeft = WINDOW_SIZE_X / 2;
+		int drawUp   = WINDOW_SIZE_Y - drawLeft;
+		DrawExtendGraph(drawLeft, drawUp, WINDOW_SIZE_X, WINDOW_SIZE_Y, this->pic.handle(), TRUE);
 	}
 };
 
@@ -182,7 +184,7 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 5, COLOR_WHITE, _T("drop: %4d")    , data.drop);
 		DrawFormatString(VIEW_MARGIN, 2 * VIEW_MARGIN + SCORE_GRAPH_Y_SIZE + 20 * 6, COLOR_WHITE, _T("ave: %+.2f")   , data.gap_ave);
 
-		DrawGraph(WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2, chara_pic.handle(), TRUE);
+		chara_pic.draw();
 
 		ScreenFlip(); // 作画エリアここまで
 		WaitTimer(10); // ループウェイト
