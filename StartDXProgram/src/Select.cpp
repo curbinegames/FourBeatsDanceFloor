@@ -544,54 +544,6 @@ public:
 		return ret;
 	}
 
-	/**
-	 * @brief 絞り込み/並び替え条件から譜面リストを作る
-	 * @param[out] musiclist 譜面リスト
-	 * @param[in] folder_num 今いるゲーム内フォルダー
-	 * @param[in] view_dif_type 今の難易度表示
-	 * @return なし
-	 */
-	void MakeMusicList(FBDF_music_list_c &musiclist, FBDF_select_view_string_c &folder_string, FBDF_dif_type_ec view_dif_type) {
-		/* 内部リスト操作 */
-		if (this->IsMusicFolderNow()) {
-			musiclist.Search(this->folder_manager_class.NowFolder()->filter_func, view_dif_type);
-			musiclist.SortByDif();
-		}
-
-		/* リスト作成 */
-		folder_string.clear();
-		if (this->IsMusicFolderNow()) {
-			for (int is = 0; is < musiclist.sort.size(); is++) {
-				std::string buf = musiclist[is].music_name;
-				FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
-				switch (musiclist[is].dif_type) {
-				case FBDF_dif_type_ec::LIGHT:
-					buf += "[light]";
-					color = GREEN_MUSIC_LIST_BAR;
-					break;
-				case FBDF_dif_type_ec::NORMAL:
-					buf += "[normal]";
-					color = YELLOW_MUSIC_LIST_BAR;
-					break;
-				case FBDF_dif_type_ec::HYPER:
-					buf += "[hyper]";
-					color = PINK_MUSIC_LIST_BAR;
-					break;
-				}
-				folder_string.push_back(buf, color);
-			}
-		}
-		else {
-			for (size_t i = 0; i < this->folder_manager_class.NowFolder()->children.size(); i++) {
-				folder_string.push_back(
-					this->folder_manager_class.NowFolder()->children[i]->name,
-					this->folder_manager_class.NowFolder()->children[i]->color
-				);
-			}
-		}
-		return;
-	}
-
 	bool ReadFile(int &cmd, FBDF_dif_type_ec &view_def) {
 		bool ret = false;
 		FILE *fp;
@@ -667,6 +619,57 @@ static void FBDF_Select_DrawColorCount(int x, int y, const FBDF_music_colorcount
 static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 	if (map.note.size() < 3) { return 0; }
 	return map.note[map.note.size() - 2].time - map.note[0].time;
+}
+
+/**
+ * @brief 絞り込み/並び替え条件から譜面リストを作る
+ * @param[out] musiclist 譜面リスト
+ * @param[in] folder_num 今いるゲーム内フォルダー
+ * @param[in] view_dif_type 今の難易度表示
+ * @return なし
+ */
+void FBDF_Select_MakeMusicList(
+	FBDF_Select_MusicFolderManager_c &folder_manager, FBDF_music_list_c &musiclist,
+	FBDF_select_view_string_c &folder_string, FBDF_dif_type_ec view_dif_type
+) {
+	/* 内部リスト操作 */
+	if (folder_manager.IsMusicFolderNow()) {
+		musiclist.Search(folder_manager.NowFolder()->filter_func, view_dif_type);
+		musiclist.SortByDif();
+	}
+
+	/* リスト作成 */
+	folder_string.clear();
+	if (folder_manager.IsMusicFolderNow()) {
+		for (int is = 0; is < musiclist.sort.size(); is++) {
+			std::string buf = musiclist[is].music_name;
+			FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
+			switch (musiclist[is].dif_type) {
+			case FBDF_dif_type_ec::LIGHT:
+				buf += "[light]";
+				color = GREEN_MUSIC_LIST_BAR;
+				break;
+			case FBDF_dif_type_ec::NORMAL:
+				buf += "[normal]";
+				color = YELLOW_MUSIC_LIST_BAR;
+				break;
+			case FBDF_dif_type_ec::HYPER:
+				buf += "[hyper]";
+				color = PINK_MUSIC_LIST_BAR;
+				break;
+			}
+			folder_string.push_back(buf, color);
+		}
+	}
+	else {
+		for (size_t i = 0; i < folder_manager.NowFolder()->children.size(); i++) {
+			folder_string.push_back(
+				folder_manager.NowFolder()->children[i]->name,
+				folder_manager.NowFolder()->children[i]->color
+			);
+		}
+	}
+	return;
 }
 
 #if 1 /* 譜面リスト読み込み系 */
@@ -776,7 +779,7 @@ static void FBDF_Select_KeyCheck(
 		}
 		else { /* サブフォルダである */
 			folder_manager.PushFolder(command);
-			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
+			FBDF_Select_MakeMusicList(folder_manager, musiclist, folder_string, view_dif_type);
 			command = 0;
 			if (folder_manager.IsMusicFolderNow() && !musiclist.sort.empty()) {
 				for (size_t i = 0; i < musiclist.sort.size(); i++) {
@@ -791,7 +794,7 @@ static void FBDF_Select_KeyCheck(
 		break;
 	case KEY_INPUT_BACK:
 		if (folder_manager.PopFolder(poped_cmd)) {
-			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
+			FBDF_Select_MakeMusicList(folder_manager, musiclist, folder_string, view_dif_type);
 			command = poped_cmd;
 		}
 		break;
@@ -812,7 +815,7 @@ static void FBDF_Select_KeyCheck(
 	case KEY_INPUT_LEFT:
 		--view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
-			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
+			FBDF_Select_MakeMusicList(folder_manager, musiclist, folder_string, view_dif_type);
 			command = 0;
 			for (size_t i = 0; i < musiclist.sort.size(); i++) {
 				if (musiclist[i].music_name == now_music) {
@@ -826,7 +829,7 @@ static void FBDF_Select_KeyCheck(
 	case KEY_INPUT_RIGHT:
 		++view_dif_type;
 		if (folder_manager.NowFolder()->name == "ALL MUSIC") {
-			folder_manager.MakeMusicList(musiclist, folder_string, view_dif_type);
+			FBDF_Select_MakeMusicList(folder_manager, musiclist, folder_string, view_dif_type);
 			command = 0;
 			for (size_t i = 0; i < musiclist.sort.size(); i++) {
 				if (musiclist[i].music_name == now_music) {
@@ -890,7 +893,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	FBDF_Option_ReloadPic();
 	if (FBDF_Select_LoadMusicList(select_class.music_list) == false) { return VIEW_SELECT; }
 	select_class.folder_manager.ReadFile(command, view_dif_type);
-	select_class.folder_manager.MakeMusicList(select_class.music_list, select_class.view_string, view_dif_type);
+	FBDF_Select_MakeMusicList(select_class.folder_manager, select_class.music_list, select_class.view_string, view_dif_type);
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
