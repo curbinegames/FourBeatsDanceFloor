@@ -1384,7 +1384,9 @@ public:
 		int DrawX = x;
 		this->DrawNum(x, y, this->chain);
 		DrawX = x + this->GetPicSize(this->chain, lins_scale(4, 0.4, 200, 0.8, this->chain) + lins_scale(0, 0.1, 100, 0, GetNowCount() - Stime));
-		DrawGraph(DrawX, y - 36, this->strpic.handle(), TRUE);
+		{
+			DrawExtendGraph(DrawX, y - 36, DrawX + 120, y, this->strpic.handle(), TRUE);
+		}
 	}
 
 	void SetChain(uint chain) {
