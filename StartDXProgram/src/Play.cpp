@@ -730,6 +730,11 @@ public:
 		this->DrawDancerGraph(x, y);
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 		MV1DrawModel(this->n3Dmodel_handle);
+		DrawBox(200,  20, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl)),  35, COLOR_WHITE, TRUE);
+		DrawBox(200,  40, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl)),  55, COLOR_WHITE, TRUE);
+		DrawBox(200,  60, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl)),  75, COLOR_WHITE, TRUE);
+		DrawBox(200,  80, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl)),  95, COLOR_WHITE, TRUE);
+		DrawBox(200, 100, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl)), 115, COLOR_WHITE, TRUE);
 #endif /* 3Dモデル */
 	}
 
@@ -855,20 +860,9 @@ private: /* update系 */
 	}
 
 	/* 口のシェイプキーの更新 */
-	void UpdateMouthShape(cvec<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) const {
-		double now_blend = 1.0;
-		double nex_blend = 0.0;
-		FBDF_mapenc_lyrics_st now_data;
-		FBDF_mapenc_lyrics_st nex_data;
-
-		while (((lyrics.nowNo() + 1) <= lyrics.size()) && (lyrics.offsetData(1).time <= Ntime)) {
-			lyrics.stepNo();
-		}
-
-		now_data = lyrics.nowData();
-		nex_data = lyrics.offsetData(1);
-		now_blend = lins_scale(-100, 1.0, 0, 0.0, Ntime - (int)nex_data.time);
-		nex_blend = lins_scale(-100, 0.0, 0, 1.0, Ntime - (int)nex_data.time);
+	void UpdateMouthShape(const tvec<FBDF_lyrics_mat_et> &lyrics, int Ntime) const {
+		double now_blend = lins_scale(-100, 1.0, 0, 0.0, Ntime - lyrics.offsetDataTime(1));
+		double nex_blend = lins_scale(-100, 0.0, 0, 1.0, Ntime - lyrics.offsetDataTime(1));
 		
 		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, 0.0);
 		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, 0.0);
@@ -880,7 +874,7 @@ private: /* update系 */
 			return;
 		}
 
-		switch (now_data.mat) {
+		switch (lyrics.nowData()) {
 		case FBDF_LYRICS_MAT_A:
 			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, now_blend);
 			break;
@@ -907,8 +901,8 @@ private: /* update系 */
 			break;
 		}
 
-		if (nex_data.time <= Ntime + 100) {
-			switch (nex_data.mat) {
+		if (lyrics.offsetDataTime(1) <= Ntime + 100) {
+			switch (lyrics.offsetData(1)) {
 			case FBDF_LYRICS_MAT_A:
 				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, nex_blend);
 				break;
@@ -940,7 +934,7 @@ public: /* update系 */
 	 * @param[out] lyrics 歌詞/口パクデータ
 	 * @return なし
 	 */
-	void Update(cvec<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
+	void Update(const tvec<FBDF_lyrics_mat_et> &lyrics, int Ntime) {
 		/* missは自動解消されない */
 		if (0 <= this->len) {
 			/* long->idle */
@@ -1795,7 +1789,9 @@ static void FBDF_Play_AllUpdate(
 	FBDF_push_key_st &pkey, DxTime_t &FinishTime, FBDF_cutin_c &cutin,
 	DxSnd_t music_hand, FBDT_hit_snd_t &se
 ) {
-	map.Ntime = GetNowCount() - map.Stime; /* 時間更新 */
+	/* 時間更新 */
+	map.Ntime = GetNowCount() - map.Stime;
+	map.lyrics.stepNoTime(map.Ntime);
 
 	FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
 

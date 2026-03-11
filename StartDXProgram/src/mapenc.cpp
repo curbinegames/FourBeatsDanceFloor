@@ -484,7 +484,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 #if 1 /* 歌詞データ系 */
 
 static FBDF_mapenc_error_et GetLyricsBlock(
-	cvec<FBDF_mapenc_lyrics_st> &lyrics, char const *buf, FBDF_map_enc_t &option
+	tvec<FBDF_lyrics_mat_et> &lyrics, char const *buf, FBDF_map_enc_t &option
 ) {
 	if (lyrics.isfull()) { /* 歌詞数が2000に達していたらこれ以上読み込まない */
 		FBDF_ErrorLogWrite("歌詞数が多すぎます!");
@@ -505,44 +505,45 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 	}
 
 	for (size_t ic = 0; ic < option.now_block; ic++) {
-		FBDF_mapenc_lyrics_st buf_lyrics;
+		int time_buf;
+		FBDF_lyrics_mat_et data_buf;
 		if (buf[ic] != '.') {
 			switch (buf[ic]) {
 			case 'a':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_A;
+				data_buf = FBDF_LYRICS_MAT_A;
 				break;
 			case 'i':
 			case 's':
 			case 't':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_I;
+				data_buf = FBDF_LYRICS_MAT_I;
 				break;
 			case 'u':
 			case 'w':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_U;
+				data_buf = FBDF_LYRICS_MAT_U;
 				break;
 			case 'e':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_E;
+				data_buf = FBDF_LYRICS_MAT_E;
 				break;
 			case 'o':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_O;
+				data_buf = FBDF_LYRICS_MAT_O;
 				break;
 			case 'n':
 			case 'm':
 			case 'b':
 			case 'p':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_N;
+				data_buf = FBDF_LYRICS_MAT_N;
 				break;
 			case 'f':
-				buf_lyrics.mat = FBDF_LYRICS_MAT_FREE;
+				data_buf = FBDF_LYRICS_MAT_FREE;
 				break;
 			}
-			buf_lyrics.time = (
+			time_buf = (
 				60000 * 4 * ic /
 				(option.now_bpm * option.scrool * option.measure_u * option.now_block) +
 				game_option.note_offset_timing + option.now_shuttime
 			);
 
-			if (lyrics.lastData().mat != buf_lyrics.mat) { lyrics.push_back(buf_lyrics); }
+			if (lyrics.lastData() != data_buf) { lyrics.push_back(time_buf, data_buf); }
 
 			if (lyrics.isfull()) {
 				FBDF_ErrorLogWrite("歌詞数が多すぎます!");
@@ -556,7 +557,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 }
 
 static FBDF_mapenc_error_et GetLyricsLine(
-	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *buf, FBDF_map_enc_t &option
+	tvec<FBDF_lyrics_mat_et> &lyrics, const char *buf, FBDF_map_enc_t &option
 ) {
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
 	std::string strbuf = buf;
@@ -573,7 +574,7 @@ static FBDF_mapenc_error_et GetLyricsLine(
 }
 
 FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
+	tvec<FBDF_lyrics_mat_et> &lyrics, const char *file_path
 ) {
 	char buf[256] = "";
 	FILE *fp;
@@ -581,7 +582,7 @@ FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
 	FBDF_map_enc_t option;
 
 	lyrics.clear();
-	lyrics.push_back({FBDF_LYRICS_MAT_FREE, 0});
+	lyrics.push_back(0, FBDF_LYRICS_MAT_FREE);
 
 	fopen_s(&fp, file_path, "r");
 	if (fp == nullptr) { return FBDF_MAPENC_ERROR_FILE; }

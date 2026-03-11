@@ -71,14 +71,9 @@ typedef struct FBDF_note_s {
 	FBDF_note_motion_assign_et motion = FBDF_NOTE_MOTION_ASSIGN_NONE;
 } FBDF_note_t;
 
-typedef struct FBDF_mapenc_lyrics_s {
-	FBDF_lyrics_mat_et mat = FBDF_LYRICS_MAT_NONE;
-	uint time = 0;
-} FBDF_mapenc_lyrics_st;
-
 typedef struct FBDF_map_s {
-	cvec<FBDF_note_t>note;
-	cvec<FBDF_mapenc_lyrics_st> lyrics;
+	cvec<FBDF_note_t> note{2000};
+	tvec<FBDF_lyrics_mat_et> lyrics{2000};
 	std::string music_name;
 	std::string artist_name;
 	std::string map_file_name    = "map.txt";
@@ -98,5 +93,5 @@ extern FBDF_mapenc_error_et FBDF_MapLoadOne(
 	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
 );
 extern FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
+	tvec<FBDF_lyrics_mat_et> &lyrics, const char *file_path
 );
