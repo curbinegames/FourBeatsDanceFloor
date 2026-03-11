@@ -855,7 +855,7 @@ private: /* update系 */
 	}
 
 	/* 口のシェイプキーの更新 */
-	void UpdateMouthShape(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) const {
+	void UpdateMouthShape(cvec<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) const {
 		double now_blend = 1.0;
 		double nex_blend = 0.0;
 		FBDF_mapenc_lyrics_st now_data;
@@ -940,7 +940,7 @@ public: /* update系 */
 	 * @param[out] lyrics 歌詞/口パクデータ
 	 * @return なし
 	 */
-	void Update(datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
+	void Update(cvec<FBDF_mapenc_lyrics_st> &lyrics, int Ntime) {
 		/* missは自動解消されない */
 		if (0 <= this->len) {
 			/* long->idle */

@@ -10,6 +10,12 @@
 #include <datacur.h>
 #include <save.h>
 
+template <typename T>
+using cvec = datacur_cursor_vector<T>;
+
+template <typename T>
+using tvec = datacur_timeline_vector<T>;
+
 typedef enum FBDF_Play_note_button_e {
 	FBDF_PLAY_NOTE_BTN_NONE,
 	FBDF_PLAY_NOTE_BTN_1,
@@ -71,8 +77,8 @@ typedef struct FBDF_mapenc_lyrics_s {
 } FBDF_mapenc_lyrics_st;
 
 typedef struct FBDF_map_s {
-	datacur_cursor_vector<FBDF_note_t>note;
-	datacur_cursor_vector<FBDF_mapenc_lyrics_st> lyrics;
+	cvec<FBDF_note_t>note;
+	cvec<FBDF_mapenc_lyrics_st> lyrics;
 	std::string music_name;
 	std::string artist_name;
 	std::string map_file_name    = "map.txt";
@@ -92,5 +98,5 @@ extern FBDF_mapenc_error_et FBDF_MapLoadOne(
 	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
 );
 extern FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
+	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
 );

@@ -77,7 +77,7 @@ typedef struct FBDF_music_colorpat_count_s {
 } FBDF_music_colorpat_count_t;
 
 /* notes難易度を計算する */
-double FBDF_CalMapNotesDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
+double FBDF_CalMapNotesDif(const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
 	std::vector<uint> BasePointQueue;
 
@@ -115,7 +115,7 @@ double FBDF_CalMapNotesDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
 }
 
 /* color難易度を計算する */
-double FBDF_CalMapColorDif(const datacur_cursor_vector<FBDF_note_t> &notes) {
+double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes) {
 	const int point_stairLen =  2;
 	const int point_step_11  = 10;
 	const int point_step_13  = 12;

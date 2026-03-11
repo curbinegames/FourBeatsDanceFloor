@@ -484,7 +484,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 #if 1 /* 歌詞データ系 */
 
 static FBDF_mapenc_error_et GetLyricsBlock(
-	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, char const *buf, FBDF_map_enc_t &option
+	cvec<FBDF_mapenc_lyrics_st> &lyrics, char const *buf, FBDF_map_enc_t &option
 ) {
 	if (lyrics.isfull()) { /* 歌詞数が2000に達していたらこれ以上読み込まない */
 		FBDF_ErrorLogWrite("歌詞数が多すぎます!");
@@ -556,7 +556,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 }
 
 static FBDF_mapenc_error_et GetLyricsLine(
-	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *buf, FBDF_map_enc_t &option
+	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *buf, FBDF_map_enc_t &option
 ) {
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
 	std::string strbuf = buf;
@@ -573,7 +573,7 @@ static FBDF_mapenc_error_et GetLyricsLine(
 }
 
 FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	datacur_cursor_vector<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
+	cvec<FBDF_mapenc_lyrics_st> &lyrics, const char *file_path
 ) {
 	char buf[256] = "";
 	FILE *fp;
