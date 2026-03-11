@@ -87,6 +87,10 @@ public:
 		DrawGraph(x, y, this->pic.handle(), TRUE);
 	}
 
+	void clear(void) {
+		DeleteGraph(this->pic.handle());
+	}
+
 	void update(std::string folder_name, std::string image_name) {
 		std::string new_path = "music/";
 		new_path += folder_name;
@@ -719,6 +723,15 @@ static void FBDF_Select_ReloadMusicList(
 	}
 }
 
+static void FBDF_Select_UpdateJacket(FBDF_select_class_set_t &select_class, int cmd) {
+	if (FBDF_Select_OnAvailableMusicFolderNow(select_class)) {
+		select_class.jacket_viewer.update(select_class.music_list[cmd].folder_name, select_class.music_list[cmd].jucket_name);
+	}
+	else {
+		select_class.jacket_viewer.clear();
+	}
+}
+
 #endif /* フォルマネ関連 */
 
 #if 1 /* 譜面リスト読み込み系 */
@@ -808,6 +821,7 @@ static void FBDF_Select_DecideFolder(
 	else { /* サブフォルダである */
 		select_class.folder_manager.PushFolder(cmd);
 		FBDF_Select_ReloadMusicList(select_class, now_music, cmd, view_dif_type);
+		FBDF_Select_UpdateJacket(select_class, cmd);
 	}
 }
 
@@ -818,6 +832,7 @@ static void FBDF_Select_BackFolder(
 	if (select_class.folder_manager.PopFolder(poped_cmd)) {
 		FBDF_Select_MakeMusicList(select_class, view_dif_type);
 		cmd = poped_cmd;
+		FBDF_Select_UpdateJacket(select_class, cmd);
 	}
 }
 
@@ -834,6 +849,7 @@ static void FBDF_Select_KeyVert(
 	if (FBDF_Select_OnAvailableMusicFolderNow(select_class)) {
 		now_music = select_class.music_list[cmd].music_name;
 	}
+	FBDF_Select_UpdateJacket(select_class, cmd);
 }
 
 static void FBDF_Select_KeyHori(
@@ -843,6 +859,7 @@ static void FBDF_Select_KeyHori(
 	if (select_class.folder_manager.NowFolder()->name != "ALL MUSIC") { return; } /* TODO: どちらかというと、if(今いるフォルダーに難易度フィルターがあるかどうか) */
 	if (right) { ++view_dif_type; } else { --view_dif_type; }
 	FBDF_Select_ReloadMusicList(select_class, now_music, cmd, view_dif_type);
+	FBDF_Select_UpdateJacket(select_class, cmd);
 }
 
 /**
@@ -901,6 +918,7 @@ static void FBDF_Select_Draw(const FBDF_select_class_set_t &select_class, int cm
 		DrawFormatString(5, 105, 0xffffffff, _T("  acc: %6.2f%%"), musiclist[cmd].user_highscore.acc  );
 		DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(musiclist[cmd].user_highscore.clear_type).c_str());
 		DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
+		select_class.jacket_viewer.draw(50, 50);
 		FBDF_Select_DrawColorCount(5, WINDOW_SIZE_Y - 50, (musiclist[cmd].color_count));
 	}
 	select_class.view_string.DrawList(cmd);
@@ -932,6 +950,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	if (FBDF_Select_LoadMusicList(select_class.music_list) == false) { return VIEW_SELECT; }
 	select_class.folder_manager.ReadFile(command, view_dif_type);
 	FBDF_Select_MakeMusicList(select_class, view_dif_type);
+	FBDF_Select_UpdateJacket(select_class, command);
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
