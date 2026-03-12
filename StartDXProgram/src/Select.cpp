@@ -637,7 +637,7 @@ static void FBDF_Select_MapLoadMusicGetDetail(
 	buf.Length             = FBDF_CalMapLength(map);
 	buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
 	buf.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
-	buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(&map);
+	buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
 	buf.auto_cal_dif.all   = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
 	buf.user_dif           = map.user_level;
 	buf.map_file_name      = map.map_file_name;

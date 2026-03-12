@@ -260,15 +260,15 @@ double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes) {
 }
 
 /* trick“ïˆÕ“x‚ðŒvŽZ‚·‚é */
-double FBDF_CalMapTrickDif(const FBDF_map_t *map) {
+double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
 	std::vector<uint> BasePointQueue;
 
-	if (map->note.size() < 3) { return 0; }
+	if (notes.size() < 3) { return 0; }
 
-	for (uint i = 2; i < map->note.size(); i++) {
-		int FirstTime  = map->note[i].time     - map->note[i - 1].time;
-		int SecondTime = map->note[i - 1].time - map->note[i - 2].time;
+	for (uint i = 2; i < notes.size(); i++) {
+		int FirstTime  = notes[i].time     - notes[i - 1].time;
+		int SecondTime = notes[i - 1].time - notes[i - 2].time;
 		uint BasePoint;
 		float Gap = 0.0;
 
@@ -323,7 +323,7 @@ double FBDF_CalMapTrickDif(const FBDF_map_t *map) {
 
 #if 1
 		DxTime_t TimeGap = 0;
-		TimeGap = 2000 / maxs_2(1, map->note[i].time - map->note[i - 1].time);
+		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
 #endif
 		BasePointQueue.push_back(BasePoint);
