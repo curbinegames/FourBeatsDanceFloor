@@ -187,6 +187,7 @@ public:
  * @return view_num_t 次の画面
  */
 view_num_t FBDF_TitleView(void) {
+	/* TODO: 前半と後半に分ける */
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int STime = 0;
 	const int BPM = 150;
@@ -209,7 +210,7 @@ view_num_t FBDF_TitleView(void) {
 		WaitTimer(1000 / 30); // ループウェイト
 	}
 
-	loop_bgm.PlaySound(true);
+	loop_bgm.PlaySound(true); /* TODO: 順序もっと後では? */
 	STime = GetNowCount();
 
 	particle_pent.SetSize(

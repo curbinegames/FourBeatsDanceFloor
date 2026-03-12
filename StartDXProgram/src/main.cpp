@@ -39,6 +39,7 @@ static void GameMain(void) {
 			return;
 		}
 		if (GetWindowUserCloseFlag()) { // 閉じるボタンが押された
+			FBDF_LOG_INFO("ウィンドウのxボタンで終了しました。");
 			break;
 		}
 		WaitTimer(10); // ループウェイト
@@ -54,7 +55,10 @@ int WINAPI WinMain(DX_MAIN_DEF) {
 	SetWindowUserCloseEnableFlag(FALSE); // ×ボタンで勝手に閉じないようにする
 	SetMainWindowText(TOOL_NAME); // ウィンドウの名前
 	SetWindowSizeChangeEnableFlag(TRUE); // ウィンドウサイズを変えれるようにする
-	if (DxLib_Init() == -1) { return -1; } // エラーで中断
+	if (DxLib_Init() == -1) { /* エラーで中断 */
+		FBDF_LOG_EMERG("DXライブラリの初期化に失敗しました。");
+		return -1;
+	}
 	SetDrawScreen(DX_SCREEN_BACK); // 作画モード変更
 	
 	/* 3Dライト設定 */ {

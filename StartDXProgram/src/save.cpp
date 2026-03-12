@@ -154,12 +154,43 @@ bool FBDF_Save_WriteOption(const FBDF_game_option_st *src) {
     return true;
 }
 
+static std::string FBDF_LogEnumToStr(FBDF_log_level_et level) {
+    std::string ret;
+    switch (level) {
+	case FBDF_LOG_LEVEL_DEBUG:
+        ret = "DEBUG";
+        break;
+	case FBDF_LOG_LEVEL_INFO:
+        ret = "INFO";
+        break;
+	case FBDF_LOG_LEVEL_NOTICE:
+        ret = "NOTICE";
+        break;
+	case FBDF_LOG_LEVEL_WARN:
+        ret = "WARNING";
+        break;
+	case FBDF_LOG_LEVEL_ERROR:
+        ret = "ERROR";
+        break;
+	case FBDF_LOG_LEVEL_CRIT:
+        ret = "CRITICAL";
+        break;
+	case FBDF_LOG_LEVEL_ALERT:
+        ret = "ALERT";
+        break;
+	case FBDF_LOG_LEVEL_EMERG:
+        ret = "EMERGENCY";
+        break;
+    }
+    return ret;
+}
+
 /**
  * @brief エラーログを追記する。
  * @param[in] message 書き込むメッセージ。printf表記には対応してないので注意。事前にsprintf()とか使ってね。勝手に改行されるから、末尾に\nを入れる必要はないよ。
  * @return bool true=成功, false=失敗
  */
-bool FBDF_ErrorLogWrite(const char *message) {
+bool FBDF_ErrorLogWrite(FBDF_log_level_et level, const char *message) {
     if (message == nullptr) { return false; }
 
     int err_check = 0;
@@ -180,12 +211,13 @@ bool FBDF_ErrorLogWrite(const char *message) {
 
     /* ファイル操作エリア */ {
         /* 年は不要 */
-        err_check = fprintf(fp, "[%02d/%02d %02d:%02d:%02d] %s\n",
+        err_check = fprintf(fp, "[%02d/%02d %02d:%02d:%02d] <%s>: %s\n",
             Ntime.tm_mon + 1,
             Ntime.tm_mday,
             Ntime.tm_hour,
             Ntime.tm_min,
             Ntime.tm_sec,
+            FBDF_LogEnumToStr(level).c_str(),
             message
         );
         if (err_check < 0) {

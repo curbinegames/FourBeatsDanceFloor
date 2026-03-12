@@ -658,7 +658,10 @@ static bool FBDF_Select_LoadMusicList(FBDF_music_list_c &musiclist) {
 	DIR *dir;
 	struct dirent *dirs;
 	dir = opendir("music");
-	if (dir == NULL) { return false; }
+	if (dir == NULL) {
+		FBDF_LOG_EMERG("musicフォルダが見つかりません。");
+		return false;
+	}
 
 	while (1) {
 		dirs = readdir(dir);

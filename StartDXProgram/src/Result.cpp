@@ -234,7 +234,7 @@ view_num_t FirstResultView(const FBDF_result_data_t &data) {
 	if (FBDF_Result_SaveMusicScore(data) == false) {
 		std::string msg = data.music_name;
 		msg += ": スコアの保存に失敗しました。";
-		FBDF_ErrorLogWrite(msg.c_str());
+		FBDF_LOG_ALERT(msg.c_str());
 	}
 	return FBDF_Result_View(data);
 }

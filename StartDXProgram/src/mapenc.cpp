@@ -228,16 +228,16 @@ static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
  */
 static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_map_enc_t &option) {
 	if (map.note.isfull()) { /* ノーツ数が2000に達していたらこれ以上読み込まない */
-		FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
+		FBDF_LOG_ERROR("ノーツ数が多すぎます!");
 		return FBDF_MAPENC_ERROR_NOTE_FULL;
 	}
 	if (option.now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
-		FBDF_ErrorLogWrite("ブロック数に0を指定してノーツを読み込もうとしました。");
+		FBDF_LOG_ERROR("ブロック数に0を指定してノーツを読み込もうとしました。");
 		return FBDF_MAPENC_ERROR_OPTION;
 	}
 	for (size_t ic = 0; ic < option.now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
-			FBDF_ErrorLogWrite("ノーツに関係ない文字が混ざっています。");
+			FBDF_LOG_ERROR("ノーツに関係ない文字が混ざっています。");
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
@@ -271,7 +271,7 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 			map.note.push_back(buf_note);
 			map.Etime = buf_note.time;
 			if (map.note.isfull()) {
-				FBDF_ErrorLogWrite("ノーツ数が多すぎます!");
+				FBDF_LOG_ERROR("ノーツ数が多すぎます!");
 				return FBDF_MAPENC_ERROR_NOTE_FULL;
 			}
 		}
@@ -325,7 +325,7 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 	if (fp == NULL) {
 		std::string buf = "couldn't open file: ";
 		buf += musicPath;
-		FBDF_ErrorLogWrite(buf.c_str());
+		FBDF_LOG_ERROR(buf.c_str());
 		return FBDF_MAPENC_ERROR_FILE;
 	}
 
@@ -487,11 +487,11 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 	tvec<FBDF_lyrics_mat_et> &lyrics, char const *buf, FBDF_map_enc_t &option
 ) {
 	if (lyrics.isfull()) { /* 歌詞数が2000に達していたらこれ以上読み込まない */
-		FBDF_ErrorLogWrite("歌詞数が多すぎます!");
+		FBDF_LOG_ERROR("歌詞数が多すぎます!");
 		return FBDF_MAPENC_ERROR_NOTE_FULL;
 	}
 	if (option.now_block == 0) { /* ブロック数0とか意味わからんもの定義してないからダメ */
-		FBDF_ErrorLogWrite("ブロック数に0を指定してノーツを読み込もうとしました。");
+		FBDF_LOG_ERROR("ブロック数に0を指定してノーツを読み込もうとしました。");
 		return FBDF_MAPENC_ERROR_OPTION;
 	}
 	for (size_t ic = 0; ic < option.now_block; ic++) { /* 歌詞に関係しない文字が一個でもあったらダメ */
@@ -499,7 +499,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 			std::string log = "歌詞に関係ない文字が混ざっています。 (";
 			log += buf[ic];
 			log += ")";
-			FBDF_ErrorLogWrite(log.c_str());
+			FBDF_LOG_ERROR(log.c_str());
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
@@ -546,7 +546,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 			if (lyrics.lastData() != data_buf) { lyrics.push_back(time_buf, data_buf); }
 
 			if (lyrics.isfull()) {
-				FBDF_ErrorLogWrite("歌詞数が多すぎます!");
+				FBDF_LOG_ERROR("歌詞数が多すぎます!");
 				return FBDF_MAPENC_ERROR_NOTE_FULL;
 			}
 		}
