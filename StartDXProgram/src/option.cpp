@@ -500,9 +500,9 @@ void FBDF_Option_ReloadPic(void) {
     }
 }
 
-void FBDF_Option_KeyAction(int &cmd, bool &option_fg) {
-	InputAllKeyHold();
-    switch (GetKeyPushOnce()) {
+void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg) {
+    key.update();
+    switch (key.GetKeyPulseOnce()) {
     case KEY_INPUT_Z:
     case KEY_INPUT_BACK: /* ƒZƒŒƒNƒg‚É–ß‚é */
         option_fg = false;

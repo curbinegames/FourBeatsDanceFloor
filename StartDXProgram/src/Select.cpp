@@ -887,6 +887,7 @@ static void FBDF_Select_KeyHori(
 
 /**
  * @brief セレクト画面のキー入力を管理する
+ * @param[out] key キークラス
  * @param[out] select_class セレクトクラス
  * @param[out] now_misic 選択中の曲名
  * @param[out] command 今のカーソル位置
@@ -896,12 +897,14 @@ static void FBDF_Select_KeyHori(
  * @return なし
  */
 static void FBDF_Select_KeyCheck(
+	dxcur_key_c &key,
 	FBDF_select_list_set_c &list_set, std::string &now_music, int &command, bool &option_fg,
 	FBDF_dif_type_ec &view_dif_type, FBDF_cutin_c &cutin
 ) {
 	if (cutin.IsClosing()) { return; } /* カットイン中のときはキー入力無効 */
 
-	switch (GetKeyPushOnce(true)) {
+	key.update();
+	switch (key.GetKeyPulseOnce()) {
 	case KEY_INPUT_RETURN:
 		FBDF_Select_DecideFolder(list_set, now_music, command, view_dif_type, cutin);
 		break;
@@ -947,6 +950,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
 	std::string now_music;
 	FBDF_select_class_set_t select_class;
+	dxcur_key_c key;
 	FBDF_option_pic_st option_pic;
 	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る");
 	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
@@ -961,11 +965,11 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		if (option_fg) {
-			FBDF_Option_KeyAction(option_cmd, option_fg);
+			FBDF_Option_KeyAction(key, option_cmd, option_fg);
 		}
 		else {
 			FBDF_Select_KeyCheck(
-				select_class.list_set, now_music, command, option_fg, view_dif_type, cutin
+				key, select_class.list_set, now_music, command, option_fg, view_dif_type, cutin
 			);
 		}
 

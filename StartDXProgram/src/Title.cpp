@@ -196,6 +196,7 @@ view_num_t FBDF_TitleView(void) {
 	dxcur_pic_c ring_pic(_T("pic/white_ring.png"));
 	dxcur_snd_c intro_bgm(_T("SE/Midsummer Philosophy/intro.mp3"));
 	dxcur_snd_c loop_bgm(_T("SE/Midsummer Philosophy/loop.mp3"));
+	dxcur_key_c key;
 
 	particle_system_c particle_pent(_T("pic/titlePent.png"));
 	particle_system_c particle_dot(_T("pic/titleDot.png"));
@@ -228,8 +229,8 @@ view_num_t FBDF_TitleView(void) {
 	particle_dot.init();
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
-		InputAllKeyHold();
-		if (!cutin.IsClosing() && GetKeyHold(KEY_INPUT_RETURN)) { cutin.SetIo(CUT_FRAG_IN); }
+		key.update();
+		if (!cutin.IsClosing() && (key.GetKeyState(KEY_INPUT_RETURN) == 1)) { cutin.SetIo(CUT_FRAG_IN); }
 
 		particle_pent.SetSimTime(lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));
 		particle_dot.SetSimTime( lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));

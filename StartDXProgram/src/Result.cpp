@@ -157,13 +157,14 @@ static void FBDF_Result_DrawFinalBar(double acc) {
  * @return view_num_t éüÇÃâÊñ 
  */
 static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
-	int keybox[1] = { KEY_INPUT_RETURN };
-
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
+	dxcur_key_c key;
 	FBDF_result_scorerank_pic_c scorerank_pic(data.acc);
 	FBDF_result_chara_pic_c chara_pic;
 
-	while (!GetWindowUserCloseFlag() && (GetKeyPushOnce(true) != KEY_INPUT_RETURN)) {
+	while (!GetWindowUserCloseFlag()) {
+		key.update();
+		if (key.GetKeyState(KEY_INPUT_RETURN) == 1) { break; }
 		ClearDrawScreen(); // çÏâÊÉGÉäÉAÇ±Ç±Ç©ÇÁ
 		DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, back.handle(), TRUE);
 
