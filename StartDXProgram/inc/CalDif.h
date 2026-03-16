@@ -88,4 +88,4 @@ extern double FBDF_CalMapNotesDif(const cvec<FBDF_note_t> &notes);
 extern double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes);
 extern double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes);
 extern void FBDF_CalMapMostColorPat(FBDF_music_most_colorpat_t *mostpat, const FBDF_map_t *map);
-extern void FBDF_CountMapColor(FBDF_music_colorcount_t *count, const FBDF_map_t *map, uint Length);
+extern void FBDF_CountMapColor(FBDF_music_colorcount_t *count, const cvec<FBDF_note_t> &notes, uint Length);

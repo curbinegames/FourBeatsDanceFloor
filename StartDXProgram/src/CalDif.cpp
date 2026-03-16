@@ -349,18 +349,18 @@ double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 }
 
 /* カラーパターンを数える */
-static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_map_t *map) {
+static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
 	std::vector<uint> BasePointQueue;
 
-	if (map->note.size() < 3) { return; }
+	if (notes.size() < 3) { return; }
 
-	for (uint i = 2; i < map->note.size(); i++) {
-		switch (map->note[i - 2].btn) {
+	for (uint i = 2; i < notes.size(); i++) {
+		switch (notes[i - 2].btn) {
 		case 1:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 1:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat111++;
 					break;
@@ -376,7 +376,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 2:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat121++;
 					break;
@@ -392,7 +392,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 3:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat131++;
 					break;
@@ -408,7 +408,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 4:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat141++;
 					break;
@@ -426,9 +426,9 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 			}
 			break;
 		case 2:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 1:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat211++;
 					break;
@@ -444,7 +444,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 2:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat221++;
 					break;
@@ -460,7 +460,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 3:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat231++;
 					break;
@@ -476,7 +476,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 4:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat241++;
 					break;
@@ -494,9 +494,9 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 			}
 			break;
 		case 3:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 1:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat311++;
 					break;
@@ -512,7 +512,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 2:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat321++;
 					break;
@@ -528,7 +528,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 3:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat331++;
 					break;
@@ -544,7 +544,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 4:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat341++;
 					break;
@@ -562,9 +562,9 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 			}
 			break;
 		case 4:
-			switch (map->note[i - 1].btn) {
+			switch (notes[i - 1].btn) {
 			case 1:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat411++;
 					break;
@@ -580,7 +580,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 2:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat421++;
 					break;
@@ -596,7 +596,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 3:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat431++;
 					break;
@@ -612,7 +612,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 				}
 				break;
 			case 4:
-				switch (map->note[i].btn) {
+				switch (notes[i].btn) {
 				case 1:
 					pat->pat441++;
 					break;
@@ -638,7 +638,7 @@ static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const FBDF_m
 /* 頻出のカラーパターンを調べる */
 void FBDF_CalMapMostColorPat(FBDF_music_most_colorpat_t *mostpat, const FBDF_map_t *map) {
 	FBDF_music_colorpat_count_t pat;
-	FBDF_CountMapColorPat(&pat, map);
+	FBDF_CountMapColorPat(&pat, map->note);
 	for (int ip = 0; ip < 63; ip++) {
 		switch (ip) {
 
@@ -731,14 +731,13 @@ void FBDF_CalMapMostColorPat(FBDF_music_most_colorpat_t *mostpat, const FBDF_map
 }
 
 /* 色の出現頻度を数える */
-void FBDF_CountMapColor(FBDF_music_colorcount_t *count, const FBDF_map_t *map, uint Length) {
-	double ret = 0.0;
-	std::vector<uint> BasePointQueue;
+void FBDF_CountMapColor(
+	FBDF_music_colorcount_t *count, const cvec<FBDF_note_t> &notes, uint Length
+) {
+	if (notes.size() < 3) { return; }
 
-	if (map->note.size() < 3) { return; }
-
-	for (uint i = 0; i < map->note.size(); i++) {
-		switch (map->note[i].btn) {
+	for (uint i = 0; i < notes.size(); i++) {
+		switch (notes[i].btn) {
 		case 1:
 			count->c1++;
 			break;
