@@ -604,98 +604,6 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 	return map.note[map.note.size() - 2].time - map.note[0].time;
 }
 
-/**
- * @brief ファイル名から楽曲を読み込む
- * @param[out] detail 読み込んだリストの保存先
- * @param[in] d_name PCフォルダー名
- * @param[in] dif 難易度タイプ
- * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
- * @return なし
- */
-static void FBDF_Select_MapLoadMusicGetDetail(
-	std::vector<FBDF_music_detail_t> &detail, const char *d_name, FBDF_dif_type_ec dif
-) {
-	FBDF_mapenc_error_et ret;
-	FBDF_map_t map;
-	FBDF_music_detail_t buf;
-
-	ret = FBDF_MapLoadOne(map, d_name, dif);
-	if (ret != FBDF_MAPENC_ERROR_NONE) {
-		/* エラーメッセージか何かを残したい */
-		if (ret == FBDF_MAPENC_ERROR_FILE) {
-			return;
-		}
-		else {
-			/* 気にせずスルー */
-		}
-	}
-
-	buf.folder_name        = d_name;
-	buf.music_name         = map.music_name;
-	buf.artist             = map.artist_name;
-	buf.jucket_name        = map.jacket_file_name;
-	buf.Length             = FBDF_CalMapLength(map);
-	buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
-	buf.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
-	buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
-	buf.auto_cal_dif.all   = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
-	buf.user_dif           = map.user_level;
-	buf.map_file_name      = map.map_file_name;
-	buf.dif_type           = dif;
-	FBDF_CalMapMostColorPat(buf.most_colorpat, &map);
-	FBDF_CountMapColor(&buf.color_count, map.note, buf.Length);
-	FBDF_Save_ReadScoreOneDif(buf.user_highscore, d_name, dif);
-
-	detail.push_back(buf);
-}
-
-/**
- * @brief PCフォルダー内を調べて楽曲のリストを読み込む
- * @param[out] musiclist 譜面リスト
- * @return bool true=成功, false=失敗
- */
-static bool FBDF_Select_LoadMusicList(FBDF_music_list_c &musiclist) {
-	DIR *dir;
-	struct dirent *dirs;
-	dir = opendir("music");
-	if (dir == NULL) {
-		FBDF_LOG_EMERG("musicフォルダが見つかりません。");
-		return false;
-	}
-
-	while (1) {
-		dirs = readdir(dir);
-		if (dirs == NULL) { break; }
-		if (dirs->d_name[0] == '.') { continue; }
-		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::LIGHT );
-		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::NORMAL);
-		FBDF_Select_MapLoadMusicGetDetail(musiclist.detail, dirs->d_name, FBDF_dif_type_ec::HYPER );
-	}
-
-	closedir(dir);
-	return true;
-}
-
-static void FBDF_Select_DrawColorCount(int x, int y, const FBDF_music_colorcount_t &count) {
-	int Len = pals_scale(35, 300, 0, 0, count.c1);
-	int BaseY = y - 60;
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_1, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count.c2);
-	BaseY += 15;
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_2, TRUE);
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_2, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count.c3);
-	BaseY += 15;
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_3, TRUE);
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_3, FALSE);
-	Len = pals_scale(35, 300, 0, 0, count.c4);
-	BaseY += 15;
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_4, TRUE);
-	DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_4, FALSE);
-	return;
-}
-
 class FBDF_select_list_set_c {
 private:
 	FBDF_select_jacket_viewer_c jacket_viewer;
@@ -783,8 +691,75 @@ public:
 		this->folder_manager.WriteFile(cmd, view_def);
 	}
 
+	/**
+	 * @brief ファイル名から楽曲を読み込む
+	 * @param[out] detail 読み込んだリストの保存先
+	 * @param[in] d_name PCフォルダー名
+	 * @param[in] dif 難易度タイプ
+	 * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
+	 * @return なし
+	 */
+	void MapLoadMusicGetDetail(const char *d_name, FBDF_dif_type_ec dif) {
+		std::vector<FBDF_music_detail_t> &detail = this->music_list.detail;
+		FBDF_mapenc_error_et ret;
+		FBDF_map_t map;
+		FBDF_music_detail_t buf;
+
+		ret = FBDF_MapLoadOne(map, d_name, dif);
+		if (ret != FBDF_MAPENC_ERROR_NONE) {
+			/* エラーメッセージか何かを残したい */
+			if (ret == FBDF_MAPENC_ERROR_FILE) {
+				return;
+			}
+			else {
+				/* 気にせずスルー */
+			}
+		}
+
+		buf.folder_name        = d_name;
+		buf.music_name         = map.music_name;
+		buf.artist             = map.artist_name;
+		buf.jucket_name        = map.jacket_file_name;
+		buf.Length             = FBDF_CalMapLength(map);
+		buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
+		buf.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
+		buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
+		buf.auto_cal_dif.all   = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
+		buf.user_dif           = map.user_level;
+		buf.map_file_name      = map.map_file_name;
+		buf.dif_type           = dif;
+		FBDF_CalMapMostColorPat(buf.most_colorpat, &map);
+		FBDF_CountMapColor(&buf.color_count, map.note, buf.Length);
+		FBDF_Save_ReadScoreOneDif(buf.user_highscore, d_name, dif);
+
+		detail.push_back(buf);
+	}
+
+	/**
+	 * @brief PCフォルダー内を調べて楽曲のリストを読み込む
+	 * @return bool true=成功, false=失敗
+	 */
+	bool LoadMusicList(void) {
+		DIR *dir;
+		struct dirent *dirs;
+		dir = opendir("music");
+		if (dir == NULL) { return false; }
+
+		while (1) {
+			dirs = readdir(dir);
+			if (dirs == NULL) { break; }
+			if (dirs->d_name[0] == '.') { continue; }
+			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::LIGHT );
+			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::NORMAL);
+			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::HYPER );
+		}
+
+		closedir(dir);
+		return true;
+	}
+
 	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
-		if (FBDF_Select_LoadMusicList(this->music_list) == false) { return false; }
+		if (this->LoadMusicList() == false) { return false; }
 		this->folder_manager.ReadFile(cmd, view_def);
 		this->MakeMusicList(view_def);
 		this->UpdateJacket(cmd);
@@ -800,6 +775,30 @@ public:
 		}
 	}
 
+#if 1 /* draw系 */
+private:
+	void DrawColorCount(int x, int y, int cmd) const {
+		const FBDF_music_colorcount_t &count = this->music_list[cmd].color_count;
+		int Len = pals_scale(35, 300, 0, 0, count.c1);
+		int BaseY = y - 60;
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_1, FALSE);
+		Len = pals_scale(35, 300, 0, 0, count.c2);
+		BaseY += 15;
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_2, TRUE);
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_2, FALSE);
+		Len = pals_scale(35, 300, 0, 0, count.c3);
+		BaseY += 15;
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_3, TRUE);
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_3, FALSE);
+		Len = pals_scale(35, 300, 0, 0, count.c4);
+		BaseY += 15;
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_4, TRUE);
+		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_4, FALSE);
+		return;
+	}
+
+public:
 	void Draw(int cmd) const {
 		if (this->OnAvailableMusicFolderNow()) {
 			DrawFormatString(5,   5, 0xffffffff, _T("notes: %3.2f"),   this->music_list[cmd].auto_cal_dif.notes  );
@@ -811,10 +810,11 @@ public:
 			DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str());
 			DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
 			this->jacket_viewer.draw(50, 50);
-			FBDF_Select_DrawColorCount(5, WINDOW_SIZE_Y - 50, (this->music_list[cmd].color_count));
+			this->DrawColorCount(5, WINDOW_SIZE_Y - 50, cmd);
 		}
 		this->view_string.DrawList(cmd);
 	}
+#endif /* draw系 */
 
 	bool IsAllFolder(void) const {
 		return this->folder_manager.NowFolder()->name == "ALL MUSIC";
