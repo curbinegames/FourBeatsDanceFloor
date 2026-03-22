@@ -186,6 +186,10 @@ public: /* ”Ô’nŒŸõŒn */
 	const FBDF_music_detail_t& at(int n) const {
 		return this->detail[sort[n]];
 	}
+
+	size_t size(void) const {
+		return this->detail.size();
+	}
 };
 
 class FBDF_select_view_string_c {
@@ -960,6 +964,13 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	FBDF_Option_ReloadPic();
 	if (select_class.list_set.Init(command, view_dif_type) == false) { return VIEW_SELECT; }
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+	{
+		std::string log = "“Ç‚Ýž‚ñ‚¾•ˆ–Ê”: ";
+		log += std::to_string(select_class.list_set.music_list.size());
+		FBDF_LOG_INFO(log.c_str());
+	}
+#endif
 	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 

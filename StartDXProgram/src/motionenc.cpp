@@ -5,6 +5,7 @@
 #include <strcur.h>
 #include <dxcur.h>
 
+#include <save.h>
 #include <system.h>
 
 #include <motionenc.h>
@@ -19,6 +20,7 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 	char buf[256];
 
 	FBDF_Play_motion_st motion_buf;
+	FBDF_Play_motion_type_st assign_check;
 
     std::string folder_path = "dancer/";
     folder_path += folder_name;
@@ -83,45 +85,59 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 				switch (buf[0]) {
 				case 'u':
 					insert_buf.up = true;
+					assign_check.up = true;
 					break;
 				case 'd':
 					insert_buf.down = true;
+					assign_check.down = true;
 					break;
 				case 'l':
 					insert_buf.left = true;
+					assign_check.left = true;
 					break;
 				case 'r':
 					insert_buf.right = true;
+					assign_check.right = true;
 					break;
 				case 'f':
 					insert_buf.front = true;
+					assign_check.front = true;
 					break;
 				case 'b':
 					insert_buf.back = true;
+					assign_check.back = true;
 					break;
 				case 'j':
 					insert_buf.jump = true;
+					assign_check.jump = true;
 					break;
 				case 'c':
 					insert_buf.clap = true;
+					assign_check.clap = true;
 					break;
 				case 't':
 					insert_buf.turn = true;
+					assign_check.turn = true;
 					break;
 				case '1':
 					insert_buf.n1 = true;
+					assign_check.n1 = true;
 					break;
 				case '2':
 					insert_buf.n2 = true;
+					assign_check.n2 = true;
 					break;
 				case '3':
 					insert_buf.n3 = true;
+					assign_check.n3 = true;
 					break;
 				case '4':
 					insert_buf.n4 = true;
+					assign_check.n4 = true;
 					break;
 				case 'v':
 					insert_buf.vpose = true;
+					assign_check.vpose = true;
 					break;
 				}
 				strmods(buf, 1);
@@ -188,6 +204,23 @@ int FBDF_DancerMotionEnc(std::vector<FBDF_Play_motion_st> &motion, const char *f
 		}
 	}
 	fclose(fp);
+
+#if (FBDF_LOG_LEVEL_DEF <= 3)
+	if (!assign_check.up   ) { FBDF_LOG_WARN("upモーションが定義されていません。"); }
+	if (!assign_check.down ) { FBDF_LOG_WARN("downモーションが定義されていません。"); }
+	if (!assign_check.left ) { FBDF_LOG_WARN("leftモーションが定義されていません。"); }
+	if (!assign_check.right) { FBDF_LOG_WARN("rightモーションが定義されていません。"); }
+	if (!assign_check.front) { FBDF_LOG_WARN("frontモーションが定義されていません。"); }
+	if (!assign_check.back ) { FBDF_LOG_WARN("backモーションが定義されていません。"); }
+	if (!assign_check.jump ) { FBDF_LOG_WARN("jumpモーションが定義されていません。"); }
+	if (!assign_check.clap ) { FBDF_LOG_WARN("clapモーションが定義されていません。"); }
+	if (!assign_check.turn ) { FBDF_LOG_WARN("turnモーションが定義されていません。"); }
+	if (!assign_check.n1   ) { FBDF_LOG_WARN("1モーションが定義されていません。"); }
+	if (!assign_check.n2   ) { FBDF_LOG_WARN("2モーションが定義されていません。"); }
+	if (!assign_check.n3   ) { FBDF_LOG_WARN("3モーションが定義されていません。"); }
+	if (!assign_check.n4   ) { FBDF_LOG_WARN("4モーションが定義されていません。"); }
+	if (!assign_check.vpose) { FBDF_LOG_WARN("vposeモーションが定義されていません。"); }
+#endif
 
 	return 0;
 }

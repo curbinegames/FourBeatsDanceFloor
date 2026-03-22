@@ -387,6 +387,14 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 		map.note.push_back(buf_note);
 	}
 
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+	{
+		std::string log = "ノーツ数: ";
+		log += std::to_string(map.note.size());
+		FBDF_LOG_INFO(log.c_str());
+	}
+#endif
+
 	return err;
 }
 
