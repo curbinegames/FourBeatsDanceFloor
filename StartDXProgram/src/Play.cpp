@@ -52,13 +52,73 @@ typedef enum FBDF_dancer_state_e {
 
 #if 1 /* struct */
 
-typedef struct FBDF_push_key_s {
+class FBDF_push_key_c {
+public:
 	int D = 0;
 	int F = 0;
 	int J = 0;
 	int K = 0;
 	int alltap = 0;
-} FBDF_push_key_st;
+
+private:
+	void update_key_auto(const FBDF_map_t &map) {
+		this->D = (IS_BETWEEN(1, this->D, 5)) ? (this->D + 1) : (0);
+		this->F = (IS_BETWEEN(1, this->F, 5)) ? (this->F + 1) : (0);
+		this->J = (IS_BETWEEN(1, this->J, 5)) ? (this->J + 1) : (0);
+		this->K = (IS_BETWEEN(1, this->K, 5)) ? (this->K + 1) : (0);
+
+		if (map.note.nowData().time <= 8 + map.Ntime) {
+			switch (map.note.nowData().btn) {
+			case FBDF_PLAY_NOTE_BTN_1:
+				this->D = 1;
+				this->F = 0;
+				this->J = 0;
+				this->K = 0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_2:
+				this->D = 0;
+				this->F = 1;
+				this->J = 0;
+				this->K = 0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_3:
+				this->D = 0;
+				this->F = 0;
+				this->J = 1;
+				this->K = 0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_4:
+				this->D = 0;
+				this->F = 0;
+				this->J = 0;
+				this->K = 1;
+				break;
+			}
+		}
+	}
+
+	void update_key_manual(void) {
+		this->D = (CheckHitKey(KEY_INPUT_D) == 1) ? (this->D + 1) : (0);
+		this->F = (CheckHitKey(KEY_INPUT_F) == 1) ? (this->F + 1) : (0);
+		this->J = (CheckHitKey(KEY_INPUT_J) == 1) ? (this->J + 1) : (0);
+		this->K = (CheckHitKey(KEY_INPUT_K) == 1) ? (this->K + 1) : (0);
+	}
+
+	void update_alltap(void) {
+		this->alltap = 0;
+		this->alltap += (this->D == 1);
+		this->alltap += (this->F == 1);
+		this->alltap += (this->J == 1);
+		this->alltap += (this->K == 1);
+	}
+
+public:
+	void update(const FBDF_map_t &map, bool auto_fg) {
+		if (auto_fg) { this->update_key_auto(map); }
+		else { this->update_key_manual(); }
+		this->update_alltap();
+	}
+};
 
 typedef struct FBDF_score_s {
 	uint crit  = 0;
@@ -292,25 +352,6 @@ public: /* コンストラクタ系 */
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
-#if (FBDF_LOG_LEVEL_DEF <= 1)
-		{
-			int anim_num = MV1GetAnimNum(this->n3Dmodel_handle);
-			std::string log_str = "";
-			for (int inum = 0; inum < anim_num; inum++) {
-				log_str  = "検出したアニメ[";
-				log_str += ('0' + inum);
-				log_str += "]: ";
-				log_str += MV1GetAnimName(this->n3Dmodel_handle, inum);
-				FBDF_LOG_INFO(log_str.c_str());
-			}
-		}
-		{
-			int shape_num = MV1GetShapeNum(this->n3Dmodel_handle);
-			std::string log_str = "検出したシェイプキーの数: ";
-			log_str += std::to_string(shape_num);
-			FBDF_LOG_INFO(log_str.c_str());
-		}
-#endif
 #endif /* 3Dモデル */
 	}
 
@@ -1582,7 +1623,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
  */
 static void FBDF_Play_NoteJudge(
 	FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map,
-	const FBDF_push_key_st &pkey, const FBDT_hit_snd_t &se)
+	const FBDF_push_key_c &pkey, const FBDT_hit_snd_t &se)
 {
 	std::queue<FBDF_judge_event_st>judge_event;
 	FBDF_judge_event_st buf;
@@ -1734,85 +1775,36 @@ static void FBDF_Play_Loadmusic(dxcur_snd_c &dest, const TCHAR *folder_name, con
 }
 
 /**
- * @brief キー入力関係
- * @param[out] pkey キー入力情報
+ * @brief 途中終了判定
  * @param[out] play_class プレイクラス、クローズが押された時の処理用
  * @param[out] score スコア、クローズが押された時の処理用
  * @param[out] map マップデータ、クローズが押された時とオートプレイ時のキー判定用
- * @param[in] auto_fg オートフラグ、trueならオートプレイ用の処理になる
  * @param[out] cutin カットインクラス、クローズが押された時の判定と処理用
  * @return なし
  */
-static void FBDF_Play_KeyCheck(
-	FBDF_push_key_st &pkey, FBDF_play_class_set_t &play_class,
-	FBDF_score_st &score, FBDF_map_t &map, bool auto_fg, FBDF_cutin_c &cutin
+static void FBDF_Play_CheckStop(
+	FBDF_play_class_set_t &play_class,
+	FBDF_score_st &score, FBDF_map_t &map, FBDF_cutin_c &cutin
 ) {
 	if (!cutin.IsClosing() && (CheckHitKey(KEY_INPUT_ESCAPE) == 1)) {
 		FBDF_Play_NoteTrash(play_class, score, map);
 		play_class.score_bar_class.fill_graph_force();
 		cutin.SetIo(CUT_FRAG_IN);
 	}
-
-	if (auto_fg) {
-		pkey.D = (IS_BETWEEN(1, pkey.D, 5)) ? (pkey.D + 1) : (0);
-		pkey.F = (IS_BETWEEN(1, pkey.F, 5)) ? (pkey.F + 1) : (0);
-		pkey.J = (IS_BETWEEN(1, pkey.J, 5)) ? (pkey.J + 1) : (0);
-		pkey.K = (IS_BETWEEN(1, pkey.K, 5)) ? (pkey.K + 1) : (0);
-
-		if (map.note.nowData().time <= 8 + map.Ntime) {
-			switch (map.note.nowData().btn) {
-			case FBDF_PLAY_NOTE_BTN_1:
-				pkey.D = 1;
-				pkey.F = 0;
-				pkey.J = 0;
-				pkey.K = 0;
-				break;
-			case FBDF_PLAY_NOTE_BTN_2:
-				pkey.D = 0;
-				pkey.F = 1;
-				pkey.J = 0;
-				pkey.K = 0;
-				break;
-			case FBDF_PLAY_NOTE_BTN_3:
-				pkey.D = 0;
-				pkey.F = 0;
-				pkey.J = 1;
-				pkey.K = 0;
-				break;
-			case FBDF_PLAY_NOTE_BTN_4:
-				pkey.D = 0;
-				pkey.F = 0;
-				pkey.J = 0;
-				pkey.K = 1;
-				break;
-			}
-		}
-	}
-	else {
-		pkey.D = (CheckHitKey(KEY_INPUT_D) == 1) ? (pkey.D + 1) : (0);
-		pkey.F = (CheckHitKey(KEY_INPUT_F) == 1) ? (pkey.F + 1) : (0);
-		pkey.J = (CheckHitKey(KEY_INPUT_J) == 1) ? (pkey.J + 1) : (0);
-		pkey.K = (CheckHitKey(KEY_INPUT_K) == 1) ? (pkey.K + 1) : (0);
-	}
-
-	pkey.alltap = 0;
-	pkey.alltap += (pkey.D == 1);
-	pkey.alltap += (pkey.F == 1);
-	pkey.alltap += (pkey.J == 1);
-	pkey.alltap += (pkey.K == 1);
 	return;
 }
 
 static void FBDF_Play_AllUpdate(
 	FBDF_play_class_set_t &play_class, FBDF_score_st &score, FBDF_map_t &map,
-	FBDF_push_key_st &pkey, DxTime_t &FinishTime, FBDF_cutin_c &cutin,
+	FBDF_push_key_c &pkey, DxTime_t &FinishTime, FBDF_cutin_c &cutin,
 	DxSnd_t music_hand, FBDT_hit_snd_t &se
 ) {
 	/* 時間更新 */
 	map.Ntime = GetNowCount() - map.Stime;
 	map.lyrics.stepNoTime(map.Ntime);
 
-	FBDF_Play_KeyCheck(pkey, play_class, score, map, game_option.auto_en, cutin);
+	FBDF_Play_CheckStop(play_class, score, map, cutin);
+	pkey.update(map, game_option.auto_en);
 
 	/* ノーツ全処理判定 */
 	if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
@@ -1837,7 +1829,7 @@ static void FBDF_Play_AllUpdate(
  * @param[in] pkey キー入力情報
  * @return なし
  */
-static void FBDF_PlayDrawLamp(const FBDF_push_key_st &pkey) {
+static void FBDF_PlayDrawLamp(const FBDF_push_key_c &pkey) {
 	/* TODO: 画像にしたい。 */
 	static const int baseX = lins(0, 0, 960, 165, WINDOW_SIZE_X);
 	static const int baseY = lins(0, 0, 720, 575, WINDOW_SIZE_Y);
@@ -1890,7 +1882,7 @@ static void FBDF_Play_DrawScore(int x, int y, const FBDF_score_st &score) {
  */
 static void FBDF_Play_AllDraw(
 	const FBDF_play_class_set_t &play_class, const FBDF_score_st &score,
-	const FBDF_map_t &map, const FBDF_push_key_st &pkey,
+	const FBDF_map_t &map, const FBDF_push_key_c &pkey,
 	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic,
 	const char *music_name)
 {
@@ -1960,7 +1952,7 @@ static void FBDF_Play_AllDraw(
 view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose_music_st &nex_music) {
 	FBDF_map_t map;
 	FBDF_score_st score;
-	FBDF_push_key_st pkey;
+	FBDF_push_key_c pkey;
 
 	FBDF_play_class_set_t play_class;
 	FBDF_cutin_c cutin;
