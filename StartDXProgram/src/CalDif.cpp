@@ -6,6 +6,8 @@
 
 #include <CalDif.h>
 
+#define DDIF_MLP 0.99
+
 /* numがtarget±gap以内であればtrueを返すdefine */
 #define IS_NEAR_NUM(num, target, gap) (((target) - (gap)) <= (num) && (num) <= ((target) + (gap)))
 
@@ -79,7 +81,7 @@ typedef struct FBDF_music_colorpat_count_s {
 /* notes難易度を計算する */
 double FBDF_CalMapNotesDif(const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
-	std::vector<uint> BasePointQueue;
+	double NowPoint = 0.0;
 
 	if (notes.size() < 3) { return 0; }
 
@@ -92,24 +94,11 @@ double FBDF_CalMapNotesDif(const cvec<FBDF_note_t> &notes) {
 		DxTime_t TimeGap = 0;
 		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
-		BasePointQueue.push_back(BasePoint);
-		if (50 <= BasePointQueue.size()) {
-			BasePointQueue.erase(BasePointQueue.begin());
-		}
 
-		double NowDif = 0.0;
-		double mlp = 100.0;
-		for (int iq = BasePointQueue.size() - 1; 0 <= iq; iq--) {
-			NowDif += BasePointQueue[iq] * mlp;
-			mlp *= 0.95;
-		}
-
-		if (ret < NowDif) {
-			ret = NowDif;
-		}
+		NowPoint *= DDIF_MLP;
+		NowPoint += BasePoint;
+		if (ret < NowPoint) { ret = NowPoint; }
 	}
-
-	ret = lins(110000, 1, 310000, 10, ret);
 
 	return ret;
 }
@@ -133,7 +122,7 @@ double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes) {
 	const int point_stair4   = 40;
 
 	double ret = 0.0;
-	std::vector<uint> BasePointQueue;
+	double NowPoint = 0.0;
 
 	if (notes.size() < 3) { return 0; }
 
@@ -237,24 +226,10 @@ double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes) {
 		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
 #endif
-		BasePointQueue.push_back(BasePoint);
-		if (50 <= BasePointQueue.size()) {
-			BasePointQueue.erase(BasePointQueue.begin());
-		}
-
-		double NowDif = 0.0;
-		double mlp = 100.0;
-		for (int iq = BasePointQueue.size() - 1; 0 <= iq; iq--) {
-			NowDif += BasePointQueue[iq] * mlp;
-			mlp *= 0.95;
-		}
-
-		if (ret < NowDif) {
-			ret = NowDif;
-		}
+		NowPoint *= DDIF_MLP;
+		NowPoint += BasePoint;
+		if (ret < NowPoint) { ret = NowPoint; }
 	}
-
-	ret = lins(130000, 1, 570000, 8, ret);
 
 	return ret;
 }
@@ -262,7 +237,7 @@ double FBDF_CalMapColorDif(const cvec<FBDF_note_t> &notes) {
 /* trick難易度を計算する */
 double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
-	std::vector<uint> BasePointQueue;
+	double NowPoint = 0.0;
 
 	if (notes.size() < 3) { return 0; }
 
@@ -326,24 +301,10 @@ double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
 		BasePoint *= TimeGap;
 #endif
-		BasePointQueue.push_back(BasePoint);
-		if (50 <= BasePointQueue.size()) {
-			BasePointQueue.erase(BasePointQueue.begin());
-		}
-
-		double NowDif = 0.0;
-		double mlp = 100.0;
-		for (int iq = BasePointQueue.size() - 1; 0 <= iq; iq--) {
-			NowDif += BasePointQueue[iq] * mlp;
-			mlp *= 0.95;
-		}
-
-		if (ret < NowDif) {
-			ret = NowDif;
-		}
+		NowPoint *= DDIF_MLP;
+		NowPoint += BasePoint;
+		if (ret < NowPoint) { ret = NowPoint; }
 	}
-
-	ret = lins(86000, 1, 240000, 8, ret);
 
 	return ret;
 }
@@ -351,7 +312,6 @@ double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 /* カラーパターンを数える */
 static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;
-	std::vector<uint> BasePointQueue;
 
 	if (notes.size() < 3) { return; }
 

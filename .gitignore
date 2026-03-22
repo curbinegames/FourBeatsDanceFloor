@@ -8,6 +8,7 @@ FBDF_errorlog.txt
 *.dll
 *.mp3
 *.mp4
+*.mv1
 *.pmx
 *.vcxproj
 *.vcxproj.filters
