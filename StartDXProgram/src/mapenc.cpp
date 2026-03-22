@@ -582,17 +582,22 @@ static FBDF_mapenc_error_et GetLyricsLine(
 }
 
 FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	tvec<FBDF_lyrics_mat_et> &lyrics, const char *file_path
+	tvec<FBDF_lyrics_mat_et> &lyrics, const char *folder_name
 ) {
 	char buf[256] = "";
 	FILE *fp;
+	std::string file_path;
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
 	FBDF_map_enc_t option;
 
 	lyrics.clear();
 	lyrics.push_back(0, FBDF_LYRICS_MAT_FREE);
 
-	fopen_s(&fp, file_path, "r");
+	file_path  = "music/";
+	file_path += folder_name;
+	file_path += "/lyrics.txt";
+	fopen_s(&fp, file_path.c_str(), "r");
+
 	if (fp == nullptr) { return FBDF_MAPENC_ERROR_FILE; }
 	
 	while (fgets(buf, 256, fp) != NULL) {

@@ -93,5 +93,5 @@ extern FBDF_mapenc_error_et FBDF_MapLoadOne(
 	FBDF_map_t &map, const char *folder_name, FBDF_dif_type_ec dif_type
 );
 extern FBDF_mapenc_error_et FBDF_Mapenc_LyricsEnc(
-	tvec<FBDF_lyrics_mat_et> &lyrics, const char *file_path
+	tvec<FBDF_lyrics_mat_et> &lyrics, const char *folder_name
 );

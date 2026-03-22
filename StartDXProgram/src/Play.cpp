@@ -1971,11 +1971,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	play_class.score_bar_class.set_time(map.offset, map.Etime);
 	play_class.dancer_class.SetBpm(map.bpm);
 	
-	std::string lyrics_path = "music/";
-	lyrics_path += nex_music.folder_name;
-	lyrics_path += '/';
-	lyrics_path += "lyrics.txt";
-	FBDF_Mapenc_LyricsEnc(map.lyrics, lyrics_path.c_str());
+	FBDF_Mapenc_LyricsEnc(map.lyrics, nex_music.folder_name.c_str());
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 

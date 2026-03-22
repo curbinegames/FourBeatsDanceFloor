@@ -15,6 +15,7 @@ typedef struct FBDF_Play_motion_len_s {
 	bool n8 = false;
 } FBDF_Play_motion_len_st;
 
+/* TODO: goodƒ‚[ƒVƒ‡ƒ“—~‚µ‚¢ */
 typedef struct FBDF_Play_motion_type_s {
 	bool up = false; /* •ûŒüŠÖ˜A‚Í2ŒÂˆÈã“¯‚Étrue‚É‚È‚ç‚È‚¢‚©‚à */
 	bool down = false;
