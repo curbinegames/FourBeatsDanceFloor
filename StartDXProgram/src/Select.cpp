@@ -52,9 +52,11 @@ typedef struct FBDF_music_detail_s {
 	std::string folder_name;
 	std::string map_file_name;
 	std::string music_name;
+	std::string music_file_name;
 	std::string artist;
 	std::string jucket_name;
 	uint Length = 0;
+	uint pre_time = 10000;
 	FBDF_music_dif_t auto_cal_dif;
 	int user_dif = 0;
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::LIGHT;
@@ -602,6 +604,107 @@ public:
 
 #endif /* 曲フォルダ―関連 */
 
+class FBDF_select_bgm_c {
+private:
+	const int sample_rate = 44100;
+	bool preview_now = false;
+	int base_Stime = 0;
+	int preview_Stime = 0;
+	int now_volume = 255;
+	std::string now_preview_path = "";
+
+	int reserve_settime = 0;
+	int reserve_starttime = 0;
+	std::string reserve_preview_path = "";
+
+	dxcur_snd_c base_snd{_T("SE/Starlights.mp3")};
+	dxcur_snd_c preview_snd;
+
+	void SetPreview(const TCHAR *path, int msec) {
+		if (this->now_preview_path == path) { return; }
+
+		StopSoundMem(this->preview_snd.handle());
+		preview_snd.reload(path);
+		if (preview_snd.handle() == DXLIB_SND_NULL) { return; }
+		this->now_preview_path = path;
+
+		StopSoundMem(this->base_snd.handle());
+		SetCurrentPositionSoundMem(msec / 1000.0 * this->sample_rate, this->preview_snd.handle());
+		PlaySoundMem(this->preview_snd.handle(), DX_PLAYTYPE_BACK, FALSE);
+		preview_now = true;
+		preview_Stime = GetNowCount();
+	}
+
+public:
+	/* 最初に呼ぶ */
+	void init(void) {
+		PlaySoundMem(this->base_snd.handle(), DX_PLAYTYPE_LOOP, TRUE);
+	}
+
+	/* 曲を選択したとき呼ぶ */
+	void ReservePreview(const TCHAR *path, int msec) {
+		this->reserve_settime = GetNowCount();
+		this->reserve_preview_path = path;
+		this->reserve_starttime = msec;
+	}
+
+	/* 曲無しフォルダに移動したとき呼ぶ */
+	void ReserveErase(void) {
+		this->reserve_preview_path = "";
+	}
+
+	/* 毎フレーム呼ぶ */
+	void update(void) {
+		int Ntime = GetNowCount() - reserve_settime;
+		if (reserve_preview_path != "" && 500 <= Ntime) {
+			SetPreview(this->reserve_preview_path.c_str(), this->reserve_starttime);
+			reserve_preview_path = "";
+		}
+		if (!preview_now) {
+			Ntime = GetNowCount() - this->base_Stime;
+			if (Ntime < 500) {
+				this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
+				ChangeVolumeSoundMem(this->now_volume, this->base_snd.handle());
+			}
+			else {
+				if (this->now_volume != 255) {
+					ChangeVolumeSoundMem(255, this->base_snd.handle());
+					this->now_volume = 255;
+				}
+			}
+		}
+		else {
+			Ntime = GetNowCount() - preview_Stime;
+			if (IS_BETWEEN_RIGHT_LESS(0, Ntime, 500)) {
+				this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
+				ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
+			}
+			else if (IS_BETWEEN(500, Ntime, 14500)) {
+				if (this->now_volume != 255) {
+					ChangeVolumeSoundMem(255, this->preview_snd.handle());
+					this->now_volume = 255;
+				}
+			}
+			else if (IS_BETWEEN_LESS(14500, Ntime, 15000)) {
+				this->now_volume = lins_scale(14500, 255, 15000, 0, Ntime);
+				ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
+			}
+			else if (15000 <= Ntime) {
+				StopSoundMem(this->preview_snd.handle());
+				this->now_volume = 0;
+				preview_now = false;
+				SetCurrentPositionSoundMem(
+					(GetRand(20000) + 20000) / 1000.0 * this->sample_rate,
+					this->preview_snd.handle()
+				);
+				ChangeVolumeSoundMem(0, this->base_snd.handle());
+				PlaySoundMem(this->base_snd.handle(), DX_PLAYTYPE_LOOP, FALSE);
+				this->base_Stime = GetNowCount();
+			}
+		}
+	}
+};
+
 /* 譜面の長さを計算する */
 static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 	if (map.note.size() < 3) { return 0; }
@@ -627,6 +730,8 @@ public:
 	FBDF_music_list_c music_list;
 	FBDF_select_view_string_c view_string;
 	FBDF_Select_MusicFolderManager_c folder_manager;
+	FBDF_select_bgm_c bgm;
+	dxcur_snd_c se{ "SE/select.mp3" };
 
 	/**
 	 * @brief 絞り込み/並び替え条件から譜面リストを作る
@@ -722,9 +827,11 @@ public:
 
 		buf.folder_name        = d_name;
 		buf.music_name         = map.music_name;
+		buf.music_file_name    = map.music_file_name;
 		buf.artist             = map.artist_name;
 		buf.jucket_name        = map.jacket_file_name;
 		buf.Length             = FBDF_CalMapLength(map);
+		buf.pre_time           = map.pre_time;
 		buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
 		buf.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
 		buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
@@ -767,6 +874,7 @@ public:
 		this->folder_manager.ReadFile(cmd, view_def);
 		this->MakeMusicList(view_def);
 		this->UpdateJacket(cmd);
+		this->bgm.init();
 		return true;
 	}
 
@@ -849,6 +957,14 @@ static void FBDF_Select_DecideFolder(
 		list_set.folder_manager.PushFolder(cmd);
 		list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 		list_set.UpdateJacket(cmd);
+		if (list_set.OnAvailableMusicFolderNow()) {
+			std::string full_path = "music/";
+			full_path += list_set.music_list[cmd].folder_name;
+			full_path += '/';
+			full_path += list_set.music_list[cmd].music_file_name;
+			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
+		}
+		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 	}
 }
 
@@ -860,6 +976,8 @@ static void FBDF_Select_BackFolder(
 		list_set.MakeMusicList(view_dif_type);
 		cmd = poped_cmd;
 		list_set.UpdateJacket(cmd);
+		list_set.bgm.ReserveErase();
+		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 	}
 }
 
@@ -875,8 +993,16 @@ static void FBDF_Select_KeyVert(
 	}
 	if (list_set.OnAvailableMusicFolderNow()) {
 		now_music = list_set.music_list[cmd].music_name;
+		{
+			std::string full_path = "music/";
+			full_path += list_set.music_list[cmd].folder_name;
+			full_path += '/';
+			full_path += list_set.music_list[cmd].music_file_name;
+			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
+		}
 	}
 	list_set.UpdateJacket(cmd);
+	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 }
 
 static void FBDF_Select_KeyHori(
@@ -887,6 +1013,14 @@ static void FBDF_Select_KeyHori(
 	if (right) { ++view_dif_type; } else { --view_dif_type; }
 	list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 	list_set.UpdateJacket(cmd);
+	if (list_set.OnAvailableMusicFolderNow()) {
+		std::string full_path = "music/";
+		full_path += list_set.music_list[cmd].folder_name;
+		full_path += '/';
+		full_path += list_set.music_list[cmd].music_file_name;
+		list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
+	}
+	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 }
 
 /**
@@ -957,7 +1091,6 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	dxcur_key_c key;
 	FBDF_option_pic_st option_pic;
 	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る");
-	dxcur_snd_c backsnd(_T("SE/Starlights.mp3"));
 	FBDF_cutin_c cutin;
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
@@ -971,12 +1104,11 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 		FBDF_LOG_INFO(log.c_str());
 	}
 #endif
-	PlaySoundMem(backsnd.handle(), DX_PLAYTYPE_LOOP);
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		if (option_fg) {
-			FBDF_Option_KeyAction(key, option_cmd, option_fg);
+			FBDF_Option_KeyAction(key, option_cmd, option_fg, select_class.list_set.se.handle());
 		}
 		else {
 			FBDF_Select_KeyCheck(
@@ -985,6 +1117,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 		}
 
 		select_class.back_pic.UpdateState();
+		select_class.list_set.bgm.update();
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから

@@ -9,5 +9,5 @@ typedef struct FBDF_option_pic_s {
 } FBDF_option_pic_st;
 
 extern void FBDF_Option_ReloadPic(void);
-extern void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg);
+extern void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg, DxSnd_t se_handle);
 extern void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic, const FBDF_usage_c &usage);

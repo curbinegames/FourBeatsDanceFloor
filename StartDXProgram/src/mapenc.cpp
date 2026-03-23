@@ -352,6 +352,10 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 			/* 日本語補正 */
 			map.artist_name = UTF8_converter(map.artist_name);
 		}
+		else if (strands(buf, "PREVIEW:")) {
+			strmods(buf, 8);
+			map.pre_time = strtol(buf, NULL, 10);
+		}
 		else {
 			break;
 		}
@@ -474,6 +478,10 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 		else if (strands(str_buf, "LEVEL:")) {
 			strmods(str_buf, 6);
 			map.user_level = strtol(str_buf, NULL, 10);
+		}
+		else if (strands(str_buf, "PREVIEW:")) {
+			strmods(str_buf, 8);
+			map.pre_time = strtol(str_buf, NULL, 10);
 		}
 	}
 

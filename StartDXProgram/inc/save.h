@@ -14,7 +14,7 @@
 
 #if 1 /* define */
 
-#define FBDF_LOG_LEVEL_DEF 0 /* ’Êí4(ERRORˆÈã‚ðo‚·) */
+#define FBDF_LOG_LEVEL_DEF 4 /* ’Êí4(ERRORˆÈã‚ðo‚·) */
 
 #if (FBDF_LOG_LEVEL_DEF <= 0)
 #define FBDF_LOG_DEBUG(mes)  FBDF_ErrorLogWrite(FBDF_LOG_LEVEL_DEBUG, mes)

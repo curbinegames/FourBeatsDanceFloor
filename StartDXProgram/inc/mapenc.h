@@ -83,6 +83,7 @@ typedef struct FBDF_map_s {
 	double   bpm         = 120;
 	int      offset      = 2000; /* 譜面スタート時間。相対時間 */
 	int      song_offset = 2000;
+	int      pre_time    = 10000; /* 選曲画面で曲が始まるタイミング[ms] */
 	uint     Stime       = 0; /* 曲開始時間。絶対時間 */
 	DxTime_t Ntime       = 0; /* 今の時間。相対時間 */
 	uint     Etime       = 0; /* 譜面が終わる時間。相対時間 */

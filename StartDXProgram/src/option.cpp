@@ -500,7 +500,7 @@ void FBDF_Option_ReloadPic(void) {
     }
 }
 
-void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg) {
+void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg, DxSnd_t se_handle) {
     key.update();
     switch (key.GetKeyPulseOnce()) {
     case KEY_INPUT_Z:
@@ -509,15 +509,19 @@ void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg) {
         break;
     case KEY_INPUT_UP:   /* €–Ú‘I‘ð */
 		cmd = LOOP_SUB(cmd, s_op_list.size());
+        PlaySoundMem(se_handle, DX_PLAYTYPE_BACK);
         break;
     case KEY_INPUT_DOWN: /* €–Ú‘I‘ð */
 		cmd = LOOP_ADD(cmd, s_op_list.size());
+        PlaySoundMem(se_handle, DX_PLAYTYPE_BACK);
         break;
     case KEY_INPUT_LEFT: /* €–Ú‘€ì */
         s_op_list.at(cmd)->CmdDown();
+        PlaySoundMem(se_handle, DX_PLAYTYPE_BACK);
         break;
     case KEY_INPUT_RIGHT: /* €–Ú‘€ì */
         s_op_list.at(cmd)->CmdUp();
+        PlaySoundMem(se_handle, DX_PLAYTYPE_BACK);
         break;
     }
 }
