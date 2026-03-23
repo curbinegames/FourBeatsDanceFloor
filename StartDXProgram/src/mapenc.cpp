@@ -313,6 +313,7 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t &map, const char *buf, FBDF_m
 static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];
+	bool bpm_inited = false;
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
 
 	FBDF_map_enc_t option;
@@ -330,10 +331,22 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 	}
 
 	while (fgets(buf, 256, fp) != NULL) {
-		if (strands(buf, "BPM:")) {
+		if (buf[0] == _T(';')) {
+			; // nothing
+		}
+		else if (strands(buf, "NAME:")) {
+			strmods(buf, 5);
+			map.music_name = buf;
+			if (map.music_name.back() == '\n') { map.music_name.pop_back(); }
+			map.music_name = UTF8_converter(map.music_name);
+		}
+		else if (strands(buf, "BPM:")) {
 			strmods(buf, 4);
-			map.bpm = strsansD(buf, 256);
-			option.now_bpm = map.bpm;
+			if (!bpm_inited) {
+				map.bpm = strsansD(buf, 256);
+				bpm_inited = true;
+			}
+			option.now_bpm = strsansD(buf, 256);
 		}
 		else if (strands(buf, "OFFSET:")) {
 			strmods(buf, 7);
@@ -352,26 +365,17 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 			/* 日本語補正 */
 			map.artist_name = UTF8_converter(map.artist_name);
 		}
+		else if (strands(buf, "LEVEL:")) {
+			strmods(buf, 6);
+			map.user_level = strtol(buf, NULL, 10);
+		}
 		else if (strands(buf, "PREVIEW:")) {
 			strmods(buf, 8);
 			map.pre_time = strtol(buf, NULL, 10);
 		}
-		else {
-			break;
-		}
-	}
-
-	while (fgets(buf, 256, fp) != NULL) {
-		if (buf[0] == _T(';')) {
-			; // nothing
-		}
 		else if (strands(buf, "BLOCK:")) {
 			strmods(buf, 6);
 			option.now_block = strtol(buf, NULL, 10);
-		}
-		else if (strands(buf, "BPM:")) {
-			strmods(buf, 4);
-			option.now_bpm = strtod(buf, NULL);
 		}
 		else {
 			for (size_t i = 0; buf[i] != '\0'; i++) {
@@ -398,6 +402,12 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 		FBDF_LOG_INFO(log.c_str());
 	}
 #endif
+	if (err != FBDF_MAPENC_ERROR_NONE) {
+		std::string buf = "(";
+		buf += musicPath;
+		buf += ")譜面解析中にエラーが起きました。";
+		FBDF_LOG_ERROR(buf.c_str());
+	}
 
 	return err;
 }

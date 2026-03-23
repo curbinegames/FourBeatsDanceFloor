@@ -59,6 +59,7 @@ typedef struct FBDF_music_detail_s {
 	uint pre_time = 10000;
 	FBDF_music_dif_t auto_cal_dif;
 	int user_dif = 0;
+	int level_list[3] = { -1,-1,-1 };
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::LIGHT;
 	FBDF_music_most_colorpat_t most_colorpat[MOST_COLORPAT_NUM];
 	FBDF_music_colorcount_t color_count;
@@ -150,8 +151,8 @@ public: /* 並び替え系 */
 		if (this->sort.empty()) { return; }
 		for (int is = 0; is + 1 < (this->sort.size()); is++) {
 			for (int ie = is + 1; ie < this->sort.size(); ie++) {
-				if (this->detail[this->sort[is]].auto_cal_dif.all >
-					this->detail[this->sort[ie]].auto_cal_dif.all)
+				if (this->detail[this->sort[is]].user_dif >
+					this->detail[this->sort[ie]].user_dif)
 				{
 					uint temp = this->sort[is];
 					this->sort[is] = this->sort[ie];
@@ -207,7 +208,7 @@ private:
 	} pic;
 
 	void DrawOne(const char *name, int offset, FBDF_music_list_bar_color_t bar_color) const {
-		int     DrawX = WINDOW_SIZE_X / 2 - 30;
+		int     DrawX = WINDOW_SIZE_X - 400;
 		DxPic_t DrawP = DXLIB_PIC_NULL;
 		if (offset != 0) { DrawX += 50; }
 
@@ -342,47 +343,47 @@ static bool FBDF_Select_FolderFilterAll(const FBDF_music_detail_t &detail, FBDF_
 #if 1 /* レベルフィルター */
 
 static bool FBDF_Select_FolderFiltetLevel0(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (detail.auto_cal_dif.all < 1);
+	return (detail.user_dif < 1);
 }
 
 static bool FBDF_Select_FolderFiltetLevel1(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(1, detail.auto_cal_dif.all, 2));
+	return (IS_BETWEEN_RIGHT_LESS(1, detail.user_dif, 2));
 }
 
 static bool FBDF_Select_FolderFiltetLevel2(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(2, detail.auto_cal_dif.all, 3));
+	return (IS_BETWEEN_RIGHT_LESS(2, detail.user_dif, 3));
 }
 
 static bool FBDF_Select_FolderFiltetLevel3(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(3, detail.auto_cal_dif.all, 4));
+	return (IS_BETWEEN_RIGHT_LESS(3, detail.user_dif, 4));
 }
 
 static bool FBDF_Select_FolderFiltetLevel4(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(4, detail.auto_cal_dif.all, 5));
+	return (IS_BETWEEN_RIGHT_LESS(4, detail.user_dif, 5));
 }
 
 static bool FBDF_Select_FolderFiltetLevel5(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(5, detail.auto_cal_dif.all, 6));
+	return (IS_BETWEEN_RIGHT_LESS(5, detail.user_dif, 6));
 }
 
 static bool FBDF_Select_FolderFiltetLevel6(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(6, detail.auto_cal_dif.all, 7));
+	return (IS_BETWEEN_RIGHT_LESS(6, detail.user_dif, 7));
 }
 
 static bool FBDF_Select_FolderFiltetLevel7(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(7, detail.auto_cal_dif.all, 8));
+	return (IS_BETWEEN_RIGHT_LESS(7, detail.user_dif, 8));
 }
 
 static bool FBDF_Select_FolderFiltetLevel8(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(8, detail.auto_cal_dif.all, 9));
+	return (IS_BETWEEN_RIGHT_LESS(8, detail.user_dif, 9));
 }
 
 static bool FBDF_Select_FolderFiltetLevel9(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (IS_BETWEEN_RIGHT_LESS(9, detail.auto_cal_dif.all, 10));
+	return (IS_BETWEEN_RIGHT_LESS(9, detail.user_dif, 10));
 }
 
 static bool FBDF_Select_FolderFiltetLevel10(const FBDF_music_detail_t &detail, FBDF_dif_type_ec view_dif_type) {
-	return (10 <= detail.auto_cal_dif.all);
+	return (10 <= detail.user_dif);
 }
 
 #endif /* レベルフィルター */
@@ -692,6 +693,7 @@ public:
 			else if (15000 <= Ntime) {
 				StopSoundMem(this->preview_snd.handle());
 				this->now_volume = 0;
+				this->now_preview_path = "";
 				preview_now = false;
 				SetCurrentPositionSoundMem(
 					(GetRand(20000) + 20000) / 1000.0 * this->sample_rate,
@@ -702,6 +704,60 @@ public:
 				this->base_Stime = GetNowCount();
 			}
 		}
+	}
+};
+
+class FBDF_select_difdraw_c {
+private:
+	int light = -1;
+	int normal = -1;
+	int dif_hyper = -1; /* hyperという名前は予約されてたw ( #define hyper __int64 )  */
+	FBDF_dif_type_ec now_type = FBDF_dif_type_ec::LIGHT;
+	dxcur_pic_c bottom{ _T("pic/select/dif_bottom.png") };
+	dxcur_pic_c cursor{ _T("pic/select/dif_cursor.png") };
+	dxcur_divpic_c num_pic{ _T("pic/select/dif_num.png"), 12, 4, 3 };
+
+public:
+	void draw(void) const {
+		{
+			int DrawX = 30;
+			int size = 200;
+			switch (this->now_type) {
+			case FBDF_dif_type_ec::LIGHT:
+				DrawX = 5;
+				break;
+			case FBDF_dif_type_ec::NORMAL:
+				DrawX = 175;
+				break;
+			case FBDF_dif_type_ec::HYPER:
+				DrawX = 355;
+				break;
+			}
+			DrawExtendGraph(DrawX, 410, DrawX + size, 410 + size, this->cursor.handle(), TRUE);
+		}
+		{
+			/* 元のファイルサイズ:97x81 */
+			int sizeX = 150;
+			int sizeY = 81 * sizeX / 97;
+			int drawN = 0;
+			drawN = (this->light != -1) ? this->light : 11;
+			DrawExtendGraph( 30, 450,  30 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+			drawN = (this->normal != -1) ? this->normal : 11;
+			DrawExtendGraph(200, 450, 200 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+			drawN = (this->dif_hyper != -1) ? this->dif_hyper : 11;
+			DrawExtendGraph(380, 450, 380 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+		}
+		DrawGraph(10, 545, this->bottom.handle(), TRUE);
+	}
+
+	void SetDifNum(int a_light, int a_normal, int a_hyper) {
+		this->light = a_light;
+		this->normal = a_normal;
+		this->dif_hyper = a_hyper;
+	}
+
+	void SetDifType(FBDF_dif_type_ec type) {
+		this->now_type = type;
 	}
 };
 
@@ -730,6 +786,7 @@ public:
 	FBDF_music_list_c music_list;
 	FBDF_select_view_string_c view_string;
 	FBDF_Select_MusicFolderManager_c folder_manager;
+	FBDF_select_difdraw_c dif_pic;
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
 
@@ -749,23 +806,19 @@ public:
 		this->view_string.clear();
 		if (this->folder_manager.IsMusicFolderNow()) {
 			for (int is = 0; is < this->music_list.sort.size(); is++) {
-				std::string buf = this->music_list[is].music_name;
 				FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
 				switch (this->music_list[is].dif_type) {
 				case FBDF_dif_type_ec::LIGHT:
-					buf += "[light]";
 					color = GREEN_MUSIC_LIST_BAR;
 					break;
 				case FBDF_dif_type_ec::NORMAL:
-					buf += "[normal]";
 					color = YELLOW_MUSIC_LIST_BAR;
 					break;
 				case FBDF_dif_type_ec::HYPER:
-					buf += "[hyper]";
 					color = PINK_MUSIC_LIST_BAR;
 					break;
 				}
-				this->view_string.push_back(buf, color);
+				this->view_string.push_back(this->music_list[is].music_name, color);
 			}
 		}
 		else {
@@ -806,44 +859,41 @@ public:
 	 * @param[in] d_name PCフォルダー名
 	 * @param[in] dif 難易度タイプ
 	 * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
-	 * @return なし
+	 * @return bool true:読み取り成功, false:失敗
 	 */
-	void MapLoadMusicGetDetail(const char *d_name, FBDF_dif_type_ec dif) {
-		std::vector<FBDF_music_detail_t> &detail = this->music_list.detail;
+	bool MapLoadMusicGetDetail(const char *d_name, FBDF_music_detail_t &dest, FBDF_dif_type_ec dif) {
 		FBDF_mapenc_error_et ret;
 		FBDF_map_t map;
-		FBDF_music_detail_t buf;
 
 		ret = FBDF_MapLoadOne(map, d_name, dif);
 		if (ret != FBDF_MAPENC_ERROR_NONE) {
 			/* エラーメッセージか何かを残したい */
 			if (ret == FBDF_MAPENC_ERROR_FILE) {
-				return;
+				return false;
 			}
 			else {
 				/* 気にせずスルー */
 			}
 		}
 
-		buf.folder_name        = d_name;
-		buf.music_name         = map.music_name;
-		buf.music_file_name    = map.music_file_name;
-		buf.artist             = map.artist_name;
-		buf.jucket_name        = map.jacket_file_name;
-		buf.Length             = FBDF_CalMapLength(map);
-		buf.pre_time           = map.pre_time;
-		buf.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
-		buf.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
-		buf.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
-		buf.auto_cal_dif.all   = (buf.auto_cal_dif.notes + buf.auto_cal_dif.color + buf.auto_cal_dif.trick) / 3;
-		buf.user_dif           = map.user_level;
-		buf.map_file_name      = map.map_file_name;
-		buf.dif_type           = dif;
-		FBDF_CalMapMostColorPat(buf.most_colorpat, &map);
-		FBDF_CountMapColor(&buf.color_count, map.note, buf.Length);
-		FBDF_Save_ReadScoreOneDif(buf.user_highscore, d_name, dif);
-
-		detail.push_back(buf);
+		dest.folder_name        = d_name;
+		dest.music_name         = map.music_name;
+		dest.music_file_name    = map.music_file_name;
+		dest.artist             = map.artist_name;
+		dest.jucket_name        = map.jacket_file_name;
+		dest.Length             = FBDF_CalMapLength(map);
+		dest.pre_time           = map.pre_time;
+		dest.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
+		dest.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
+		dest.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
+		dest.auto_cal_dif.all   = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
+		dest.user_dif           = map.user_level;
+		dest.map_file_name      = map.map_file_name;
+		dest.dif_type           = dif;
+		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
+		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
+		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
+		return true;
 	}
 
 	/**
@@ -853,16 +903,36 @@ public:
 	bool LoadMusicList(void) {
 		DIR *dir;
 		struct dirent *dirs;
+		FBDF_music_detail_t buf[3];
+		bool insert_fg[3] = { false,false,false };
 		dir = opendir("music");
 		if (dir == NULL) { return false; }
 
 		while (1) {
+			int dif_list[3] = { -1,-1,-1 };
 			dirs = readdir(dir);
 			if (dirs == NULL) { break; }
 			if (dirs->d_name[0] == '.') { continue; }
-			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::LIGHT );
-			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::NORMAL);
-			this->MapLoadMusicGetDetail(dirs->d_name, FBDF_dif_type_ec::HYPER );
+			insert_fg[0] = this->MapLoadMusicGetDetail(dirs->d_name, buf[0], FBDF_dif_type_ec::LIGHT);
+			if (insert_fg[0]) {
+				dif_list[0] = buf[0].user_dif;
+			}
+			insert_fg[1] = this->MapLoadMusicGetDetail(dirs->d_name, buf[1], FBDF_dif_type_ec::NORMAL);
+			if (insert_fg[1]) {
+				dif_list[1] = buf[1].user_dif;
+			}
+			insert_fg[2] = this->MapLoadMusicGetDetail(dirs->d_name, buf[2], FBDF_dif_type_ec::HYPER);
+			if (insert_fg[2]) {
+				dif_list[2] = buf[2].user_dif;
+			}
+			for (size_t ib = 0; ib < 3; ib++) {
+				if (insert_fg[ib]) {
+					for (size_t ia = 0; ia < 3; ia++) {
+						buf[ib].level_list[ia] = dif_list[ia];
+					}
+					this->music_list.detail.push_back(buf[ib]);
+				}
+			}
 		}
 
 		closedir(dir);
@@ -875,6 +945,18 @@ public:
 		this->MakeMusicList(view_def);
 		this->UpdateJacket(cmd);
 		this->bgm.init();
+		if (this->OnAvailableMusicFolderNow()) {
+			this->dif_pic.SetDifNum(
+				this->music_list[cmd].level_list[0],
+				this->music_list[cmd].level_list[1],
+				this->music_list[cmd].level_list[2]
+			);
+			this->dif_pic.SetDifType(this->music_list[cmd].dif_type);
+		}
+		else {
+			this->dif_pic.SetDifNum(-1, -1, -1);
+			this->dif_pic.SetDifType(view_def);
+		}
 		return true;
 	}
 
@@ -913,14 +995,10 @@ private:
 public:
 	void Draw(int cmd) const {
 		if (this->OnAvailableMusicFolderNow()) {
-			DrawFormatString(5,   5, 0xffffffff, _T("notes: %3.2f"),   this->music_list[cmd].auto_cal_dif.notes  );
-			DrawFormatString(5,  25, 0xffffffff, _T("color: %3.2f"),   this->music_list[cmd].auto_cal_dif.color  );
-			DrawFormatString(5,  45, 0xffffffff, _T("trick: %3.2f"),   this->music_list[cmd].auto_cal_dif.trick  );
-			DrawFormatString(5,  65, 0xffffffff, _T(" mdif: %3.2f"),   this->music_list[cmd].auto_cal_dif.all    );
-			DrawFormatString(5,  85, 0xffffffff, _T("score: %d"),      this->music_list[cmd].user_highscore.score);
-			DrawFormatString(5, 105, 0xffffffff, _T("  acc: %6.2f%%"), this->music_list[cmd].user_highscore.acc  );
-			DrawFormatString(5, 125, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str());
-			DrawFormatString(5, 145, 0xffffffff, _T("folder: %s"), "");
+			DrawFormatString(5,  80, 0xffffffff, _T("score: %d"),      this->music_list[cmd].user_highscore.score);
+			DrawFormatString(5, 100, 0xffffffff, _T("  acc: %6.2f%%"), this->music_list[cmd].user_highscore.acc  );
+			DrawFormatString(5, 120, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str());
+			DrawFormatString(5, 140, 0xffffffff, _T("folder: %s"), "");
 			this->jacket_viewer.draw(50, 50);
 			this->DrawColorCount(5, WINDOW_SIZE_Y - 50, cmd);
 		}
@@ -937,6 +1015,7 @@ public:
 typedef struct FBDF_select_class_set_s {
 	FBDF_select_list_set_c list_set;
 	FBDF_select_back_pic_c back_pic;
+	dxcur_pic_c top_bar{ "pic/select/select_bar.png" };
 	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
 } FBDF_select_class_set_t;
 
@@ -963,6 +1042,15 @@ static void FBDF_Select_DecideFolder(
 			full_path += '/';
 			full_path += list_set.music_list[cmd].music_file_name;
 			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
+			list_set.dif_pic.SetDifNum(
+				list_set.music_list[cmd].level_list[0],
+				list_set.music_list[cmd].level_list[1],
+				list_set.music_list[cmd].level_list[2]
+			);
+			list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+		}
+		else {
+			list_set.dif_pic.SetDifNum(-1, -1, -1);
 		}
 		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 	}
@@ -978,6 +1066,7 @@ static void FBDF_Select_BackFolder(
 		list_set.UpdateJacket(cmd);
 		list_set.bgm.ReserveErase();
 		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
+		list_set.dif_pic.SetDifNum(-1, -1, -1);
 	}
 }
 
@@ -1000,6 +1089,12 @@ static void FBDF_Select_KeyVert(
 			full_path += list_set.music_list[cmd].music_file_name;
 			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
 		}
+		list_set.dif_pic.SetDifNum(
+			list_set.music_list[cmd].level_list[0],
+			list_set.music_list[cmd].level_list[1],
+			list_set.music_list[cmd].level_list[2]
+		);
+		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
 	list_set.UpdateJacket(cmd);
 	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
@@ -1019,6 +1114,12 @@ static void FBDF_Select_KeyHori(
 		full_path += '/';
 		full_path += list_set.music_list[cmd].music_file_name;
 		list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
+		list_set.dif_pic.SetDifNum(
+			list_set.music_list[cmd].level_list[0],
+			list_set.music_list[cmd].level_list[1],
+			list_set.music_list[cmd].level_list[2]
+		);
+		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
 	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 }
@@ -1072,6 +1173,8 @@ static void FBDF_Select_KeyCheck(
 static void FBDF_Select_Draw(const FBDF_select_class_set_t &select_class, int cmd) {
 	select_class.back_pic.DrawPic();
 	select_class.list_set.Draw(cmd);
+	select_class.list_set.dif_pic.draw();
+	DrawGraph(0, 0, select_class.top_bar.handle(), TRUE);
 	select_class.usage.draw(0, WINDOW_SIZE_Y);
 }
 
