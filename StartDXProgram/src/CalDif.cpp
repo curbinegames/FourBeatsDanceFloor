@@ -309,6 +309,72 @@ double FBDF_CalMapTrickDif(const cvec<FBDF_note_t> &notes) {
 	return ret;
 }
 
+/* length難易度を計算する */
+double FBDF_CalMapLengthDif(const cvec<FBDF_note_t> &notes) {
+	double ret = 0.0;
+	double NowPoint = 0.0;
+
+	if (notes.size() < 3) { return 0; }
+
+	for (uint i = 2; i < notes.size(); i++) {
+		double BasePoint = 10;
+
+		DxTime_t TimeGap = 0;
+		TimeGap = 2000 / maxs_2(1, notes[i].time - notes[i - 1].time);
+		BasePoint *= TimeGap;
+
+		if (2 <= notes[i - 1].len) {
+			switch (notes[i].btn) {
+			case FBDF_PLAY_NOTE_BTN_1:
+				BasePoint *= 1.0;
+				break;
+			case FBDF_PLAY_NOTE_BTN_2:
+				BasePoint *= 1.6;
+				break;
+			case FBDF_PLAY_NOTE_BTN_3:
+				BasePoint *= 1.3;
+				break;
+			case FBDF_PLAY_NOTE_BTN_4:
+				BasePoint *= 1.6;
+				break;
+			}
+		}
+
+		switch (notes[i - 1].len) {
+		case 1:
+			BasePoint *= 1.2 * 0.25;
+			break;
+		case 2:
+			BasePoint *= 1.3 * 0.50;
+			break;
+		case 3:
+			BasePoint *= 1.5 * 0.75;
+			break;
+		case 4:
+			BasePoint *= 1.0;
+			break;
+		case 5:
+			BasePoint *= 2.0;
+			break;
+		case 6:
+			BasePoint *= 1.4;
+			break;
+		case 7:
+			BasePoint *= 2.0;
+			break;
+		case 8:
+			BasePoint *= 1.0;
+			break;
+		}
+
+		NowPoint *= DDIF_MLP;
+		NowPoint += BasePoint;
+		if (ret < NowPoint) { ret = NowPoint; }
+	}
+
+	return ret;
+}
+
 /* カラーパターンを数える */
 static void FBDF_CountMapColorPat(FBDF_music_colorpat_count_t *pat, const cvec<FBDF_note_t> &notes) {
 	double ret = 0.0;

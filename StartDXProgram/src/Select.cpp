@@ -42,10 +42,11 @@ typedef enum FBDF_music_list_bar_color_e {
 #if 1 /* struct */
 
 typedef struct FBDF_music_dif_s {
-	double notes = 0;
-	double color = 0;
-	double trick = 0;
-	double all = 0;
+	double notes  = 0;
+	double color  = 0;
+	double trick  = 0;
+	double length = 0;
+	double all    = 0;
 } FBDF_music_dif_t;
 
 typedef struct FBDF_music_detail_s {
@@ -179,20 +180,20 @@ public: /* i‚èž‚ÝŒn */
 	}
 
 public: /* ”Ô’nŒŸõŒn */
-	FBDF_music_detail_t& operator[](int n) {
-		return this->detail[sort[n]];
+	FBDF_music_detail_t& operator[](size_t n) {
+		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
-	const FBDF_music_detail_t& operator[](int n) const {
-		return this->detail[sort[n]];
+	const FBDF_music_detail_t& operator[](size_t n) const {
+		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
-	FBDF_music_detail_t& at(int n) {
-		return this->detail[sort[n]];
+	FBDF_music_detail_t& at(size_t n) {
+		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
-	const FBDF_music_detail_t& at(int n) const {
-		return this->detail[sort[n]];
+	const FBDF_music_detail_t& at(size_t n) const {
+		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
 	size_t size(void) const {
@@ -910,23 +911,53 @@ public:
 	}
 
 	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
-		dest.folder_name        = d_name;
-		dest.music_name         = map.music_name;
-		dest.music_file_name    = map.music_file_name;
-		dest.artist             = map.artist_name;
-		dest.jucket_name        = map.jacket_file_name;
-		dest.Length             = FBDF_CalMapLength(map);
-		dest.pre_time           = map.pre_time;
-		dest.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
-		dest.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
-		dest.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
-		dest.auto_cal_dif.all   = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
-		dest.user_dif           = map.user_level;
-		dest.map_file_name      = map.map_file_name;
-		dest.dif_type           = dif;
+		dest.folder_name         = d_name;
+		dest.music_name          = map.music_name;
+		dest.music_file_name     = map.music_file_name;
+		dest.artist              = map.artist_name;
+		dest.jucket_name         = map.jacket_file_name;
+		dest.Length              = FBDF_CalMapLength(map);
+		dest.pre_time            = map.pre_time;
+		dest.auto_cal_dif.notes  = FBDF_CalMapNotesDif(map.note);
+		dest.auto_cal_dif.color  = FBDF_CalMapColorDif(map.note);
+		dest.auto_cal_dif.trick  = FBDF_CalMapTrickDif(map.note);
+		dest.auto_cal_dif.length = FBDF_CalMapLengthDif(map.note);
+		dest.auto_cal_dif.all    = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
+		dest.user_dif            = map.user_level;
+		dest.map_file_name       = map.map_file_name;
+		dest.dif_type            = dif;
 		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
 		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
 		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+		{
+			std::string buf = "mdif: ";
+			buf += std::to_string(dest.auto_cal_dif.length);
+			buf += "(";
+			buf += std::to_string(
+				lins(21000, 1, 28000, 9, dest.auto_cal_dif.length)
+			);
+			buf += ")";
+			buf += " : ";
+			buf += dest.folder_name;
+			buf += "[";
+			switch (dest.dif_type) {
+			case FBDF_dif_type_ec::LIGHT:
+				buf += "LIGHT";
+				break;
+			case FBDF_dif_type_ec::NORMAL:
+				buf += "NORMAL";
+				break;
+			case FBDF_dif_type_ec::HYPER:
+				buf += "HYPER";
+				break;
+			}
+			buf += "](";
+			buf += std::to_string(dest.user_dif);
+			buf += ")";
+			FBDF_LOG_INFO(buf.c_str());
+		}
+#endif
 	}
 
 	/**
@@ -1006,6 +1037,7 @@ public:
 		if (this->LoadMusicList() == false) { return false; }
 		this->folder_manager.ReadFile(cmd, view_def);
 		this->MakeMusicList(view_def);
+		cmd = betweens(0, cmd, this->music_list.sort.size() - 1);
 		this->UpdateJacket(cmd);
 		this->bgm.init();
 		if (this->OnAvailableMusicFolderNow()) {
@@ -1067,6 +1099,10 @@ public:
 		if (this->OnAvailableMusicFolderNow()) {
 			this->DrawColorCount(5, 100, cmd);
 			this->jacket_viewer.draw();
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 110, COLOR_WHITE, _T("artist: %s"),
+				this->music_list[cmd].artist.c_str()
+			);
 			DrawFormatString(
 				5, WINDOW_SIZE_Y - 90, COLOR_WHITE, _T("score: %d / acc: %6.2f%%"),
 				this->music_list[cmd].user_highscore.score,
