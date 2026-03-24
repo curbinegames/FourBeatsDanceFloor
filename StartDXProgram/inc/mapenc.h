@@ -80,6 +80,7 @@ typedef struct FBDF_map_s {
 	std::string music_file_name  = "music.mp3";
 	std::string jacket_file_name = "image.png";
 	uint     blockNo     = 0;
+	bool     bpm_inited  = false;
 	double   bpm         = 120;
 	int      offset      = 2000; /* 譜面スタート時間。相対時間 */
 	int      song_offset = 2000;

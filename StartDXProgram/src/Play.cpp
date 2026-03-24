@@ -352,6 +352,25 @@ public: /* コンストラクタ系 */
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
 		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+		{
+			int anim_num = MV1GetAnimNum(this->n3Dmodel_handle);
+			std::string log_str = "";
+			for (int inum = 0; inum < anim_num; inum++) {
+				log_str  = "検出したアニメ[";
+				log_str += ('0' + inum);
+				log_str += "]: ";
+				log_str += MV1GetAnimName(this->n3Dmodel_handle, inum);
+				FBDF_LOG_INFO(log_str.c_str());
+			}
+		}
+		{
+			int shape_num = MV1GetShapeNum(this->n3Dmodel_handle);
+			std::string log_str = "検出したシェイプキーの数: ";
+			log_str += std::to_string(shape_num);
+			FBDF_LOG_INFO(log_str.c_str());
+		}
+#endif
 #endif /* 3Dモデル */
 	}
 

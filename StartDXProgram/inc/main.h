@@ -7,6 +7,16 @@
  * ・文字数
  * 1行100文字まで。改行するときは外括弧優先。
  * 
+ * ・全体の並び
+ * include
+ * define
+ * enum
+ * struct
+ * class
+ * extern
+ * static function
+ * function
+ * 
  * ・includeの順番
  * 標準関数
  * STL系

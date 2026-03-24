@@ -305,18 +305,66 @@ static FBDF_mapenc_error_et GetNoteLine(FBDF_map_t &map, const char *buf, FBDF_m
 }
 
 /**
+ * @brief base.txt, map.txtの共通コマンドを処理する
+ * @return bool true:検知した, false:検知しなかった
+ */
+static bool FBDF_Mapenc_GetsCmdGeneral(FBDF_map_t &map, FBDF_map_enc_t &option, char buf[]) {
+	if (buf[0] == _T('\n')) { return true; } /* 改行のみを検知、何もせず正常終了。 */
+	if (buf[0] == _T('\0')) { return true; } /* 空文字を検知、何もせず正常終了。 */
+	if (buf[0] == _T(';')) { return true; } /* コメント文を検知、何もせず正常終了。 */
+	if (strands(buf, "NAME:")) {
+		strmods(buf, 5);
+		map.music_name = buf;
+		if (map.music_name.back() == '\n') { map.music_name.pop_back(); }
+		map.music_name = UTF8_converter(map.music_name);
+		return true;
+	}
+	if (strands(buf, "ARTIST:")) {
+		strmods(buf, 7);
+		map.artist_name = buf;
+		if (map.artist_name.back() == '\n') { map.artist_name.pop_back(); }
+		map.artist_name = UTF8_converter(map.artist_name);
+		return true;
+	}
+	if (strands(buf, "BPM:")) {
+		strmods(buf, 4);
+		if (!map.bpm_inited) {
+			map.bpm = strsansD(buf, 256);
+			map.bpm_inited = true;
+		}
+		option.now_bpm = strsansD(buf, 256);
+		return true;
+	}
+	if (strands(buf, "LEVEL:")) {
+		strmods(buf, 6);
+		map.user_level = strtol(buf, NULL, 10);
+		return true;
+	}
+	if (strands(buf, "OFFSET:")) {
+		strmods(buf, 7);
+		map.offset = strtol(buf, NULL, 10);
+		option.now_shuttime = map.offset;
+		return true;
+	}
+	if (strands(buf, "PREVIEW:")) {
+		strmods(buf, 8);
+		map.pre_time = strtol(buf, NULL, 10);
+		return true;
+	}
+	return false;
+}
+
+/**
  * @brief 譜面を読み込む
  * @param[out] map 格納先
  * @param[in] nex_music 譜面ファイルのパス
  * @return FBDF_mapenc_error_et エラー情報
  */
-static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_music) {
+static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, FBDF_map_enc_t &option, const char *nex_music) {
 	char buf[256];
 	char musicPath[96];
 	bool bpm_inited = false;
 	FBDF_mapenc_error_et err = FBDF_MAPENC_ERROR_NONE;
-
-	FBDF_map_enc_t option;
 
 	FILE *fp = NULL;
 
@@ -331,53 +379,8 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 	}
 
 	while (fgets(buf, 256, fp) != NULL) {
-		if (buf[0] == _T(';')) {
-			; // nothing
-		}
-		else if (strands(buf, "NAME:")) {
-			strmods(buf, 5);
-			map.music_name = buf;
-			if (map.music_name.back() == '\n') { map.music_name.pop_back(); }
-			map.music_name = UTF8_converter(map.music_name);
-		}
-		else if (strands(buf, "BPM:")) {
-			strmods(buf, 4);
-			if (!bpm_inited) {
-				map.bpm = strsansD(buf, 256);
-				bpm_inited = true;
-			}
-			option.now_bpm = strsansD(buf, 256);
-		}
-		else if (strands(buf, "OFFSET:")) {
-			strmods(buf, 7);
-			map.offset = strtol(buf, NULL, 10);
-			option.now_shuttime = map.offset;
-		}
-		else if (strands(buf, "ARTIST:")) {
-			strmods(buf, 7);
-			map.artist_name = buf;
-			/* 改行消し */
-			for (int ic = 0; ic < map.artist_name.size(); ic++) {
-				if (map.artist_name[ic] == '\n') {
-					map.artist_name.pop_back();
-				}
-			}
-			/* 日本語補正 */
-			map.artist_name = UTF8_converter(map.artist_name);
-		}
-		else if (strands(buf, "LEVEL:")) {
-			strmods(buf, 6);
-			map.user_level = strtol(buf, NULL, 10);
-		}
-		else if (strands(buf, "PREVIEW:")) {
-			strmods(buf, 8);
-			map.pre_time = strtol(buf, NULL, 10);
-		}
-		else if (strands(buf, "SAMP_RATE:")) {
-			strmods(buf, 10);
-			map.samp_rate = strtol(buf, NULL, 10);
-		}
-		else if (strands(buf, "BLOCK:")) {
+		if (FBDF_Mapenc_GetsCmdGeneral(map, option, buf)) { continue; }
+		if (strands(buf, "BLOCK:")) {
 			strmods(buf, 6);
 			option.now_block = strtol(buf, NULL, 10);
 		}
@@ -431,6 +434,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 	FILE *fp = NULL;
 	std::string base_path = "";
 	std::string map_path = "";
+	FBDF_map_enc_t option;
 
 	map.music_name = folder_name; /* 初期値として登録 */
 
@@ -444,7 +448,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 		map_path = "music/";
 		map_path += folder_name;
 		map_path += "/map.txt";
-		return FBDF_MapLoadOneCap(map, map_path.c_str());
+		return FBDF_MapLoadOneCap(map, option, map_path.c_str());
 	}
 
 	while (fgets(str_buf, 256, fp) != NULL) {
@@ -463,43 +467,13 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 
 		if (!match_dif) { continue; }
 
-		if (strands(str_buf, "NAME:")) {
-			strmods(str_buf, 5);
-			map.music_name = str_buf;
-			if (map.music_name.back() == '\n') { map.music_name.pop_back(); }
-			map.music_name = UTF8_converter(map.music_name);
-		}
-		else if (strands(str_buf, "ARTIST:")) {
-			strmods(str_buf, 7);
-			map.artist_name = str_buf;
-			if (map.artist_name.back() == '\n') { map.artist_name.pop_back(); }
-			map.artist_name = UTF8_converter(map.artist_name);
-		}
-		else if (strands(str_buf, "BPM:")) {
-			strmods(str_buf, 4);
-			map.bpm = strtod(str_buf, NULL);
-		}
-		else if (strands(str_buf, "OFFSET:")) {
-			strmods(str_buf, 7);
-			map.offset = strtol(str_buf, NULL, 10);
-		}
-		else if (strands(str_buf, "MAP:")) {
+		if (FBDF_Mapenc_GetsCmdGeneral(map, option, str_buf)) { continue; }
+
+		if (strands(str_buf, "MAP:")) {
 			strmods(str_buf, 4);
 			map.map_file_name = str_buf;
 			if (map.map_file_name.back() == '\n') { map.map_file_name.pop_back(); }
 			map.map_file_name = UTF8_converter(map.map_file_name);
-		}
-		else if (strands(str_buf, "LEVEL:")) {
-			strmods(str_buf, 6);
-			map.user_level = strtol(str_buf, NULL, 10);
-		}
-		else if (strands(str_buf, "PREVIEW:")) {
-			strmods(str_buf, 8);
-			map.pre_time = strtol(str_buf, NULL, 10);
-		}
-		else if (strands(str_buf, "SAMP_RATE:")) {
-			strmods(str_buf, 10);
-			map.samp_rate = strtol(str_buf, NULL, 10);
 		}
 	}
 
@@ -510,7 +484,7 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 	map_path += '/';
 	map_path += map.map_file_name;
 
-	return FBDF_MapLoadOneCap(map, map_path.c_str());
+	return FBDF_MapLoadOneCap(map, option, map_path.c_str());
 }
 
 #endif /* ノーツデータ系 */
