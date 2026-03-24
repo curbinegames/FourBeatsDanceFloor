@@ -87,12 +87,16 @@ private:
 	dxcur_pic_c pic;
 
 public:
-	void draw(int x, int y) const {
-		DrawGraph(x, y, this->pic.handle(), TRUE);
+	void draw(void) const {
+		int DrawX = 110;
+		int DrawY = 160;
+		int size  = 300;
+		DrawExtendGraph(DrawX, DrawY, DrawX + size, DrawY + size, this->pic.handle(), TRUE);
 	}
 
 	void clear(void) {
 		DeleteGraph(this->pic.handle());
+		this->path = "";
 	}
 
 	void update(std::string folder_name, std::string image_name) {
@@ -533,6 +537,8 @@ private:
 
 	folder_manager_c<FBDF_music_folder_node_st> folder_manager_class{&fol_root};
 
+	std::vector<std::string> folder_path;
+
 #endif /* フォルダー定義 */
 
 public:
@@ -545,7 +551,11 @@ public:
 	}
 
 	bool PushFolder(int cmd) {
-		return this->folder_manager_class.PushFolder(cmd);
+		if (!this->folder_manager_class.PushFolder(cmd)) {
+			return false;
+		}
+		folder_path.push_back(this->NowFolder()->name);
+		return true;
 	}
 
 	/**
@@ -563,6 +573,7 @@ public:
 					break;
 				}
 			}
+			folder_path.pop_back();
 		}
 		return ret;
 	}
@@ -600,6 +611,22 @@ public:
 		fwrite(&cmd, sizeof(int), 1, fp);
 		fwrite(&view_def, sizeof(FBDF_dif_type_ec), 1, fp);
 		fclose(fp);
+		return ret;
+	}
+
+	std::string GetFolderPathString(void) const {
+		std::string ret = "";
+		if (this->folder_path.empty()) {
+			ret = "default";
+		}
+		else {
+			for (size_t i = 0; i < this->folder_path.size(); i++) {
+				if (0 < i) {
+					ret += '/';
+				}
+				ret += this->folder_path[i];
+			}
+		}
 		return ret;
 	}
 };
@@ -1013,7 +1040,7 @@ private:
 	void DrawColorCount(int x, int y, int cmd) const {
 		const FBDF_music_colorcount_t &count = this->music_list[cmd].color_count;
 		int Len = pals_scale(35, 300, 0, 0, count.c1);
-		int BaseY = y - 60;
+		int BaseY = y;
 		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_1, TRUE);
 		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_1, FALSE);
 		Len = pals_scale(35, 300, 0, 0, count.c2);
@@ -1033,13 +1060,22 @@ private:
 
 public:
 	void Draw(int cmd) const {
+		DrawFormatString(
+			5, 80, COLOR_WHITE, _T("folder: %s"),
+			this->folder_manager.GetFolderPathString().c_str()
+		);
 		if (this->OnAvailableMusicFolderNow()) {
-			DrawFormatString(5,  80, 0xffffffff, _T("score: %d"),      this->music_list[cmd].user_highscore.score);
-			DrawFormatString(5, 100, 0xffffffff, _T("  acc: %6.2f%%"), this->music_list[cmd].user_highscore.acc  );
-			DrawFormatString(5, 120, 0xffffffff, _T("clear type: %s"), FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str());
-			DrawFormatString(5, 140, 0xffffffff, _T("folder: %s"), "");
-			this->jacket_viewer.draw(50, 50);
-			this->DrawColorCount(5, WINDOW_SIZE_Y - 50, cmd);
+			this->DrawColorCount(5, 100, cmd);
+			this->jacket_viewer.draw();
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 90, COLOR_WHITE, _T("score: %d / acc: %6.2f%%"),
+				this->music_list[cmd].user_highscore.score,
+				this->music_list[cmd].user_highscore.acc
+			);
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 70, COLOR_WHITE, _T("clear type: %s"),
+				FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str()
+			);
 		}
 		this->view_string.DrawList(cmd);
 	}

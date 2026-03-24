@@ -237,7 +237,10 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 	}
 	for (size_t ic = 0; ic < option.now_block; ic++) { /* ノーツに関係しない文字が一個でもあったらダメ */
 		if (!ISNOTE(buf[ic])) {
-			FBDF_LOG_ERROR("ノーツに関係ない文字が混ざっています。");
+			std::string str_buf = "ノーツに関係ない文字が混ざっています。(";
+			str_buf += buf[ic];
+			str_buf += ')';
+			FBDF_LOG_ERROR(str_buf.c_str());
 			return FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR;
 		}
 	}
@@ -349,6 +352,11 @@ static bool FBDF_Mapenc_GetsCmdGeneral(FBDF_map_t &map, FBDF_map_enc_t &option, 
 	if (strands(buf, "PREVIEW:")) {
 		strmods(buf, 8);
 		map.pre_time = strtol(buf, NULL, 10);
+		return true;
+	}
+	if (strands(buf, "SAMP_RATE:")) {
+		strmods(buf, 10);
+		map.samp_rate = strtol(buf, NULL, 10);
 		return true;
 	}
 	return false;
