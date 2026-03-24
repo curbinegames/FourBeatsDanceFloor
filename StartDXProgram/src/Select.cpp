@@ -57,6 +57,7 @@ typedef struct FBDF_music_detail_s {
 	std::string jucket_name;
 	uint Length = 0;
 	uint pre_time = 10000;
+	uint sample_rate = 44100;
 	FBDF_music_dif_t auto_cal_dif;
 	int user_dif = 0;
 	int level_list[3] = { -1,-1,-1 };
@@ -607,7 +608,7 @@ public:
 
 class FBDF_select_bgm_c {
 private:
-	const int sample_rate = 44100;
+	int sample_rate = 44100;
 	bool preview_now = false;
 	int base_Stime = 0;
 	int preview_Stime = 0;
@@ -616,6 +617,7 @@ private:
 
 	int reserve_settime = 0;
 	int reserve_starttime = 0;
+	int reserve_sample_rate = 44100;
 	std::string reserve_preview_path = "";
 
 	dxcur_snd_c base_snd{_T("SE/Starlights.mp3")};
@@ -628,8 +630,9 @@ private:
 		preview_snd.reload(path);
 		if (preview_snd.handle() == DXLIB_SND_NULL) { return; }
 		this->now_preview_path = path;
+		this->sample_rate = this->reserve_sample_rate;
 
-		StopSoundMem(this->base_snd.handle());
+		ChangeVolumeSoundMem(0, this->base_snd.handle());
 		SetCurrentPositionSoundMem(msec / 1000.0 * this->sample_rate, this->preview_snd.handle());
 		PlaySoundMem(this->preview_snd.handle(), DX_PLAYTYPE_BACK, FALSE);
 		preview_now = true;
@@ -643,10 +646,14 @@ public:
 	}
 
 	/* 曲を選択したとき呼ぶ */
-	void ReservePreview(const TCHAR *path, int msec) {
-		this->reserve_settime = GetNowCount();
-		this->reserve_preview_path = path;
-		this->reserve_starttime = msec;
+	void ReservePreview(const FBDF_music_detail_t &detail) {
+		this->reserve_preview_path  = "music/";
+		this->reserve_preview_path += detail.folder_name;
+		this->reserve_preview_path += '/';
+		this->reserve_preview_path += detail.music_file_name;
+		this->reserve_starttime     = detail.pre_time;
+		this->reserve_settime       = GetNowCount();
+		this->reserve_sample_rate   = detail.sample_rate;
 	}
 
 	/* 曲無しフォルダに移動したとき呼ぶ */
@@ -654,6 +661,48 @@ public:
 		this->reserve_preview_path = "";
 	}
 
+private: /* update系 */
+	void UpdateBaseBgm(void) {
+		int Ntime = GetNowCount() - this->base_Stime;
+		if (Ntime < 500) {
+			this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
+			ChangeVolumeSoundMem(this->now_volume, this->base_snd.handle());
+		}
+		else {
+			if (this->now_volume != 255) {
+				ChangeVolumeSoundMem(255, this->base_snd.handle());
+				this->now_volume = 255;
+			}
+		}
+	}
+
+	void UpdatePreviewBgm(void) {
+		int Ntime = GetNowCount() - preview_Stime;
+		if (IS_BETWEEN_RIGHT_LESS(0, Ntime, 500)) {
+			this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
+			ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
+		}
+		else if (IS_BETWEEN(500, Ntime, 14500)) {
+			if (this->now_volume != 255) {
+				ChangeVolumeSoundMem(255, this->preview_snd.handle());
+				this->now_volume = 255;
+			}
+		}
+		else if (IS_BETWEEN_LESS(14500, Ntime, 15000)) {
+			this->now_volume = lins_scale(14500, 255, 15000, 0, Ntime);
+			ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
+		}
+		else if (15000 <= Ntime) {
+			StopSoundMem(this->preview_snd.handle());
+			this->now_volume = 0;
+			this->now_preview_path = "";
+			preview_now = false;
+			ChangeVolumeSoundMem(0, this->base_snd.handle());
+			this->base_Stime = GetNowCount();
+		}
+	}
+
+public: /* update系 */
 	/* 毎フレーム呼ぶ */
 	void update(void) {
 		int Ntime = GetNowCount() - reserve_settime;
@@ -662,47 +711,10 @@ public:
 			reserve_preview_path = "";
 		}
 		if (!preview_now) {
-			Ntime = GetNowCount() - this->base_Stime;
-			if (Ntime < 500) {
-				this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
-				ChangeVolumeSoundMem(this->now_volume, this->base_snd.handle());
-			}
-			else {
-				if (this->now_volume != 255) {
-					ChangeVolumeSoundMem(255, this->base_snd.handle());
-					this->now_volume = 255;
-				}
-			}
+			UpdateBaseBgm();
 		}
 		else {
-			Ntime = GetNowCount() - preview_Stime;
-			if (IS_BETWEEN_RIGHT_LESS(0, Ntime, 500)) {
-				this->now_volume = lins_scale(0, 0, 500, 255, Ntime);
-				ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
-			}
-			else if (IS_BETWEEN(500, Ntime, 14500)) {
-				if (this->now_volume != 255) {
-					ChangeVolumeSoundMem(255, this->preview_snd.handle());
-					this->now_volume = 255;
-				}
-			}
-			else if (IS_BETWEEN_LESS(14500, Ntime, 15000)) {
-				this->now_volume = lins_scale(14500, 255, 15000, 0, Ntime);
-				ChangeVolumeSoundMem(this->now_volume, this->preview_snd.handle());
-			}
-			else if (15000 <= Ntime) {
-				StopSoundMem(this->preview_snd.handle());
-				this->now_volume = 0;
-				this->now_preview_path = "";
-				preview_now = false;
-				SetCurrentPositionSoundMem(
-					(GetRand(20000) + 20000) / 1000.0 * this->sample_rate,
-					this->preview_snd.handle()
-				);
-				ChangeVolumeSoundMem(0, this->base_snd.handle());
-				PlaySoundMem(this->base_snd.handle(), DX_PLAYTYPE_LOOP, FALSE);
-				this->base_Stime = GetNowCount();
-			}
+			UpdatePreviewBgm();
 		}
 	}
 };
@@ -717,43 +729,53 @@ private:
 	dxcur_pic_c cursor{ _T("pic/select/dif_cursor.png") };
 	dxcur_divpic_c num_pic{ _T("pic/select/dif_num.png"), 12, 4, 3 };
 
+	void DrawCursor(void) const {
+		int DrawX = 30;
+		int size = 200;
+		switch (this->now_type) {
+		case FBDF_dif_type_ec::LIGHT:
+			DrawX = 5;
+			break;
+		case FBDF_dif_type_ec::NORMAL:
+			DrawX = 175;
+			break;
+		case FBDF_dif_type_ec::HYPER:
+			DrawX = 355;
+			break;
+		}
+		DrawExtendGraph(DrawX, 410, DrawX + size, 410 + size, this->cursor.handle(), TRUE);
+	}
+
+	void DrawNumber(void) const {
+		/* 元のファイルサイズ:97x81 */
+		int sizeX = 150;
+		int sizeY = 81 * sizeX / 97;
+		int drawN = 0;
+		drawN = (this->light != -1) ? this->light : 11;
+		DrawExtendGraph( 30, 450,  30 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+		drawN = (this->normal != -1) ? this->normal : 11;
+		DrawExtendGraph(200, 450, 200 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+		drawN = (this->dif_hyper != -1) ? this->dif_hyper : 11;
+		DrawExtendGraph(380, 450, 380 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
+	}
+
 public:
 	void draw(void) const {
-		{
-			int DrawX = 30;
-			int size = 200;
-			switch (this->now_type) {
-			case FBDF_dif_type_ec::LIGHT:
-				DrawX = 5;
-				break;
-			case FBDF_dif_type_ec::NORMAL:
-				DrawX = 175;
-				break;
-			case FBDF_dif_type_ec::HYPER:
-				DrawX = 355;
-				break;
-			}
-			DrawExtendGraph(DrawX, 410, DrawX + size, 410 + size, this->cursor.handle(), TRUE);
-		}
-		{
-			/* 元のファイルサイズ:97x81 */
-			int sizeX = 150;
-			int sizeY = 81 * sizeX / 97;
-			int drawN = 0;
-			drawN = (this->light != -1) ? this->light : 11;
-			DrawExtendGraph( 30, 450,  30 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
-			drawN = (this->normal != -1) ? this->normal : 11;
-			DrawExtendGraph(200, 450, 200 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
-			drawN = (this->dif_hyper != -1) ? this->dif_hyper : 11;
-			DrawExtendGraph(380, 450, 380 + sizeX, 450 + sizeY, this->num_pic.handle(drawN), TRUE);
-		}
+		this->DrawCursor();
+		this->DrawNumber();
 		DrawGraph(10, 545, this->bottom.handle(), TRUE);
 	}
 
-	void SetDifNum(int a_light, int a_normal, int a_hyper) {
-		this->light = a_light;
-		this->normal = a_normal;
-		this->dif_hyper = a_hyper;
+	void ResetDifNum(void) {
+		this->light = -1;
+		this->normal = -1;
+		this->dif_hyper = -1;
+	}
+
+	void SetDifNum(int dif_list[]) {
+		this->light = dif_list[0];
+		this->normal = dif_list[1];
+		this->dif_hyper = dif_list[2];
 	}
 
 	void SetDifType(FBDF_dif_type_ec type) {
@@ -883,6 +905,7 @@ public:
 		dest.jucket_name        = map.jacket_file_name;
 		dest.Length             = FBDF_CalMapLength(map);
 		dest.pre_time           = map.pre_time;
+		dest.sample_rate        = map.samp_rate;
 		dest.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
 		dest.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
 		dest.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
@@ -946,15 +969,11 @@ public:
 		this->UpdateJacket(cmd);
 		this->bgm.init();
 		if (this->OnAvailableMusicFolderNow()) {
-			this->dif_pic.SetDifNum(
-				this->music_list[cmd].level_list[0],
-				this->music_list[cmd].level_list[1],
-				this->music_list[cmd].level_list[2]
-			);
+			this->dif_pic.SetDifNum(this->music_list[cmd].level_list);
 			this->dif_pic.SetDifType(this->music_list[cmd].dif_type);
 		}
 		else {
-			this->dif_pic.SetDifNum(-1, -1, -1);
+			this->dif_pic.ResetDifNum();
 			this->dif_pic.SetDifType(view_def);
 		}
 		return true;
@@ -1037,20 +1056,12 @@ static void FBDF_Select_DecideFolder(
 		list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 		list_set.UpdateJacket(cmd);
 		if (list_set.OnAvailableMusicFolderNow()) {
-			std::string full_path = "music/";
-			full_path += list_set.music_list[cmd].folder_name;
-			full_path += '/';
-			full_path += list_set.music_list[cmd].music_file_name;
-			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
-			list_set.dif_pic.SetDifNum(
-				list_set.music_list[cmd].level_list[0],
-				list_set.music_list[cmd].level_list[1],
-				list_set.music_list[cmd].level_list[2]
-			);
+			list_set.bgm.ReservePreview(list_set.music_list[cmd]);
+			list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
 			list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 		}
 		else {
-			list_set.dif_pic.SetDifNum(-1, -1, -1);
+			list_set.dif_pic.ResetDifNum();
 		}
 		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
 	}
@@ -1066,7 +1077,7 @@ static void FBDF_Select_BackFolder(
 		list_set.UpdateJacket(cmd);
 		list_set.bgm.ReserveErase();
 		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
-		list_set.dif_pic.SetDifNum(-1, -1, -1);
+		list_set.dif_pic.ResetDifNum();
 	}
 }
 
@@ -1082,18 +1093,8 @@ static void FBDF_Select_KeyVert(
 	}
 	if (list_set.OnAvailableMusicFolderNow()) {
 		now_music = list_set.music_list[cmd].music_name;
-		{
-			std::string full_path = "music/";
-			full_path += list_set.music_list[cmd].folder_name;
-			full_path += '/';
-			full_path += list_set.music_list[cmd].music_file_name;
-			list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
-		}
-		list_set.dif_pic.SetDifNum(
-			list_set.music_list[cmd].level_list[0],
-			list_set.music_list[cmd].level_list[1],
-			list_set.music_list[cmd].level_list[2]
-		);
+		list_set.bgm.ReservePreview(list_set.music_list[cmd]);
+		list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
 		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
 	list_set.UpdateJacket(cmd);
@@ -1109,16 +1110,8 @@ static void FBDF_Select_KeyHori(
 	list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 	list_set.UpdateJacket(cmd);
 	if (list_set.OnAvailableMusicFolderNow()) {
-		std::string full_path = "music/";
-		full_path += list_set.music_list[cmd].folder_name;
-		full_path += '/';
-		full_path += list_set.music_list[cmd].music_file_name;
-		list_set.bgm.ReservePreview(full_path.c_str(), list_set.music_list[cmd].pre_time);
-		list_set.dif_pic.SetDifNum(
-			list_set.music_list[cmd].level_list[0],
-			list_set.music_list[cmd].level_list[1],
-			list_set.music_list[cmd].level_list[2]
-		);
+		list_set.bgm.ReservePreview(list_set.music_list[cmd]);
+		list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
 		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
 	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);

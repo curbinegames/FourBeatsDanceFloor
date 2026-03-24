@@ -373,6 +373,10 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, const char *nex_
 			strmods(buf, 8);
 			map.pre_time = strtol(buf, NULL, 10);
 		}
+		else if (strands(buf, "SAMP_RATE:")) {
+			strmods(buf, 10);
+			map.samp_rate = strtol(buf, NULL, 10);
+		}
 		else if (strands(buf, "BLOCK:")) {
 			strmods(buf, 6);
 			option.now_block = strtol(buf, NULL, 10);
@@ -492,6 +496,10 @@ FBDF_mapenc_error_et FBDF_MapLoadOne(
 		else if (strands(str_buf, "PREVIEW:")) {
 			strmods(str_buf, 8);
 			map.pre_time = strtol(str_buf, NULL, 10);
+		}
+		else if (strands(str_buf, "SAMP_RATE:")) {
+			strmods(str_buf, 10);
+			map.samp_rate = strtol(str_buf, NULL, 10);
 		}
 	}
 
