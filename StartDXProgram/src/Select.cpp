@@ -812,6 +812,13 @@ public:
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
 
+	void MakeNexMusic(FBDF_play_choose_music_st &dest, int cmd) const {
+		dest.folder_name   = this->music_list[cmd].folder_name;
+		dest.map_file_name = this->music_list[cmd].map_file_name;
+		dest.music_name    = this->music_list[cmd].music_name;
+		dest.dif_type      = this->music_list[cmd].dif_type;
+	}
+
 	/**
 	 * @brief 絞り込み/並び替え条件から譜面リストを作る
 	 * @param[in] view_dif_type 今の難易度表示
@@ -875,6 +882,26 @@ public:
 		this->folder_manager.WriteFile(cmd, view_def);
 	}
 
+	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
+		dest.folder_name        = d_name;
+		dest.music_name         = map.music_name;
+		dest.music_file_name    = map.music_file_name;
+		dest.artist             = map.artist_name;
+		dest.jucket_name        = map.jacket_file_name;
+		dest.Length             = FBDF_CalMapLength(map);
+		dest.pre_time           = map.pre_time;
+		dest.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
+		dest.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
+		dest.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
+		dest.auto_cal_dif.all   = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
+		dest.user_dif           = map.user_level;
+		dest.map_file_name      = map.map_file_name;
+		dest.dif_type           = dif;
+		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
+		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
+		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
+	}
+
 	/**
 	 * @brief ファイル名から楽曲を読み込む
 	 * @param[out] detail 読み込んだリストの保存先
@@ -897,26 +924,34 @@ public:
 				/* 気にせずスルー */
 			}
 		}
-
-		dest.folder_name        = d_name;
-		dest.music_name         = map.music_name;
-		dest.music_file_name    = map.music_file_name;
-		dest.artist             = map.artist_name;
-		dest.jucket_name        = map.jacket_file_name;
-		dest.Length             = FBDF_CalMapLength(map);
-		dest.pre_time           = map.pre_time;
-		dest.sample_rate        = map.samp_rate;
-		dest.auto_cal_dif.notes = FBDF_CalMapNotesDif(map.note);
-		dest.auto_cal_dif.color = FBDF_CalMapColorDif(map.note);
-		dest.auto_cal_dif.trick = FBDF_CalMapTrickDif(map.note);
-		dest.auto_cal_dif.all   = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
-		dest.user_dif           = map.user_level;
-		dest.map_file_name      = map.map_file_name;
-		dest.dif_type           = dif;
-		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
-		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
-		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
+		MapToDetail(dest, map, d_name, dif);
 		return true;
+	}
+
+	void MapLoadMusicGetDetailAllDif(const char *d_name) {
+		bool insert_fg[3] = { false,false,false };
+		int dif_list[3] = { -1,-1,-1 };
+		FBDF_music_detail_t buf[3];
+		insert_fg[0] = this->MapLoadMusicGetDetail(d_name, buf[0], FBDF_dif_type_ec::LIGHT);
+		if (insert_fg[0]) {
+			dif_list[0] = buf[0].user_dif;
+		}
+		insert_fg[1] = this->MapLoadMusicGetDetail(d_name, buf[1], FBDF_dif_type_ec::NORMAL);
+		if (insert_fg[1]) {
+			dif_list[1] = buf[1].user_dif;
+		}
+		insert_fg[2] = this->MapLoadMusicGetDetail(d_name, buf[2], FBDF_dif_type_ec::HYPER);
+		if (insert_fg[2]) {
+			dif_list[2] = buf[2].user_dif;
+		}
+		for (size_t ib = 0; ib < 3; ib++) {
+			if (insert_fg[ib]) {
+				for (size_t ia = 0; ia < 3; ia++) {
+					buf[ib].level_list[ia] = dif_list[ia];
+				}
+				this->music_list.detail.push_back(buf[ib]);
+			}
+		}
 	}
 
 	/**
@@ -926,36 +961,14 @@ public:
 	bool LoadMusicList(void) {
 		DIR *dir;
 		struct dirent *dirs;
-		FBDF_music_detail_t buf[3];
-		bool insert_fg[3] = { false,false,false };
 		dir = opendir("music");
 		if (dir == NULL) { return false; }
 
 		while (1) {
-			int dif_list[3] = { -1,-1,-1 };
 			dirs = readdir(dir);
 			if (dirs == NULL) { break; }
 			if (dirs->d_name[0] == '.') { continue; }
-			insert_fg[0] = this->MapLoadMusicGetDetail(dirs->d_name, buf[0], FBDF_dif_type_ec::LIGHT);
-			if (insert_fg[0]) {
-				dif_list[0] = buf[0].user_dif;
-			}
-			insert_fg[1] = this->MapLoadMusicGetDetail(dirs->d_name, buf[1], FBDF_dif_type_ec::NORMAL);
-			if (insert_fg[1]) {
-				dif_list[1] = buf[1].user_dif;
-			}
-			insert_fg[2] = this->MapLoadMusicGetDetail(dirs->d_name, buf[2], FBDF_dif_type_ec::HYPER);
-			if (insert_fg[2]) {
-				dif_list[2] = buf[2].user_dif;
-			}
-			for (size_t ib = 0; ib < 3; ib++) {
-				if (insert_fg[ib]) {
-					for (size_t ia = 0; ia < 3; ia++) {
-						buf[ib].level_list[ia] = dif_list[ia];
-					}
-					this->music_list.detail.push_back(buf[ib]);
-				}
-			}
+			MapLoadMusicGetDetailAllDif(dirs->d_name);
 		}
 
 		closedir(dir);
@@ -976,6 +989,13 @@ public:
 			this->dif_pic.ResetDifNum();
 			this->dif_pic.SetDifType(view_def);
 		}
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+		{
+			std::string log = "読み込んだ譜面数: ";
+			log += std::to_string(this->music_list.size());
+			FBDF_LOG_INFO(log.c_str());
+		}
+#endif
 		return true;
 	}
 
@@ -1193,13 +1213,6 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	FBDF_Option_ReloadPic();
 	if (select_class.list_set.Init(command, view_dif_type) == false) { return VIEW_SELECT; }
-#if (FBDF_LOG_LEVEL_DEF <= 1)
-	{
-		std::string log = "読み込んだ譜面数: ";
-		log += std::to_string(select_class.list_set.music_list.size());
-		FBDF_LOG_INFO(log.c_str());
-	}
-#endif
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
@@ -1229,9 +1242,6 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	select_class.list_set.WriteUserData(command, view_dif_type);
 	FBDF_Save_WriteOption(&game_option);
 
-	nex_music.folder_name   = select_class.list_set.music_list[command].folder_name;
-	nex_music.map_file_name = select_class.list_set.music_list[command].map_file_name;
-	nex_music.music_name    = select_class.list_set.music_list[command].music_name;
-	nex_music.dif_type      = select_class.list_set.music_list[command].dif_type;
+	select_class.list_set.MakeNexMusic(nex_music, command);
 	return VIEW_PLAY;
 }
