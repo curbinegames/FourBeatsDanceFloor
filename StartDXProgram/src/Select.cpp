@@ -819,8 +819,6 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 
 class FBDF_select_list_set_c {
 private:
-	FBDF_select_jacket_viewer_c jacket_viewer;
-
 	/* 今いるフォルダの中に、特定の曲名があるかどうか。あったら番地、なかったら-1を返す。 */
 	int FindMusicOnList(const std::string &find_music) const {
 		if (!this->folder_manager.IsMusicFolderNow()) { return -1; }
@@ -836,9 +834,6 @@ public:
 	FBDF_music_list_c music_list;
 	FBDF_select_view_string_c view_string;
 	FBDF_Select_MusicFolderManager_c folder_manager;
-	FBDF_select_difdraw_c dif_pic;
-	FBDF_select_bgm_c bgm;
-	dxcur_snd_c se{ "SE/select.mp3" };
 
 	void MakeNexMusic(FBDF_play_choose_music_st &dest, int cmd) const {
 		dest.folder_name   = this->music_list[cmd].folder_name;
@@ -1033,42 +1028,7 @@ public:
 		return true;
 	}
 
-	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
-		if (this->LoadMusicList() == false) { return false; }
-		this->folder_manager.ReadFile(cmd, view_def);
-		this->MakeMusicList(view_def);
-		cmd = betweens(0, cmd, this->music_list.sort.size() - 1);
-		this->UpdateJacket(cmd);
-		this->bgm.init();
-		if (this->OnAvailableMusicFolderNow()) {
-			this->dif_pic.SetDifNum(this->music_list[cmd].level_list);
-			this->dif_pic.SetDifType(this->music_list[cmd].dif_type);
-		}
-		else {
-			this->dif_pic.ResetDifNum();
-			this->dif_pic.SetDifType(view_def);
-		}
-#if (FBDF_LOG_LEVEL_DEF <= 1)
-		{
-			std::string log = "読み込んだ譜面数: ";
-			log += std::to_string(this->music_list.size());
-			FBDF_LOG_INFO(log.c_str());
-		}
-#endif
-		return true;
-	}
-
-	void UpdateJacket(int cmd) {
-		if (this->OnAvailableMusicFolderNow()) {
-			this->jacket_viewer.update(this->music_list[cmd].folder_name, this->music_list[cmd].jucket_name);
-		}
-		else {
-			this->jacket_viewer.clear();
-		}
-	}
-
-#if 1 /* draw系 */
-private:
+public:
 	void DrawColorCount(int x, int y, int cmd) const {
 		const FBDF_music_colorcount_t &count = this->music_list[cmd].color_count;
 		int Len = pals_scale(35, 300, 0, 0, count.c1);
@@ -1090,54 +1050,99 @@ private:
 		return;
 	}
 
-public:
-	void Draw(int cmd) const {
-		DrawFormatString(
-			5, 80, COLOR_WHITE, _T("folder: %s"),
-			this->folder_manager.GetFolderPathString().c_str()
-		);
-		if (this->OnAvailableMusicFolderNow()) {
-			this->DrawColorCount(5, 100, cmd);
-			this->jacket_viewer.draw();
-			DrawFormatString(
-				5, WINDOW_SIZE_Y - 110, COLOR_WHITE, _T("artist: %s"),
-				this->music_list[cmd].artist.c_str()
-			);
-			DrawFormatString(
-				5, WINDOW_SIZE_Y - 90, COLOR_WHITE, _T("score: %d / acc: %6.2f%%"),
-				this->music_list[cmd].user_highscore.score,
-				this->music_list[cmd].user_highscore.acc
-			);
-			DrawFormatString(
-				5, WINDOW_SIZE_Y - 70, COLOR_WHITE, _T("clear type: %s"),
-				FBDF_ClearTypeToString(this->music_list[cmd].user_highscore.clear_type).c_str()
-			);
-		}
-		this->view_string.DrawList(cmd);
-	}
-#endif /* draw系 */
-
 	bool IsAllFolder(void) const {
 		return this->folder_manager.NowFolder()->name == "ALL MUSIC";
 	}
 };
 
 /* セレクト画面に関するクラスをまとめたもの */
-typedef struct FBDF_select_class_set_s {
+class FBDF_select_class_set_c {
+public:
 	FBDF_select_list_set_c list_set;
 	FBDF_select_back_pic_c back_pic;
 	dxcur_pic_c top_bar{ "pic/select/select_bar.png" };
+	FBDF_select_jacket_viewer_c jacket_viewer;
+	FBDF_select_difdraw_c dif_pic;
 	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
-} FBDF_select_class_set_t;
+	FBDF_select_bgm_c bgm;
+	dxcur_snd_c se{ "SE/select.mp3" };
+
+	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
+		if (this->list_set.LoadMusicList() == false) { return false; }
+		this->list_set.folder_manager.ReadFile(cmd, view_def);
+		this->list_set.MakeMusicList(view_def);
+		cmd = betweens(0, cmd, this->list_set.music_list.sort.size() - 1);
+		this->UpdateJacket(cmd);
+		this->bgm.init();
+		if (this->list_set.OnAvailableMusicFolderNow()) {
+			this->dif_pic.SetDifNum(this->list_set.music_list[cmd].level_list);
+			this->dif_pic.SetDifType(this->list_set.music_list[cmd].dif_type);
+		}
+		else {
+			this->dif_pic.ResetDifNum();
+			this->dif_pic.SetDifType(view_def);
+		}
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+		{
+			std::string log = "読み込んだ譜面数: ";
+			log += std::to_string(this->music_list.size());
+			FBDF_LOG_INFO(log.c_str());
+		}
+#endif
+		return true;
+	}
+
+	void UpdateJacket(int cmd) {
+		if (this->list_set.OnAvailableMusicFolderNow()) {
+			this->jacket_viewer.update(
+				this->list_set.music_list[cmd].folder_name,
+				this->list_set.music_list[cmd].jucket_name
+			);
+		}
+		else {
+			this->jacket_viewer.clear();
+		}
+	}
+
+	void Draw(int cmd) const {
+		this->back_pic.DrawPic();
+		DrawFormatString(
+			5, 80, COLOR_WHITE, _T("folder: %s"),
+			this->list_set.folder_manager.GetFolderPathString().c_str()
+		);
+		if (this->list_set.OnAvailableMusicFolderNow()) {
+			this->list_set.DrawColorCount(5, 100, cmd);
+			this->jacket_viewer.draw();
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 110, COLOR_WHITE, _T("artist: %s"),
+				this->list_set.music_list[cmd].artist.c_str()
+			);
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 90, COLOR_WHITE, _T("score: %d / acc: %6.2f%%"),
+				this->list_set.music_list[cmd].user_highscore.score,
+				this->list_set.music_list[cmd].user_highscore.acc
+			);
+			DrawFormatString(
+				5, WINDOW_SIZE_Y - 70, COLOR_WHITE, _T("clear type: %s"),
+				FBDF_ClearTypeToString(this->list_set.music_list[cmd].user_highscore.clear_type).c_str()
+			);
+		}
+		this->list_set.view_string.DrawList(cmd);
+		this->dif_pic.draw();
+		DrawGraph(0, 0, this->top_bar.handle(), TRUE);
+		this->usage.draw(0, WINDOW_SIZE_Y);
+	}
+};
 
 #endif /* class */
 
 #if 1 /* キー入力関連 */
 
 static void FBDF_Select_DecideFolder(
-	FBDF_select_list_set_c &list_set, std::string &now_music, int &cmd,
+	FBDF_select_class_set_c &select_class, std::string &now_music, int &cmd,
 	FBDF_dif_type_ec view_dif_type, FBDF_cutin_c &cutin
 ) {
+	FBDF_select_list_set_c &list_set = select_class.list_set;
 	if (list_set.folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
 		if (!list_set.music_list.sort.empty()) { /* 曲フォルダの中が空じゃない */
 			cutin.SetIo(CUT_FRAG_IN);
@@ -1146,36 +1151,38 @@ static void FBDF_Select_DecideFolder(
 	else { /* サブフォルダである */
 		list_set.folder_manager.PushFolder(cmd);
 		list_set.ReloadMusicList(now_music, cmd, view_dif_type);
-		list_set.UpdateJacket(cmd);
+		select_class.UpdateJacket(cmd);
 		if (list_set.OnAvailableMusicFolderNow()) {
-			list_set.bgm.ReservePreview(list_set.music_list[cmd]);
-			list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-			list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+			select_class.bgm.ReservePreview(list_set.music_list[cmd]);
+			select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
+			select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 		}
 		else {
-			list_set.dif_pic.ResetDifNum();
+			select_class.dif_pic.ResetDifNum();
 		}
-		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
+		PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
 	}
 }
 
 static void FBDF_Select_BackFolder(
-	FBDF_select_list_set_c &list_set, int &cmd, FBDF_dif_type_ec view_dif_type
+	FBDF_select_class_set_c &select_class, int &cmd, FBDF_dif_type_ec view_dif_type
 ) {
+	FBDF_select_list_set_c &list_set = select_class.list_set;
 	size_t poped_cmd = 0;
 	if (list_set.folder_manager.PopFolder(poped_cmd)) {
 		list_set.MakeMusicList(view_dif_type);
 		cmd = poped_cmd;
-		list_set.UpdateJacket(cmd);
-		list_set.bgm.ReserveErase();
-		PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
-		list_set.dif_pic.ResetDifNum();
+		select_class.UpdateJacket(cmd);
+		select_class.bgm.ReserveErase();
+		PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
+		select_class.dif_pic.ResetDifNum();
 	}
 }
 
 static void FBDF_Select_KeyVert(
-	FBDF_select_list_set_c &list_set, std::string &now_music, int &cmd, bool up
+	FBDF_select_class_set_c &select_class, std::string &now_music, int &cmd, bool up
 ) {
+	FBDF_select_list_set_c &list_set = select_class.list_set;
 	size_t list_size = list_set.view_string.size();
 	if (up) {
 		cmd = MOD_AVOID_ZERO((cmd + list_size - 1), list_size, 0);
@@ -1185,28 +1192,29 @@ static void FBDF_Select_KeyVert(
 	}
 	if (list_set.OnAvailableMusicFolderNow()) {
 		now_music = list_set.music_list[cmd].music_name;
-		list_set.bgm.ReservePreview(list_set.music_list[cmd]);
-		list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+		select_class.bgm.ReservePreview(list_set.music_list[cmd]);
+		select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
+		select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
-	list_set.UpdateJacket(cmd);
-	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
+	select_class.UpdateJacket(cmd);
+	PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
 }
 
 static void FBDF_Select_KeyHori(
-	FBDF_select_list_set_c &list_set, FBDF_dif_type_ec &view_dif_type,
+	FBDF_select_class_set_c &select_class, FBDF_dif_type_ec &view_dif_type,
 	std::string &now_music, int &cmd, bool right
 ) {
+	FBDF_select_list_set_c &list_set = select_class.list_set;
 	if (!list_set.IsAllFolder()) { return; } /* TODO: どちらかというと、if(今いるフォルダーに難易度フィルターがあるかどうか) */
 	if (right) { ++view_dif_type; } else { --view_dif_type; }
 	list_set.ReloadMusicList(now_music, cmd, view_dif_type);
-	list_set.UpdateJacket(cmd);
+	select_class.UpdateJacket(cmd);
 	if (list_set.OnAvailableMusicFolderNow()) {
-		list_set.bgm.ReservePreview(list_set.music_list[cmd]);
-		list_set.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-		list_set.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+		select_class.bgm.ReservePreview(list_set.music_list[cmd]);
+		select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
+		select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
 	}
-	PlaySoundMem(list_set.se.handle(), DX_PLAYTYPE_BACK);
+	PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
 }
 
 /**
@@ -1221,8 +1229,8 @@ static void FBDF_Select_KeyHori(
  * @return なし
  */
 static void FBDF_Select_KeyCheck(
-	dxcur_key_c &key,
-	FBDF_select_list_set_c &list_set, std::string &now_music, int &command, bool &option_fg,
+	dxcur_key_c &key, FBDF_select_class_set_c &select_class,
+	std::string &now_music, int &command, bool &option_fg,
 	FBDF_dif_type_ec &view_dif_type, FBDF_cutin_c &cutin
 ) {
 	if (cutin.IsClosing()) { return; } /* カットイン中のときはキー入力無効 */
@@ -1230,22 +1238,22 @@ static void FBDF_Select_KeyCheck(
 	key.update();
 	switch (key.GetKeyPulseOnce()) {
 	case KEY_INPUT_RETURN:
-		FBDF_Select_DecideFolder(list_set, now_music, command, view_dif_type, cutin);
+		FBDF_Select_DecideFolder(select_class, now_music, command, view_dif_type, cutin);
 		break;
 	case KEY_INPUT_BACK:
-		FBDF_Select_BackFolder(list_set, command, view_dif_type);
+		FBDF_Select_BackFolder(select_class, command, view_dif_type);
 		break;
 	case KEY_INPUT_UP:
-		FBDF_Select_KeyVert(list_set, now_music, command, true);
+		FBDF_Select_KeyVert(select_class, now_music, command, true);
 		break;
 	case KEY_INPUT_DOWN:
-		FBDF_Select_KeyVert(list_set, now_music, command, false);
+		FBDF_Select_KeyVert(select_class, now_music, command, false);
 		break;
 	case KEY_INPUT_LEFT:
-		FBDF_Select_KeyHori(list_set, view_dif_type, now_music, command, false);
+		FBDF_Select_KeyHori(select_class, view_dif_type, now_music, command, false);
 		break;
 	case KEY_INPUT_RIGHT:
-		FBDF_Select_KeyHori(list_set, view_dif_type, now_music, command, true);
+		FBDF_Select_KeyHori(select_class, view_dif_type, now_music, command, true);
 		break;
 	case KEY_INPUT_Z:
 		option_fg = true;
@@ -1254,14 +1262,6 @@ static void FBDF_Select_KeyCheck(
 }
 
 #endif /* キー入力関連 */
-
-static void FBDF_Select_Draw(const FBDF_select_class_set_t &select_class, int cmd) {
-	select_class.back_pic.DrawPic();
-	select_class.list_set.Draw(cmd);
-	select_class.list_set.dif_pic.draw();
-	DrawGraph(0, 0, select_class.top_bar.handle(), TRUE);
-	select_class.usage.draw(0, WINDOW_SIZE_Y);
-}
 
 /**
  * @brief セレクト画面のベース
@@ -1275,7 +1275,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	FBDF_dif_type_ec view_dif_type = FBDF_dif_type_ec::LIGHT;
 	std::string now_music;
-	FBDF_select_class_set_t select_class;
+	FBDF_select_class_set_c select_class;
 	dxcur_key_c key;
 	FBDF_option_pic_st option_pic;
 	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る");
@@ -1284,25 +1284,25 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Option_ReloadPic();
-	if (select_class.list_set.Init(command, view_dif_type) == false) { return VIEW_SELECT; }
+	if (select_class.Init(command, view_dif_type) == false) { return VIEW_SELECT; }
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		if (option_fg) {
-			FBDF_Option_KeyAction(key, option_cmd, option_fg, select_class.list_set.se.handle());
+			FBDF_Option_KeyAction(key, option_cmd, option_fg, select_class.se.handle());
 		}
 		else {
 			FBDF_Select_KeyCheck(
-				key, select_class.list_set, now_music, command, option_fg, view_dif_type, cutin
+				key, select_class, now_music, command, option_fg, view_dif_type, cutin
 			);
 		}
 
 		select_class.back_pic.UpdateState();
-		select_class.list_set.bgm.update();
+		select_class.bgm.update();
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから
-		FBDF_Select_Draw(select_class, command);
+		select_class.Draw(command);
 		if (option_fg) { FBDF_Option_Draw(option_cmd, option_pic, option_usage); }
 		cutin.DrawCut();
 		ScreenFlip(); // 作画エリアここまで
