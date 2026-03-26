@@ -1896,6 +1896,27 @@ static void FBDF_Play_DrawScore(int x, int y, const FBDF_score_st &score) {
 	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.all_point);
 }
 
+static void FBDF_Play_DrawJudgeArea(const FBDF_play_class_set_t &play_class) {
+	uint Yoffset = 0;
+	if (game_option.judge_draw_en) {
+		play_class.judge_class.DrawJudge(
+			lins(0, 120, 960, 270, WINDOW_SIZE_X), lins(0, 0, 720, 530, WINDOW_SIZE_Y)
+		);
+		Yoffset += 70;
+	}
+	if (game_option.fast_slow_en ) {
+		play_class.judge_class.DrawFastSlow(
+			lins(0, 50, 960, 230, WINDOW_SIZE_X), lins(0, 0, 720, 545, WINDOW_SIZE_Y) - Yoffset
+		);
+		Yoffset += 40;
+	}
+	if (game_option.chain_draw_en) {
+		play_class.chain_draw_class.DrawChain(
+			lins(0, 0, 960, 180, WINDOW_SIZE_X), lins(0, 0, 720, 560, WINDOW_SIZE_Y) - Yoffset
+		);
+	}
+}
+
 /**
  * @brief プレイ画面に関するものを全て描画する。
  */
@@ -1938,26 +1959,7 @@ static void FBDF_Play_AllDraw(
 		lins(0, 0, 960, 155, WINDOW_SIZE_X),
 		lins(0, 0, 720, 691, WINDOW_SIZE_Y)
 	);
-	{
-		uint Yoffset = 0;
-		if (game_option.judge_draw_en) {
-			play_class.judge_class.DrawJudge(
-				lins(0, 120, 960, 270, WINDOW_SIZE_X), lins(0, 0, 720, 530, WINDOW_SIZE_Y)
-			);
-			Yoffset += 70;
-		}
-		if (game_option.fast_slow_en ) {
-			play_class.judge_class.DrawFastSlow(
-				lins(0, 50, 960, 230, WINDOW_SIZE_X), lins(0, 0, 720, 545, WINDOW_SIZE_Y) - Yoffset
-			);
-			Yoffset += 40;
-		}
-		if (game_option.chain_draw_en) {
-			play_class.chain_draw_class.DrawChain(
-				lins(0, 0, 960, 180, WINDOW_SIZE_X), lins(0, 0, 720, 560, WINDOW_SIZE_Y) - Yoffset
-			);
-		}
-	}
+	FBDF_Play_DrawJudgeArea(play_class);
 }
 
 #endif /* Draw系 */
