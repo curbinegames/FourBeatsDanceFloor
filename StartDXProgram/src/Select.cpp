@@ -992,15 +992,21 @@ public:
 		return (this->folder_manager.IsMusicFolderNow() && !this->music_list.sort.empty());
 	}
 
-	/* リスト作って選択中の曲探してコマンドと曲名を取得する */
-	void ReloadMusicList(std::string &now_music, int &cmd, FBDF_dif_type_ec view_dif_type) {
+	void FetchMusicCmd(int &cmd, const std::string &now_music) {
 		int find_no;
-		this->MakeMusicListInner(view_dif_type);
-		this->MakeMusicListView();
 		cmd = 0;
 		if (this->OnAvailableMusicFolderNow()) {
 			find_no = this->FindMusicOnList(now_music);
 			if (find_no != -1) { cmd = find_no; }
+		}
+	}
+
+	/* リスト作って選択中の曲探してコマンドと曲名を取得する */
+	void ReloadMusicList(std::string &now_music, int &cmd, FBDF_dif_type_ec view_dif_type) {
+		this->MakeMusicListInner(view_dif_type);
+		this->MakeMusicListView();
+		this->FetchMusicCmd(cmd, now_music);
+		if (this->OnAvailableMusicFolderNow()) {
 			now_music = this->music_list[cmd].music_name;
 		}
 	}
