@@ -18,8 +18,9 @@
 #include <mapenc.h>
 #include <CalDif.h>
 #include <option.h>
-
 #include <Play.h>
+
+#include <Select.h>
 
 #define NOTE_COLOR_DARK_1 0xFF3E5BCF
 #define NOTE_COLOR_DARK_2 0xFF008A00
@@ -40,33 +41,6 @@ typedef enum FBDF_music_list_bar_color_e {
 } FBDF_music_list_bar_color_t;
 
 #if 1 /* struct */
-
-typedef struct FBDF_music_dif_s {
-	double notes  = 0;
-	double color  = 0;
-	double trick  = 0;
-	double length = 0;
-	double all    = 0;
-} FBDF_music_dif_t;
-
-typedef struct FBDF_music_detail_s {
-	std::string folder_name;
-	std::string map_file_name;
-	std::string music_name;
-	std::string music_file_name;
-	std::string artist;
-	std::string jucket_name;
-	uint Length = 0;
-	uint pre_time = 10000;
-	uint sample_rate = 44100;
-	FBDF_music_dif_t auto_cal_dif;
-	int user_dif = 0;
-	int level_list[3] = { -1,-1,-1 };
-	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::LIGHT;
-	FBDF_music_most_colorpat_t most_colorpat[MOST_COLORPAT_NUM];
-	FBDF_music_colorcount_t color_count;
-	FBDF_file_music_score_st user_highscore;
-} FBDF_music_detail_t;
 
 typedef struct FBDF_music_detail_base_s {
 	std::string name;
