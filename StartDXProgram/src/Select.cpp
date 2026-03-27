@@ -940,18 +940,22 @@ public:
 	}
 
 	/**
-	 * @brief 絞り込み/並び替え条件から譜面リストを作る
+	 * @brief 絞り込み/並び替え条件から内部譜面リストを作る
 	 * @param[in] view_dif_type 今の難易度表示
 	 * @return なし
 	 */
-	void MakeMusicList(FBDF_dif_type_ec view_dif_type) {
-		/* 内部リスト操作 */
+	void MakeMusicListInner(FBDF_dif_type_ec view_dif_type) {
 		if (this->folder_manager.IsMusicFolderNow()) {
 			this->music_list.Search(this->folder_manager.NowFolder()->filter_func, view_dif_type);
 			this->music_list.SortByDif();
 		}
+	}
 
-		/* リスト作成 */
+	/**
+	 * @brief 絞り込み/並び替え条件から表示譜面リストを作る
+	 * @return なし
+	 */
+	void MakeMusicListView(void) {
 		this->view_string.clear();
 		if (this->folder_manager.IsMusicFolderNow()) {
 			for (int is = 0; is < this->music_list.sort.size(); is++) {
@@ -971,10 +975,12 @@ public:
 			}
 		}
 		else {
-			for (size_t i = 0; i < this->folder_manager.NowFolder()->children.size(); i++) {
+			const std::vector<FBDF_music_folder_node_st*> &buf_child =
+				this->folder_manager.NowFolder()->children;
+			for (size_t i = 0; i < buf_child.size(); i++) {
 				this->view_string.push_back(
-					this->folder_manager.NowFolder()->children[i]->name,
-					this->folder_manager.NowFolder()->children[i]->color
+					buf_child[i]->name,
+					buf_child[i]->color
 				);
 			}
 		}
@@ -989,7 +995,8 @@ public:
 	/* リスト作って選択中の曲探してコマンドと曲名を取得する */
 	void ReloadMusicList(std::string &now_music, int &cmd, FBDF_dif_type_ec view_dif_type) {
 		int find_no;
-		this->MakeMusicList(view_dif_type);
+		this->MakeMusicListInner(view_dif_type);
+		this->MakeMusicListView();
 		cmd = 0;
 		if (this->OnAvailableMusicFolderNow()) {
 			find_no = this->FindMusicOnList(now_music);
@@ -1044,7 +1051,8 @@ public:
 	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
 		if (this->list_set.music_list.LoadMusicList() == false) { return false; }
 		this->list_set.folder_manager.ReadFile(cmd, view_def);
-		this->list_set.MakeMusicList(view_def);
+		this->list_set.MakeMusicListInner(view_def);
+		this->list_set.MakeMusicListView();
 		cmd = betweens(0, cmd, this->list_set.music_list.sort.size() - 1);
 		this->UpdateJacket(cmd);
 		this->bgm.init();
@@ -1144,7 +1152,8 @@ static void FBDF_Select_BackFolder(
 	FBDF_select_list_set_c &list_set = select_class.list_set;
 	size_t poped_cmd = 0;
 	if (list_set.folder_manager.PopFolder(poped_cmd)) {
-		list_set.MakeMusicList(view_dif_type);
+		list_set.MakeMusicListInner(view_dif_type);
+		list_set.MakeMusicListView();
 		cmd = poped_cmd;
 		select_class.UpdateJacket(cmd);
 		select_class.bgm.ReserveErase();
