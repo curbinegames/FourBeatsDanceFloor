@@ -1045,6 +1045,7 @@ public:
 /* セレクト画面に関するクラスをまとめたもの */
 class FBDF_select_class_set_c {
 public:
+	dxcur_mouse_item_c mouse_item;
 	FBDF_select_list_set_c list_set;
 	FBDF_select_back_pic_c back_pic;
 	dxcur_pic_c top_bar{ "pic/select/select_bar.png" };
@@ -1054,6 +1055,17 @@ public:
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
 
+private:
+	void InitMouseItems(void) {
+		/* 詳細表示ヘルプ */ {
+			dxcur_ui_elem_c buf;
+			buf.SetPosition(0, 600, 300, 670);
+			buf.box_en = true;
+			this->mouse_item.AddItem(buf);
+		}
+	}
+
+public:
 	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
 		if (this->list_set.music_list.LoadMusicList() == false) { return false; }
 		this->list_set.folder_manager.ReadFile(cmd, view_def);
@@ -1070,6 +1082,7 @@ public:
 			this->dif_pic.ResetDifNum();
 			this->dif_pic.SetDifType(view_def);
 		}
+		this->InitMouseItems();
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
 			std::string log = "読み込んだ譜面数: ";
@@ -1119,6 +1132,7 @@ public:
 		this->dif_pic.draw();
 		DrawGraph(0, 0, this->top_bar.handle(), TRUE);
 		this->usage.draw(0, WINDOW_SIZE_Y);
+		this->mouse_item.draw();
 	}
 };
 
