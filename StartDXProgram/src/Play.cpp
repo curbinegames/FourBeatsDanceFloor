@@ -1582,22 +1582,21 @@ static void FBDF_Play_NoteJudgeEventAntion(
 
 		/* スコア計算 */
 		score.base_point += buf.score;
-		if (FBDF_PLAYSTYLE_NORMAL <= game_option.play_style) { score.chain_point += score.chain; }
+		score.scale_point = score.base_point; /* TODO: basepointの方にプレイスタイル補正をかけていた名残り。消す。 */
 		switch (game_option.play_style) {
 		case FBDF_PLAYSTYLE_ASSIST_PLUS:
-			score.scale_point = score.base_point * 90 / 100; /* 90% */
 			break;
 		case FBDF_PLAYSTYLE_ASSIST:
-			score.scale_point = score.base_point * 95 / 100; /* 95% */
+			score.chain_point += score.chain * 0.45;
 			break;
 		case FBDF_PLAYSTYLE_NORMAL:
-			score.scale_point = score.base_point * 99 / 100; /* 99% */
+			score.chain_point += score.chain;
 			break;
 		case FBDF_PLAYSTYLE_BLANC:
-			score.scale_point = score.base_point * 995 / 1000; /* 99.5% */
+			score.chain_point += score.chain * 1.28;
 			break;
 		case FBDF_PLAYSTYLE_BLANC_PLUS:
-			score.scale_point = score.base_point; /* 100% */
+			score.chain_point += score.chain * 1.84;
 			break;
 		}
 		score.all_point = score.scale_point + score.chain_point;
@@ -1829,7 +1828,10 @@ static void FBDF_Play_AllUpdate(
 	if ((FinishTime == 0) && (map.note.size() == map.note.nowNo() + 1)) { FinishTime = map.Ntime; }
 
 	/* 譜面終了判定 */
-	if (!cutin.IsClosing() && (FinishTime != 0) && ((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(music_hand))) {
+	if (
+		!cutin.IsClosing() && (FinishTime != 0) &&
+		((FinishTime + 2000) <= map.Ntime) && (CheckSoundMem(music_hand) != 1)
+	) {
 		cutin.SetIo(CUT_FRAG_IN);
 	}
 

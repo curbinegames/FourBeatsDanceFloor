@@ -1066,7 +1066,8 @@ private:
 	}
 
 public:
-	bool Init(int &cmd, FBDF_dif_type_ec &view_def) {
+	/* TODO: now_music‚Íƒƒ“ƒo•Ï”‚É‚µ‚È‚¢‚©? */
+	bool Init(int &cmd, FBDF_dif_type_ec &view_def, std::string &now_music) {
 		if (this->list_set.music_list.LoadMusicList() == false) { return false; }
 		this->list_set.folder_manager.ReadFile(cmd, view_def);
 		this->list_set.MakeMusicListInner(view_def);
@@ -1077,6 +1078,7 @@ public:
 		if (this->list_set.OnAvailableMusicFolderNow()) {
 			this->dif_pic.SetDifNum(this->list_set.music_list[cmd].level_list);
 			this->dif_pic.SetDifType(this->list_set.music_list[cmd].dif_type);
+			now_music = list_set.music_list[cmd].music_name;
 		}
 		else {
 			this->dif_pic.ResetDifNum();
@@ -1124,8 +1126,9 @@ public:
 				this->list_set.music_list[cmd].user_highscore.acc
 			);
 			DrawFormatString(
-				5, WINDOW_SIZE_Y - 70, COLOR_WHITE, _T("clear type: %s"),
-				FBDF_ClearTypeToString(this->list_set.music_list[cmd].user_highscore.clear_type).c_str()
+				5, WINDOW_SIZE_Y - 70, COLOR_WHITE, _T("clear type: %s, %s"),
+				FBDF_ClearTypeToString(this->list_set.music_list[cmd].user_highscore.clear_type).c_str(),
+				FBDF_ClearTypeToString(this->list_set.music_list[cmd].user_highscore.blanc_clear_type).c_str()
 			);
 		}
 		this->list_set.view_string.DrawList(cmd);
@@ -1287,7 +1290,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Option_ReloadPic();
-	if (select_class.Init(command, view_dif_type) == false) { return VIEW_SELECT; }
+	if (select_class.Init(command, view_dif_type, now_music) == false) { return VIEW_SELECT; }
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {

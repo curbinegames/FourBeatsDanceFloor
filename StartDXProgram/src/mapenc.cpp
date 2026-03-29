@@ -32,6 +32,16 @@
 	(c) == '4'      \
 )
 
+#define ISPASSLYRICS(c) ( \
+	(c) == 'k' ||         \
+	(c) == 'r' ||         \
+	(c) == 'z' ||         \
+	(c) == 'g' ||         \
+	(c) == 'h' ||         \
+	(c) == 'y' ||         \
+	(c) == 'd'            \
+)
+
 #define ISLYRICS(c) ( \
 	(c) == '.' ||   \
 	(c) == 'f' ||   \
@@ -46,7 +56,8 @@
 	(c) == 'w' ||   \
 	(c) == 'b' ||   \
 	(c) == 'p' ||   \
-	(c) == 'n'      \
+	(c) == 'n' ||   \
+	ISPASSLYRICS(c) \
 )
 
 typedef struct FBDF_map_enc_s {
@@ -523,7 +534,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 	for (size_t ic = 0; ic < option.now_block; ic++) {
 		int time_buf;
 		FBDF_lyrics_mat_et data_buf;
-		if (buf[ic] != '.') {
+		if (buf[ic] != '.' && !ISPASSLYRICS(buf[ic])) {
 			switch (buf[ic]) {
 			case 'a':
 				data_buf = FBDF_LYRICS_MAT_A;

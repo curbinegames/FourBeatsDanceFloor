@@ -46,8 +46,56 @@ static void GameMain(void) {
 	}
 }
 
+typedef struct raw_s {
+	int score = 0;
+	double acc = 0.0;
+	FBDF_clear_type_et clear_type = FBDF_CLEAR_TYPE_NOPLAY;
+} raw_st;
+
+static bool raw_read(raw_st dest[], const TCHAR *music_folder_name) {
+	std::string save_path;
+	FILE *fp;
+
+	save_path  = "save/";
+	save_path += music_folder_name;
+	save_path += ".dat";
+
+	fopen_s(&fp, save_path.c_str(), "rb");
+	if (fp == NULL) { return false; }
+	fread(dest, sizeof(raw_st), 3, fp);
+	fclose(fp);
+
+	return true;
+}
+
+static void update_save(const TCHAR *music_folder_name) {
+	raw_st dest[3];
+	FBDF_file_music_score_st new_data[3];
+	if (raw_read(dest, music_folder_name) == false) {
+		return;
+	}
+	for (size_t i = 0; i < 3; i++) {
+		new_data[i].acc = dest[i].acc;
+		new_data[i].blanc_clear_type = FBDF_CLEAR_TYPE_NOPLAY;
+		new_data[i].clear_type = dest[i].clear_type;
+		new_data[i].score = dest[i].score;
+	}
+	FBDF_Save_WriteScoreAllDif(new_data, music_folder_name);
+}
+
+static void update_all_save(void) {
+	update_save(_T("Ghost_Tango"));
+	update_save(_T("Sky_Modulation"));
+	update_save(_T("Your_Story"));
+	update_save(_T("アンゴラたちの踊り"));
+	update_save(_T("ハレクラニ"));
+	update_save(_T("横顔"));
+	update_save(_T("流桜"));
+}
+
 /* WinMain関数はもう編集する必要なし */
 int WINAPI WinMain(DX_MAIN_DEF) {
+	// update_all_save(); /* セーブデータ更新用 */
 	/* dxlibの初期化 */
 	ChangeWindowMode(TRUE); // ウィンドウモードにする
 	SetGraphMode(WINDOW_SIZE_X, WINDOW_SIZE_Y, 32); // ウィンドウサイズの変更

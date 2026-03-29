@@ -77,6 +77,7 @@ typedef struct FBDF_file_music_score_s {
 	int score = 0;
 	double acc = 0.0;
 	FBDF_clear_type_et clear_type = FBDF_CLEAR_TYPE_NOPLAY;
+	FBDF_clear_type_et blanc_clear_type = FBDF_CLEAR_TYPE_NOPLAY;
 } FBDF_file_music_score_st;
 
 extern bool FBDF_Save_ReadScoreAllDif(        FBDF_file_music_score_st  dest[], const TCHAR *music_folder_name);

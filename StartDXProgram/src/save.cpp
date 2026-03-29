@@ -111,9 +111,12 @@ bool FBDF_Save_UpdateScoreOneDif(const FBDF_file_music_score_st &src, const TCHA
     FBDF_file_music_score_st buf;
     FBDF_Save_ReadScoreOneDif(buf, music_folder_name, dif_type); /* read‚Å‚«‚Ä‚È‚­‚Ä‚à—Ç‚¢ */
 
-    if (buf.acc        < src.acc       ) { buf.acc        = src.acc;        }
-    if (buf.clear_type < src.clear_type) { buf.clear_type = src.clear_type; }
-    if (buf.score      < src.score     ) { buf.score      = src.score;      }
+    if (buf.acc              < src.acc       ) { buf.acc        = src.acc;        }
+    if (buf.score            < src.score     ) { buf.score      = src.score;      }
+    if (buf.clear_type       < src.clear_type) { buf.clear_type = src.clear_type; }
+    if (buf.blanc_clear_type < src.blanc_clear_type) {
+        buf.blanc_clear_type = src.blanc_clear_type;
+    }
 
     return FBDF_Save_WriteScoreOneDif(buf, music_folder_name, dif_type);
 }

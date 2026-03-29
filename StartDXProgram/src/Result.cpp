@@ -201,16 +201,14 @@ static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
  * @return FBDF_clear_type_et クリアタイプ
  */
 static FBDF_clear_type_et FBDF_Result_JudgeClearType(const FBDF_result_data_t &data) {
-	if (data.acc < 70.0)             { return FBDF_CLEAR_TYPE_FAILED;    } /* acc70%未満 */
+	if (data.acc < 70.0) { return FBDF_CLEAR_TYPE_FAILED;    } /* acc70%未満 */
 	if (game_option.play_style <= FBDF_PLAYSTYLE_ASSIST)
-	                                 { return FBDF_CLEAR_TYPE_ASSIST;    } /* acc70%以上 & アシストあり */
-	if (30 < data.drop)              { return FBDF_CLEAR_TYPE_CLEARED;   } /* acc70%以上 & アシストなし & (30 < drop数) */
-	if ( 5 < data.drop)              { return FBDF_CLEAR_TYPE_CAKEWALK;  } /* acc70%以上 & アシストなし & ( 5 < drop数 <= 30) */
-	if ( 0 < data.drop)              { return FBDF_CLEAR_TYPE_MISSLESS;  } /* acc70%以上 & アシストなし & ( 0 < drop数 <=  5) */
-	if ( 0 < data.save ||
-		game_option.play_style <  FBDF_PLAYSTYLE_BLANC_PLUS)
-		                             { return FBDF_CLEAR_TYPE_FULLCOMBO; } /* acc70%以上 & アシストなし & drop数=0 & (save数1以上 or ブラン+モードではない)) */
-	return FBDF_CLEAR_TYPE_PERFECT; /* acc70%以上 & アシストなし & drop数=0 & save数=0 & ブラン+モード */
+	                     { return FBDF_CLEAR_TYPE_ASSIST;    } /* acc70%以上 & アシストあり */
+	if (30 < data.drop)  { return FBDF_CLEAR_TYPE_CLEARED;   } /* acc70%以上 & アシストなし & (30 < drop数) */
+	if ( 5 < data.drop)  { return FBDF_CLEAR_TYPE_CAKEWALK;  } /* acc70%以上 & アシストなし & ( 5 < drop数 <= 30) */
+	if ( 0 < data.drop)  { return FBDF_CLEAR_TYPE_MISSLESS;  } /* acc70%以上 & アシストなし & ( 0 < drop数 <=  5) */
+	if ( 0 < data.save)  { return FBDF_CLEAR_TYPE_FULLCOMBO; } /* acc70%以上 & アシストなし & drop数=0 & save数1以上 */
+	return FBDF_CLEAR_TYPE_PERFECT; /* acc70%以上 & アシストなし & drop数=0 & save数=0 */
 }
 
 /**
@@ -220,9 +218,19 @@ static FBDF_clear_type_et FBDF_Result_JudgeClearType(const FBDF_result_data_t &d
  */
 static bool FBDF_Result_SaveMusicScore(const FBDF_result_data_t &data) {
 	FBDF_file_music_score_st this_time_score;
-	this_time_score.acc        = data.acc;
-	this_time_score.clear_type = FBDF_Result_JudgeClearType(data);
 	this_time_score.score      = data.score;
+	if (game_option.play_style <= FBDF_PLAYSTYLE_ASSIST) {
+		this_time_score.acc = 0;
+	}
+	else {
+		this_time_score.acc = data.acc;
+	}
+	if (game_option.play_style <= FBDF_PLAYSTYLE_BLANC_PLUS) {
+		this_time_score.clear_type = FBDF_Result_JudgeClearType(data);
+	}
+	else {
+		this_time_score.blanc_clear_type = FBDF_Result_JudgeClearType(data);
+	}
 	return FBDF_Save_UpdateScoreOneDif(this_time_score, data.folder_name.c_str(), data.dif_type);
 }
 
