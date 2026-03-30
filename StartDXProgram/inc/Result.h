@@ -12,7 +12,7 @@ typedef struct FBDF_result_data_s {
 	std::string music_name;
 	std::string artist_name;
 	std::string folder_name;
-	double level = 0;
+	uint level = 0;
 	uint score = 0;
 	double acc = 0;
 	uint crit = 0;

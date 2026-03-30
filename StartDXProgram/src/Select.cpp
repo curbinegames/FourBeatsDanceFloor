@@ -123,7 +123,7 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 }
 
 class FBDF_music_list_c {
-public:
+private:
 	std::vector<FBDF_music_detail_t>detail;
 	std::vector<uint>sort;
 
@@ -176,8 +176,16 @@ public: /* 番地検索系 */
 		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
-	size_t size(void) const {
+	size_t size_all(void) const {
 		return this->detail.size();
+	}
+
+	size_t size_searched(void) const {
+		return this->sort.size();
+	}
+
+	bool empty_searched(void) const {
+		return this->sort.empty();
 	}
 
 	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
@@ -201,11 +209,15 @@ public: /* 番地検索系 */
 		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
+			double databuf = (
+				(dest.color_count.c1) /
+				(dest.color_count.c1 + dest.color_count.c2 + dest.color_count.c3 + dest.color_count.c4)
+			);
 			std::string buf = "mdif: ";
-			buf += std::to_string(dest.auto_cal_dif.length);
+			buf += std::to_string(databuf);
 			buf += "(";
 			buf += std::to_string(
-				lins(21000, 1, 28000, 9, dest.auto_cal_dif.length)
+				lins(1, 1, 9, 9, databuf)
 			);
 			buf += ")";
 			buf += " : ";
@@ -919,7 +931,7 @@ private:
 	/* 今いるフォルダの中に、特定の曲名があるかどうか。あったら番地、なかったら-1を返す。 */
 	int FindMusicOnList(const std::string &find_music) const {
 		if (!this->folder_manager.IsMusicFolderNow()) { return -1; }
-		for (size_t i = 0; i < this->music_list.sort.size(); i++) {
+		for (size_t i = 0; i < this->music_list.size_searched(); i++) {
 			if (this->music_list[i].music_name == find_music) {
 				return i;
 			}
@@ -958,7 +970,7 @@ public:
 	void MakeMusicListView(void) {
 		this->view_string.clear();
 		if (this->folder_manager.IsMusicFolderNow()) {
-			for (int is = 0; is < this->music_list.sort.size(); is++) {
+			for (int is = 0; is < this->music_list.size_searched(); is++) {
 				FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
 				switch (this->music_list[is].dif_type) {
 				case FBDF_dif_type_ec::LIGHT:
@@ -989,7 +1001,7 @@ public:
 
 	/* 今、曲が存在する曲フォルダの中にいるか */
 	bool OnAvailableMusicFolderNow(void) const {
-		return (this->folder_manager.IsMusicFolderNow() && !this->music_list.sort.empty());
+		return (this->folder_manager.IsMusicFolderNow() && !this->music_list.empty_searched());
 	}
 
 	void FetchMusicCmd(int &cmd, const std::string &now_music) {
@@ -1072,7 +1084,7 @@ public:
 		this->list_set.folder_manager.ReadFile(cmd, view_def);
 		this->list_set.MakeMusicListInner(view_def);
 		this->list_set.MakeMusicListView();
-		cmd = betweens(0, cmd, this->list_set.music_list.sort.size() - 1);
+		cmd = betweens(0, cmd, this->list_set.music_list.size_searched() - 1);
 		this->UpdateJacket(cmd);
 		this->bgm.init();
 		if (this->list_set.OnAvailableMusicFolderNow()) {
@@ -1088,7 +1100,7 @@ public:
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
 			std::string log = "読み込んだ譜面数: ";
-			log += std::to_string(this->music_list.size());
+			log += std::to_string(this->list_set.music_list.size_all());
 			FBDF_LOG_INFO(log.c_str());
 		}
 #endif
@@ -1149,7 +1161,7 @@ static void FBDF_Select_DecideFolder(
 ) {
 	FBDF_select_list_set_c &list_set = select_class.list_set;
 	if (list_set.folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
-		if (!list_set.music_list.sort.empty()) { /* 曲フォルダの中が空じゃない */
+		if (!list_set.music_list.empty_searched()) { /* 曲フォルダの中が空じゃない */
 			cutin.SetIo(CUT_FRAG_IN);
 		}
 	}

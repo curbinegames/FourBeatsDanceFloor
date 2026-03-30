@@ -1740,7 +1740,7 @@ static void FBDF_Play_MakeResultData(FBDF_result_data_t &result_data, const FBDF
 	result_data.music_name  = nex_music.folder_name;
 	result_data.artist_name = map.artist_name;
 	result_data.folder_name = nex_music.folder_name;
-	result_data.level       = 0;
+	result_data.level       = map.user_level;
 	result_data.score       = score.all_point;
 	result_data.acc         = play_class.score_bar_class.GetScore_ave();
 	result_data.crit        = score.crit;
