@@ -123,7 +123,7 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 }
 
 class FBDF_music_list_c {
-private:
+public:
 	std::vector<FBDF_music_detail_t>detail;
 	std::vector<uint>sort;
 
@@ -176,16 +176,8 @@ public: /* 番地検索系 */
 		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
-	size_t size_all(void) const {
+	size_t size(void) const {
 		return this->detail.size();
-	}
-
-	size_t size_searched(void) const {
-		return this->sort.size();
-	}
-
-	bool empty_searched(void) const {
-		return this->sort.empty();
 	}
 
 	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
@@ -209,15 +201,11 @@ public: /* 番地検索系 */
 		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
-			double databuf = (
-				(dest.color_count.c1) /
-				(dest.color_count.c1 + dest.color_count.c2 + dest.color_count.c3 + dest.color_count.c4)
-			);
 			std::string buf = "mdif: ";
-			buf += std::to_string(databuf);
+			buf += std::to_string(dest.auto_cal_dif.length);
 			buf += "(";
 			buf += std::to_string(
-				lins(1, 1, 9, 9, databuf)
+				lins(21000, 1, 28000, 9, dest.auto_cal_dif.length)
 			);
 			buf += ")";
 			buf += " : ";
@@ -928,10 +916,13 @@ public:
 
 class FBDF_select_list_set_c {
 private:
+	FBDF_select_view_string_c view_string;
+	FBDF_Select_MusicFolderManager_c folder_manager;
+
 	/* 今いるフォルダの中に、特定の曲名があるかどうか。あったら番地、なかったら-1を返す。 */
 	int FindMusicOnList(const std::string &find_music) const {
 		if (!this->folder_manager.IsMusicFolderNow()) { return -1; }
-		for (size_t i = 0; i < this->music_list.size_searched(); i++) {
+		for (size_t i = 0; i < this->music_list.sort.size(); i++) {
 			if (this->music_list[i].music_name == find_music) {
 				return i;
 			}
@@ -939,10 +930,17 @@ private:
 		return -1;
 	}
 
+	void FetchMusicCmd(int &cmd, const std::string &now_music) const {
+		int find_no;
+		cmd = 0;
+		if (this->OnAvailableMusicFolderNow()) {
+			find_no = this->FindMusicOnList(now_music);
+			if (find_no != -1) { cmd = find_no; }
+		}
+	}
+
 public:
 	FBDF_music_list_c music_list;
-	FBDF_select_view_string_c view_string;
-	FBDF_Select_MusicFolderManager_c folder_manager;
 
 	void MakeNexMusic(FBDF_play_choose_music_st &dest, int cmd) const {
 		dest.folder_name   = this->music_list[cmd].folder_name;
@@ -970,7 +968,7 @@ public:
 	void MakeMusicListView(void) {
 		this->view_string.clear();
 		if (this->folder_manager.IsMusicFolderNow()) {
-			for (int is = 0; is < this->music_list.size_searched(); is++) {
+			for (int is = 0; is < this->music_list.sort.size(); is++) {
 				FBDF_music_list_bar_color_t color = BLUE_MUSIC_LIST_BAR;
 				switch (this->music_list[is].dif_type) {
 				case FBDF_dif_type_ec::LIGHT:
@@ -1001,16 +999,19 @@ public:
 
 	/* 今、曲が存在する曲フォルダの中にいるか */
 	bool OnAvailableMusicFolderNow(void) const {
-		return (this->folder_manager.IsMusicFolderNow() && !this->music_list.empty_searched());
+		return (this->folder_manager.IsMusicFolderNow() && !this->music_list.sort.empty());
 	}
 
-	void FetchMusicCmd(int &cmd, const std::string &now_music) {
-		int find_no;
-		cmd = 0;
-		if (this->OnAvailableMusicFolderNow()) {
-			find_no = this->FindMusicOnList(now_music);
-			if (find_no != -1) { cmd = find_no; }
-		}
+	bool PushFolder(int cmd) {
+		return this->folder_manager.PushFolder(cmd);
+	}
+
+	bool PopFolder(size_t &pop) {
+		return this->folder_manager.PopFolder(pop);
+	}
+
+	void ReadUserData(int &cmd, FBDF_dif_type_ec &view_def) {
+		this->folder_manager.ReadFile(cmd, view_def);
 	}
 
 	/* リスト作って選択中の曲探してコマンドと曲名を取得する */
@@ -1021,6 +1022,10 @@ public:
 		if (this->OnAvailableMusicFolderNow()) {
 			now_music = this->music_list[cmd].music_name;
 		}
+	}
+
+	size_t SizeViewString(void) const {
+		return this->view_string.size();
 	}
 
 	void WriteUserData(int &cmd, FBDF_dif_type_ec &view_def) const {
@@ -1049,16 +1054,27 @@ public:
 		return;
 	}
 
+	void DrawList(int cmd) const {
+		this->view_string.DrawList(cmd);
+	}
+
+	std::string GetNowFolderPath(void) const {
+		return this->folder_manager.GetFolderPathString();
+	}
+
 	bool IsAllFolder(void) const {
 		return this->folder_manager.NowFolder()->name == "ALL MUSIC";
+	}
+
+	bool IsMusicFolderNow(void) const {
+		return this->folder_manager.IsMusicFolderNow();
 	}
 };
 
 /* セレクト画面に関するクラスをまとめたもの */
 class FBDF_select_class_set_c {
-public:
+private:
 	dxcur_mouse_item_c mouse_item;
-	FBDF_select_list_set_c list_set;
 	FBDF_select_back_pic_c back_pic;
 	dxcur_pic_c top_bar{ "pic/select/select_bar.png" };
 	FBDF_select_jacket_viewer_c jacket_viewer;
@@ -1066,6 +1082,9 @@ public:
 	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
+
+public:
+	FBDF_select_list_set_c list_set;
 
 private:
 	void InitMouseItems(void) {
@@ -1081,30 +1100,42 @@ public:
 	/* TODO: now_musicはメンバ変数にしないか? */
 	bool Init(int &cmd, FBDF_dif_type_ec &view_def, std::string &now_music) {
 		if (this->list_set.music_list.LoadMusicList() == false) { return false; }
-		this->list_set.folder_manager.ReadFile(cmd, view_def);
+		this->list_set.ReadUserData(cmd, view_def);
 		this->list_set.MakeMusicListInner(view_def);
 		this->list_set.MakeMusicListView();
-		cmd = betweens(0, cmd, this->list_set.music_list.size_searched() - 1);
+		cmd = betweens(0, cmd, this->list_set.music_list.sort.size() - 1);
 		this->UpdateJacket(cmd);
 		this->bgm.init();
 		if (this->list_set.OnAvailableMusicFolderNow()) {
-			this->dif_pic.SetDifNum(this->list_set.music_list[cmd].level_list);
-			this->dif_pic.SetDifType(this->list_set.music_list[cmd].dif_type);
+			this->SetDifNum(cmd);
+			this->SetDifType(this->list_set.music_list[cmd].dif_type);
 			now_music = list_set.music_list[cmd].music_name;
 		}
 		else {
-			this->dif_pic.ResetDifNum();
-			this->dif_pic.SetDifType(view_def);
+			this->ResetDifNum();
+			this->SetDifType(view_def);
 		}
 		this->InitMouseItems();
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
 			std::string log = "読み込んだ譜面数: ";
-			log += std::to_string(this->list_set.music_list.size_all());
+			log += std::to_string(this->music_list.size());
 			FBDF_LOG_INFO(log.c_str());
 		}
 #endif
 		return true;
+	}
+
+	void ReservePreview(int cmd) {
+		this->bgm.ReservePreview(this->list_set.music_list[cmd]);
+	}
+
+	void ReserveErase(void) {
+		this->bgm.ReserveErase();
+	}
+
+	void ResetDifNum(void) {
+		this->dif_pic.ResetDifNum();
 	}
 
 	void UpdateJacket(int cmd) {
@@ -1119,11 +1150,16 @@ public:
 		}
 	}
 
+	void update(void) {
+		this->back_pic.UpdateState();
+		this->bgm.update();
+	}
+
 	void Draw(int cmd) const {
 		this->back_pic.DrawPic();
 		DrawFormatString(
 			5, 80, COLOR_WHITE, _T("folder: %s"),
-			this->list_set.folder_manager.GetFolderPathString().c_str()
+			this->list_set.GetNowFolderPath().c_str()
 		);
 		if (this->list_set.OnAvailableMusicFolderNow()) {
 			this->list_set.DrawColorCount(5, 100, cmd);
@@ -1143,11 +1179,23 @@ public:
 				FBDF_ClearTypeToString(this->list_set.music_list[cmd].user_highscore.blanc_clear_type).c_str()
 			);
 		}
-		this->list_set.view_string.DrawList(cmd);
+		this->list_set.DrawList(cmd);
 		this->dif_pic.draw();
 		DrawGraph(0, 0, this->top_bar.handle(), TRUE);
 		this->usage.draw(0, WINDOW_SIZE_Y);
 		this->mouse_item.draw();
+	}
+
+	void SetDifNum(int cmd) {
+		this->dif_pic.SetDifNum(this->list_set.music_list[cmd].level_list);
+	}
+
+	void SetDifType(FBDF_dif_type_ec type) {
+		this->dif_pic.SetDifType(type);
+	}
+
+	DxSnd_t GetSeHandle(void) const {
+		return this->se.handle();
 	}
 };
 
@@ -1160,24 +1208,22 @@ static void FBDF_Select_DecideFolder(
 	FBDF_dif_type_ec view_dif_type, FBDF_cutin_c &cutin
 ) {
 	FBDF_select_list_set_c &list_set = select_class.list_set;
-	if (list_set.folder_manager.IsMusicFolderNow()) { /* 曲フォルダである */
-		if (!list_set.music_list.empty_searched()) { /* 曲フォルダの中が空じゃない */
-			cutin.SetIo(CUT_FRAG_IN);
-		}
+	if (list_set.OnAvailableMusicFolderNow()) {
+		cutin.SetIo(CUT_FRAG_IN);
 	}
-	else { /* サブフォルダである */
-		list_set.folder_manager.PushFolder(cmd);
+	else if (!list_set.IsMusicFolderNow()) {
+		list_set.PushFolder(cmd);
 		list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 		select_class.UpdateJacket(cmd);
 		if (list_set.OnAvailableMusicFolderNow()) {
-			select_class.bgm.ReservePreview(list_set.music_list[cmd]);
-			select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-			select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+			select_class.ReservePreview(cmd);
+			select_class.SetDifNum(cmd);
+			select_class.SetDifType(list_set.music_list[cmd].dif_type);
 		}
 		else {
-			select_class.dif_pic.ResetDifNum();
+			select_class.ResetDifNum();
 		}
-		PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
+		PlaySoundMem(select_class.GetSeHandle(), DX_PLAYTYPE_BACK);
 	}
 }
 
@@ -1186,14 +1232,14 @@ static void FBDF_Select_BackFolder(
 ) {
 	FBDF_select_list_set_c &list_set = select_class.list_set;
 	size_t poped_cmd = 0;
-	if (list_set.folder_manager.PopFolder(poped_cmd)) {
+	if (list_set.PopFolder(poped_cmd)) {
 		list_set.MakeMusicListInner(view_dif_type);
 		list_set.MakeMusicListView();
 		cmd = poped_cmd;
 		select_class.UpdateJacket(cmd);
-		select_class.bgm.ReserveErase();
-		PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
-		select_class.dif_pic.ResetDifNum();
+		select_class.ReserveErase();
+		PlaySoundMem(select_class.GetSeHandle(), DX_PLAYTYPE_BACK);
+		select_class.ResetDifNum();
 	}
 }
 
@@ -1201,7 +1247,7 @@ static void FBDF_Select_KeyVert(
 	FBDF_select_class_set_c &select_class, std::string &now_music, int &cmd, bool up
 ) {
 	FBDF_select_list_set_c &list_set = select_class.list_set;
-	size_t list_size = list_set.view_string.size();
+	size_t list_size = list_set.SizeViewString();
 	if (up) {
 		cmd = MOD_AVOID_ZERO((cmd + list_size - 1), list_size, 0);
 	}
@@ -1210,12 +1256,12 @@ static void FBDF_Select_KeyVert(
 	}
 	if (list_set.OnAvailableMusicFolderNow()) {
 		now_music = list_set.music_list[cmd].music_name;
-		select_class.bgm.ReservePreview(list_set.music_list[cmd]);
-		select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-		select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+		select_class.ReservePreview(cmd);
+		select_class.SetDifNum(cmd);
+		select_class.SetDifType(list_set.music_list[cmd].dif_type);
 	}
 	select_class.UpdateJacket(cmd);
-	PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
+	PlaySoundMem(select_class.GetSeHandle(), DX_PLAYTYPE_BACK);
 }
 
 static void FBDF_Select_KeyHori(
@@ -1228,11 +1274,11 @@ static void FBDF_Select_KeyHori(
 	list_set.ReloadMusicList(now_music, cmd, view_dif_type);
 	select_class.UpdateJacket(cmd);
 	if (list_set.OnAvailableMusicFolderNow()) {
-		select_class.bgm.ReservePreview(list_set.music_list[cmd]);
-		select_class.dif_pic.SetDifNum(list_set.music_list[cmd].level_list);
-		select_class.dif_pic.SetDifType(list_set.music_list[cmd].dif_type);
+		select_class.ReservePreview(cmd);
+		select_class.SetDifNum(cmd);
+		select_class.SetDifType(list_set.music_list[cmd].dif_type);
 	}
-	PlaySoundMem(select_class.se.handle(), DX_PLAYTYPE_BACK);
+	PlaySoundMem(select_class.GetSeHandle(), DX_PLAYTYPE_BACK);
 }
 
 /**
@@ -1307,7 +1353,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		if (option_fg) {
-			FBDF_Option_KeyAction(key, option_cmd, option_fg, select_class.se.handle());
+			FBDF_Option_KeyAction(key, option_cmd, option_fg, select_class.GetSeHandle());
 		}
 		else {
 			FBDF_Select_KeyCheck(
@@ -1315,8 +1361,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 			);
 		}
 
-		select_class.back_pic.UpdateState();
-		select_class.bgm.update();
+		select_class.update();
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから

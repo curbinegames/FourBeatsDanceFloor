@@ -1473,7 +1473,7 @@ public:
 /* プレイ画面に関するクラスをまとめたもの */
 typedef struct FBDF_play_class_set_s {
 	FBDF_judge_c judge_class;
-	FBDF_dancer_c dancer_class;
+	FBDF_dancer_c dancer_class{ game_option.chara };
 	FBDF_score_bar_c score_bar_class;
 	FBDF_gap_bar_c gap_bar_class;
 	FBDF_play_notes_draw_c notes_draw_class;
