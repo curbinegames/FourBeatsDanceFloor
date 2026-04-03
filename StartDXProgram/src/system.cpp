@@ -2,6 +2,7 @@
 #include <string>
 #include <DxLib.h>
 #include <sancur.h>
+#include <strcur.h>
 #include <system.h>
 
 #define FBDF_PLAY_SCOREBAR_COLOR_RED60     0xFFEB3324 /* 70  - 60 */
@@ -49,6 +50,92 @@ FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
 
 FBDF_usage_c::FBDF_usage_c(void) {}
 FBDF_usage_c::FBDF_usage_c(const char *str) : usage(str) {}
+
+#if 1 /* FBDF_cascadia_pic_c */
+
+/* x座標は勝手に進むので注意 */
+void FBDF_cascadia_pic_c::DrawNumOnce(int &x, int y, char num, double size) const {
+    num = betweens('0', num, '9');
+    DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+        this->pic.handle(num - '0'), TRUE);
+    x += this->picsizeX * size;
+}
+
+/* x座標は勝手に進むので注意 */
+void FBDF_cascadia_pic_c::DrawPoint(int &x, int y, double size) const {
+    DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+        this->pic.handle(10), TRUE);
+    x += this->pointsizeX * size;
+}
+
+/* x座標は勝手に進むので注意 */
+void FBDF_cascadia_pic_c::DrawPlus(int &x, int y, double size) const {
+    DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+        this->pic.handle(11), TRUE);
+    x += this->picsizeX * size;
+}
+
+/* x座標は勝手に進むので注意 */
+void FBDF_cascadia_pic_c::DrawMinus(int &x, int y, double size) const {
+    DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
+        this->pic.handle(12), TRUE);
+    x += this->picsizeX * size;
+}
+
+uint FBDF_cascadia_pic_c::GetPicSize(uint num, double size) const {
+    uint ret = 0;
+    if (num == 0) { return this->picsizeX * size; }
+    while (num != 0) {
+        ret += this->picsizeX;
+        num /= 10;
+    }
+    return (uint)(ret * size);
+}
+
+void FBDF_cascadia_pic_c::DrawNum(int x, int y, double size, int num, bool sign) const {
+    char buf[8];
+    int DrawX = x;
+    int DrawY = y;
+    if (num < 0) {
+        this->DrawMinus(DrawX, DrawY, size);
+    }
+    else if (sign){
+        this->DrawPlus(DrawX, DrawY, size);
+    }
+    strnums(buf, num, 8);
+    for (size_t i = 0; buf[i] != '\0'; i++) {
+        this->DrawNumOnce(DrawX, DrawY, buf[i], size);
+    }
+}
+
+void FBDF_cascadia_pic_c::DrawNumRight(int right, int up, double size, uint num, bool sign) const {
+    char buf[8];
+    int DrawX = right - this->GetPicSize(num, size);
+    this->DrawNum(DrawX, up, size, num, sign);
+}
+
+void FBDF_cascadia_pic_c::DrawFloat(int x, int y, double size, double num, uint under, bool sign) const {
+    char buf[12];
+    int DrawX = x;
+    int DrawY = y;
+    if (num < 0) {
+        this->DrawMinus(DrawX, DrawY, size);
+    }
+    else if (sign){
+        this->DrawPlus(DrawX, DrawY, size);
+    }
+    strnumsD(buf, num, 12, under);
+    for (size_t i = 0; buf[i] != '\0'; i++) {
+        if (buf[i] == '.') {
+            this->DrawPoint(DrawX, DrawY, size);
+        }
+        else {
+            this->DrawNumOnce(DrawX, DrawY, buf[i], size);
+        }
+    }
+}
+
+#endif /* FBDF_cascadia_pic_c */
 
 void FBDF_usage_c::draw(int left, int down) const {
     DrawGraph(left, down - 48, this->pic.handle(), TRUE);

@@ -170,98 +170,6 @@ public:
 	}
 };
 
-class FBDF_result_num_pic_c {
-private:
-	dxcur_divpic_c pic = dxcur_divpic_c(_T("pic/Cascadia_num.png"), 13, 5, 3);
-
-	const int pointsizeX = 25;
-	const int picsizeX = 60;
-	const int picsizeY = 86;
-
-	/* x座標は勝手に進むので注意 */
-	void DrawNumOnce(int &x, int y, char num, double size) const {
-		num = betweens('0', num, '9');
-		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
-			this->pic.handle(num - '0'), TRUE);
-		x += this->picsizeX * size;
-	}
-
-	/* x座標は勝手に進むので注意 */
-	void DrawPoint(int &x, int y, double size) const {
-		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
-			this->pic.handle(10), TRUE);
-		x += this->pointsizeX * size;
-	}
-
-	/* x座標は勝手に進むので注意 */
-	void DrawPlus(int &x, int y, double size) const {
-		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
-			this->pic.handle(11), TRUE);
-		x += this->picsizeX * size;
-	}
-
-	/* x座標は勝手に進むので注意 */
-	void DrawMinus(int &x, int y, double size) const {
-		DrawExtendGraph(x, y, x + this->picsizeX * size, y + this->picsizeY * size,
-			this->pic.handle(12), TRUE);
-		x += this->picsizeX * size;
-	}
-
-	uint GetPicSize(uint num, double size) const {
-		uint ret = 0;
-		if (num == 0) { return this->picsizeX * size; }
-		while (num != 0) {
-			ret += this->picsizeX;
-			num /= 10;
-		}
-		return (uint)(ret * size);
-	}
-
-public:
-	void DrawNum(int x, int y, double size, int num, bool sign = false) const {
-		char buf[8];
-		int DrawX = x;
-		int DrawY = y;
-		if (num < 0) {
-			this->DrawMinus(DrawX, DrawY, size);
-		}
-		else if (sign){
-			this->DrawPlus(DrawX, DrawY, size);
-		}
-		strnums(buf, num, 8);
-		for (size_t i = 0; buf[i] != '\0'; i++) {
-			this->DrawNumOnce(DrawX, DrawY, buf[i], size);
-		}
-	}
-
-	void DrawNumRight(int right, int up, double size, uint num, bool sign = false) const {
-		char buf[8];
-		int DrawX = right - this->GetPicSize(num, size);
-		this->DrawNum(DrawX, up, size, num, sign);
-	}
-
-	void DrawFloat(int x, int y, double size, double num, uint under, bool sign = false) const {
-		char buf[12];
-		int DrawX = x;
-		int DrawY = y;
-		if (num < 0) {
-			this->DrawMinus(DrawX, DrawY, size);
-		}
-		else if (sign){
-			this->DrawPlus(DrawX, DrawY, size);
-		}
-		strnumsD(buf, num, 12, under);
-		for (size_t i = 0; buf[i] != '\0'; i++) {
-			if (buf[i] == '.') {
-				this->DrawPoint(DrawX, DrawY, size);
-			}
-			else {
-				this->DrawNumOnce(DrawX, DrawY, buf[i], size);
-			}
-		}
-	}
-};
-
 /**
  * @brief スコアバーの推移を書く
  * @param[in] src スコアバーの推移データ
@@ -322,7 +230,7 @@ static void FBDF_Result_DrawFinalBar(double acc) {
 }
 
 static void FBDF_Result_DrawUnderScore(
-	const FBDF_result_data_t &data, DxPic_t pic, FBDF_result_num_pic_c &numpic
+	const FBDF_result_data_t &data, DxPic_t pic, FBDF_cascadia_pic_c &numpic
 ) {
 	const int baseY = 16 + VIEW_MARGIN + SCORE_GRAPH_Y_SIZE;
 	const int margin = 56;
@@ -358,7 +266,7 @@ static void FBDF_Result_DrawUnderScore(
 static view_num_t FBDF_Result_View(const FBDF_result_data_t &data) {
 	dxcur_pic_c back(_T("pic/cutinFulldark.png"));
 	dxcur_pic_c list_str(_T("pic/result/list_str.png"));
-	FBDF_result_num_pic_c numpic;
+	FBDF_cascadia_pic_c numpic;
 	dxcur_key_c key;
 	FBDF_result_scorerank_pic_c scorerank_pic(data.acc);
 	FBDF_result_cleartype_pic_c cleartype_pic(data);

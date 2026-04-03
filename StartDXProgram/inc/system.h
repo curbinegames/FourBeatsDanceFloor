@@ -90,6 +90,26 @@ public:
     void draw(int left, int down) const;
 };
 
+class FBDF_cascadia_pic_c {
+private:
+	dxcur_divpic_c pic = dxcur_divpic_c(_T("pic/Cascadia_num.png"), 13, 5, 3);
+
+	const int pointsizeX = 25;
+	const int picsizeX = 60;
+	const int picsizeY = 86;
+
+	void DrawNumOnce(int &x, int y, char num, double size) const;
+	void DrawPoint(int &x, int y, double size) const;
+	void DrawPlus(int &x, int y, double size) const;
+	void DrawMinus(int &x, int y, double size) const;
+	uint GetPicSize(uint num, double size) const;
+
+public:
+	void DrawNum(int x, int y, double size, int num, bool sign = false) const;
+	void DrawNumRight(int right, int up, double size, uint num, bool sign = false) const;
+	void DrawFloat(int x, int y, double size, double num, uint under, bool sign = false) const;
+};
+
 extern FBDF_game_option_st game_option; /* ゲームオプション、option.cpp以外で変更されない、他の場所では読み込み専用 */
 
 /* プレイ用、右向き */

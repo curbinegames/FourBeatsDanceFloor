@@ -1872,32 +1872,6 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_c &pkey) {
 	return;
 }
 
-static void FBDF_Play_DrawScore(int x, int y, const FBDF_score_st &score) {
-	int drawX = x;
-	if (score.all_point < 10) {
-		drawX = x - 28;
-	}
-	else if (score.all_point < 100) {
-		drawX = x - 28 * 2;
-	}
-	else if (score.all_point < 1000) {
-		drawX = x - 28 * 3;
-	}
-	else if (score.all_point < 10000) {
-		drawX = x - 28 * 4;
-	}
-	else if (score.all_point < 100000) {
-		drawX = x - 28 * 5;
-	}
-	else if (score.all_point < 1000000) {
-		drawX = x - 28 * 6;
-	}
-	else if (score.all_point < 10000000) {
-		drawX = x - 28 * 7;
-	}
-	DrawFormatStringToHandle(drawX, y, COLOR_WHITE, FBDF_font_DSEG7Modern, _T("%7d"), score.all_point);
-}
-
 static void FBDF_Play_DrawJudgeArea(const FBDF_play_class_set_t &play_class) {
 	uint Yoffset = 0;
 	if (game_option.judge_draw_en) {
@@ -1925,14 +1899,14 @@ static void FBDF_Play_DrawJudgeArea(const FBDF_play_class_set_t &play_class) {
 static void FBDF_Play_AllDraw(
 	const FBDF_play_class_set_t &play_class, const FBDF_score_st &score,
 	const FBDF_map_t &map, const FBDF_push_key_c &pkey,
-	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic,
+	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic, const FBDF_cascadia_pic_c &numPic,
 	const char *music_name)
 {
 	DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, backPic.handle(), TRUE); /* 背景描画 */
 
 	/* ダンサー周り描画 */
 	play_class.dancer_class.DrawDance(500, 300);
-	FBDF_Play_DrawScore(WINDOW_SIZE_X - 20, 20, score);
+	numPic.DrawNumRight(WINDOW_SIZE_X - 15, 15, 0.6, score.all_point);
 
 	/* スコアバー周り描画 */
 	play_class.score_bar_class.draw_bar(
@@ -1978,6 +1952,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	FBDF_push_key_c pkey;
 
 	FBDF_play_class_set_t play_class;
+	FBDF_cascadia_pic_c numPic;
 	FBDF_cutin_c cutin;
 
 	dxcur_pic_c backPic(_T("pic/play/PlayBack.png"));
@@ -2009,7 +1984,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	while (!cutin.IsEndAnim() && !GetWindowUserCloseFlag()) {
 		FBDF_Play_AllUpdate(play_class, score, map, pkey, FinishTime, cutin, musicData.handle(), se);
 		ClearDrawScreen(); /* 作画エリアここから */
-		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, nex_music.folder_name.c_str());
+		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, numPic, nex_music.folder_name.c_str());
 		cutin.DrawCut();
 		ScreenFlip(); /* 作画エリアここまで */
 		WaitTimer(10); // ループウェイト
