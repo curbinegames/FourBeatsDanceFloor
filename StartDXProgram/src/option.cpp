@@ -470,7 +470,7 @@ public:
 #endif /* class */
 
 static std::vector<FBDF_option_item_base_c *> s_op_list = {
-    new FBDF_option_item_chara_c(),
+    // new FBDF_option_item_chara_c(),
     new FBDF_option_item_playstyle_c(),
     new FBDF_option_item_autoen_c(),
     new FBDF_option_item_lanespeed_c(),
@@ -504,7 +504,8 @@ void FBDF_Option_KeyAction(dxcur_key_c &key, int &cmd, bool &option_fg, DxSnd_t 
     key.update();
     switch (key.GetKeyPulseOnce()) {
     case KEY_INPUT_Z:
-    case KEY_INPUT_BACK: /* セレクトに戻る */
+    case KEY_INPUT_BACK:
+	case KEY_INPUT_ESCAPE: /* セレクトに戻る */
         option_fg = false;
         break;
     case KEY_INPUT_UP:   /* 項目選択 */

@@ -1630,6 +1630,97 @@ static void FBDF_Play_NoteJudgeEventAntion(
 	return;
 }
 
+class FBDF_Play_tutorial_c {
+private:
+	const int BaseTime = 10;
+	const int bpm = 135;
+	dxcur_pic_c pic[12] = {
+		dxcur_pic_c(_T("music/tutorial/001.png")),
+		dxcur_pic_c(_T("music/tutorial/002.png")),
+		dxcur_pic_c(_T("music/tutorial/003.png")),
+		dxcur_pic_c(_T("music/tutorial/004.png")),
+		dxcur_pic_c(_T("music/tutorial/005.png")),
+		dxcur_pic_c(_T("music/tutorial/006.png")),
+		dxcur_pic_c(_T("music/tutorial/007.png")),
+		dxcur_pic_c(_T("music/tutorial/008.png")),
+		dxcur_pic_c(_T("music/tutorial/009.png")),
+		dxcur_pic_c(_T("music/tutorial/010.png")),
+		dxcur_pic_c(_T("music/tutorial/011.png")),
+		dxcur_pic_c(_T("music/tutorial/012.png"))
+	};
+
+	int GetAlpha(int Ntime) const {
+		int beat = 100 * this->bpm * (double)(Ntime - this->BaseTime) / 60000; /* x100 */
+		if (beat <= 3100) {
+			return lins_scale(300, 0, 400, 255, beat);
+		}
+		beat = (beat - 3100) % 3200;
+		if (beat <= 100) {
+			return lins_scale(0, 255, 100, 0, beat);
+		}
+		if (beat <= 200) {
+			return lins_scale(100, 0, 200, 255, beat);
+		}
+		return 255;
+	}
+
+	int GetSection(int Ntime) const {
+		int beat = 100 * this->bpm * (double)(Ntime - this->BaseTime) / 60000; /* x100 */
+		for (size_t i = 0; i < 20; i++) {
+			if (beat < 3200 * (i + 1)) { return i; }
+		}
+		return 20;
+	}
+
+public:
+	void draw(int Ntime) const {
+		const int drawX = 220;
+		const int drawY = 100;
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, this->GetAlpha(Ntime));
+		switch (this->GetSection(Ntime)) {
+		case 0: /* イントロ */
+			DrawGraph(drawX, drawY, this->pic[0].handle(), TRUE);
+			break;
+		case 1: /* キー */
+			DrawGraph(drawX, drawY, this->pic[1].handle(), TRUE);
+			break;
+		case 2: /* ノーツ */
+			DrawGraph(drawX, drawY, this->pic[2].handle(), TRUE);
+			break;
+		case 3: /* 青ノーツ */
+			DrawGraph(drawX, drawY, this->pic[3].handle(), TRUE);
+			break;
+		case 5: /* 緑ノーツ */
+			DrawGraph(drawX, drawY, this->pic[4].handle(), TRUE);
+			break;
+		case 7: /* 赤ノーツ */
+			DrawGraph(drawX, drawY, this->pic[5].handle(), TRUE);
+			break;
+		case 9: /* 黄ノーツ */
+			DrawGraph(drawX, drawY, this->pic[6].handle(), TRUE);
+			break;
+		case 11: /* カンタン */
+			DrawGraph(drawX, drawY, this->pic[7].handle(), TRUE);
+			break;
+		case 12: /* ゲージ */
+			DrawGraph(drawX, drawY, this->pic[8].handle(), TRUE);
+			break;
+		case 13: /* 実践 */
+			DrawGraph(drawX, drawY, this->pic[9].handle(), TRUE);
+			break;
+		case 16: /* 終わりに */
+			DrawGraph(drawX, drawY, this->pic[10].handle(), TRUE);
+			break;
+		case 17: /* エンド */
+			DrawGraph(drawX, drawY, this->pic[11].handle(), TRUE);
+			break;
+		default:
+			break;
+		}
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+	}
+};
+
 /**
  * @brief ノーツの判定
  * @param[out] play_class プレイクラス
@@ -1857,16 +1948,16 @@ static void FBDF_PlayDrawLamp(const FBDF_push_key_c &pkey) {
 	static const int sizeX = lins(0, 0, 960,  60, WINDOW_SIZE_X);
 	static const int sizeY = lins(0, 0, 720,  15, WINDOW_SIZE_Y);
 	static const int   gap =  10;
-	if (IS_BETWEEN(1, pkey.D, 15)) {
+	if (1 <= pkey.D) {
 		DrawBox(baseX                      , baseY, baseX +     sizeX          , baseY + sizeY, NOTE_COLOR_1, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey.F, 15)) {
+	if (1 <= pkey.F) {
 		DrawBox(baseX +     sizeX +     gap, baseY, baseX + 2 * sizeX +     gap, baseY + sizeY, NOTE_COLOR_2, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey.J, 15)) {
+	if (1 <= pkey.J) {
 		DrawBox(baseX + 2 * sizeX + 2 * gap, baseY, baseX + 3 * sizeX + 2 * gap, baseY + sizeY, NOTE_COLOR_3, TRUE);
 	}
-	if (IS_BETWEEN(1, pkey.K, 15)) {
+	if (1 <= pkey.K) {
 		DrawBox(baseX + 3 * sizeX + 3 * gap, baseY, baseX + 4 * sizeX + 3 * gap, baseY + sizeY, NOTE_COLOR_4, TRUE);
 	}
 	return;
@@ -1900,7 +1991,7 @@ static void FBDF_Play_AllDraw(
 	const FBDF_play_class_set_t &play_class, const FBDF_score_st &score,
 	const FBDF_map_t &map, const FBDF_push_key_c &pkey,
 	const dxcur_pic_c &backPic, const dxcur_pic_c &lanePic, const FBDF_cascadia_pic_c &numPic,
-	const char *music_name)
+	const FBDF_Play_tutorial_c *tutorial)
 {
 	DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, backPic.handle(), TRUE); /* 背景描画 */
 
@@ -1921,7 +2012,7 @@ static void FBDF_Play_AllDraw(
 	DrawExtendGraph(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y, lanePic.handle(), TRUE);
 	DrawFormatString(
 		lins(0, 0, 960, 166, WINDOW_SIZE_X), lins(0, 0, 720, 653, WINDOW_SIZE_Y) + 10,
-		COLOR_WHITE, _T("%s"), music_name
+		COLOR_WHITE, _T("%s"), map.music_name.c_str()
 	);
 	play_class.notes_draw_class.DrawNotes(
 		lins(0, 0, 960, 42      , WINDOW_SIZE_X),
@@ -1936,6 +2027,8 @@ static void FBDF_Play_AllDraw(
 		lins(0, 0, 720, 691, WINDOW_SIZE_Y)
 	);
 	FBDF_Play_DrawJudgeArea(play_class);
+
+	if (tutorial != nullptr) { tutorial->draw(map.Ntime); }
 }
 
 #endif /* Draw系 */
@@ -1963,6 +2056,9 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 
 	DxTime_t FinishTime = 0;
 
+	FBDF_Play_tutorial_c *tutorial = nullptr;
+	FBDF_game_option_st option_buf;
+
 	/* 譜面読み込み系 */
 	if (FBDF_Play_MapLoad(map, nex_music.folder_name.c_str(), nex_music.dif_type) == false) { return VIEW_SELECT; }
 	map.note.resetNo();
@@ -1972,6 +2068,12 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	FBDF_Mapenc_LyricsEnc(map.lyrics, nex_music.folder_name.c_str());
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
+	if (map.music_name == "チュートリアル") {
+		option_buf = game_option;
+		game_option.play_style = FBDF_PLAYSTYLE_NORMAL;
+		game_option.lane_speed = 20;
+		tutorial = new FBDF_Play_tutorial_c;
+	}
 
 	FBDF_Play_Loadmusic(musicData, nex_music.folder_name.c_str(), map.music_file_name.c_str());
 	PlaySoundMem(musicData.handle(), DX_PLAYTYPE_BACK);
@@ -1984,7 +2086,7 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	while (!cutin.IsEndAnim() && !GetWindowUserCloseFlag()) {
 		FBDF_Play_AllUpdate(play_class, score, map, pkey, FinishTime, cutin, musicData.handle(), se);
 		ClearDrawScreen(); /* 作画エリアここから */
-		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, numPic, nex_music.folder_name.c_str());
+		FBDF_Play_AllDraw(play_class, score, map, pkey, backPic, lanePic, numPic, tutorial);
 		cutin.DrawCut();
 		ScreenFlip(); /* 作画エリアここまで */
 		WaitTimer(10); // ループウェイト
@@ -1996,6 +2098,11 @@ view_num_t FBDF_PlayView(FBDF_result_data_t &result_data, const FBDF_play_choose
 	if (game_option.auto_en) { return VIEW_SELECT; } /* オートプレイなら選択画面直行 */
 
 	FBDF_Play_MakeResultData(result_data, nex_music, map, score, play_class);
+
+	if (tutorial != nullptr) {
+		game_option = option_buf;
+		delete tutorial;
+	}
 
 	return VIEW_RESULT;
 }

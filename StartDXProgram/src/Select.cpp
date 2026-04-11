@@ -123,11 +123,32 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 }
 
 class FBDF_music_list_c {
+private:
+	int sort_type = 0; /* 0:デフォルト, 1:難易度, 2:accスコア */
+
 public:
 	std::vector<FBDF_music_detail_t>detail;
 	std::vector<uint>sort;
 
-public: /* 並び替え系 */
+private: /* 並び替え系 */
+	/**
+	 * @brief 現在の this->sort の内容を取得順に並び替える
+	 * @param なし
+	 * @return なし
+	 */
+	void SortByDefault(void) {
+		if (this->sort.empty()) { return; }
+		for (int is = 0; is + 1 < (this->sort.size()); is++) {
+			for (int ie = is + 1; ie < this->sort.size(); ie++) {
+				if (this->sort[is] > this->sort[ie]) {
+					uint temp = this->sort[is];
+					this->sort[is] = this->sort[ie];
+					this->sort[ie] = temp;
+				}
+			}
+		}
+	}
+
 	/**
 	 * @brief 現在の this->sort の内容を難易度順に並び替える
 	 * @param なし
@@ -145,6 +166,41 @@ public: /* 並び替え系 */
 					this->sort[ie] = temp;
 				}
 			}
+		}
+	}
+
+	/**
+	 * @brief 現在の this->sort の内容をaccスコア難易度順に並び替える
+	 * @param なし
+	 * @return なし
+	 */
+	void SortByAccScore(void) {
+		if (this->sort.empty()) { return; }
+		for (int is = 0; is + 1 < (this->sort.size()); is++) {
+			for (int ie = is + 1; ie < this->sort.size(); ie++) {
+				if (this->detail[this->sort[is]].user_highscore.acc >
+					this->detail[this->sort[ie]].user_highscore.acc)
+				{
+					uint temp = this->sort[is];
+					this->sort[is] = this->sort[ie];
+					this->sort[ie] = temp;
+				}
+			}
+		}
+	}
+
+public: /* 並び替え系 */
+	void SortList(void) {
+		switch (this->sort_type) {
+		case 0: /* デフォルト */
+			this->SortByDefault();
+			break;
+		case 1: /* 難易度 */
+			this->SortByDif();
+			break;
+		case 2: /* accスコア */
+			this->SortByAccScore();
+			break;
 		}
 	}
 
@@ -178,6 +234,11 @@ public: /* 番地検索系 */
 
 	size_t size(void) const {
 		return this->detail.size();
+	}
+
+	void SwitchSortType(void) {
+		this->sort_type = LOOP_ADD(this->sort_type, 3);
+		this->SortList();
 	}
 
 	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
@@ -301,6 +362,47 @@ public: /* 番地検索系 */
 
 		closedir(dir);
 		return true;
+	}
+
+	bool ReadSortType(void) {
+		bool ret = false;
+		FILE *fp;
+		std::vector<uint32_t> vec;
+		fopen_s(&fp, "save/user/sort.dat", "rb");
+		if (fp == nullptr) { return false; }
+		fread(&this->sort_type, sizeof(int), 1, fp);
+		fclose(fp);
+		this->SortList();
+		return ret;
+	}
+
+	bool WriteSortType(void) const {
+		bool ret = false;
+		FILE *fp;
+		std::vector<uint32_t> vec;
+		fopen_s(&fp, "save/user/sort.dat", "wb");
+		if (fp == nullptr) { return false; }
+		fwrite(&this->sort_type, sizeof(int), 1, fp);
+		fclose(fp);
+		return ret;
+	}
+
+	void SetSortType(int type) {
+		if (!IS_BETWEEN(0, type, 2)) { return; }
+		this->sort_type = type;
+		this->SortList();
+	}
+
+	std::string GetSortTypeString(void) const {
+		switch (this->sort_type) {
+		case 0: /* デフォルト */
+			return "default";
+		case 1: /* 難易度 */
+			return "Level";
+		case 2: /* accスコア */
+			return "acc score";
+		}
+		return "";
 	}
 };
 
@@ -957,7 +1059,7 @@ public:
 	void MakeMusicListInner(FBDF_dif_type_ec view_dif_type) {
 		if (this->folder_manager.IsMusicFolderNow()) {
 			this->music_list.Search(this->folder_manager.NowFolder()->filter_func, view_dif_type);
-			this->music_list.SortByDif();
+			this->music_list.SortList();
 		}
 	}
 
@@ -1012,6 +1114,7 @@ public:
 
 	void ReadUserData(int &cmd, FBDF_dif_type_ec &view_def) {
 		this->folder_manager.ReadFile(cmd, view_def);
+		this->music_list.ReadSortType();
 	}
 
 	/* リスト作って選択中の曲探してコマンドと曲名を取得する */
@@ -1028,8 +1131,15 @@ public:
 		return this->view_string.size();
 	}
 
+	void SwitchSortType(int &cmd, const std::string &now_music) {
+		this->music_list.SwitchSortType();
+		this->MakeMusicListView();
+		this->FetchMusicCmd(cmd, now_music);
+	}
+
 	void WriteUserData(int &cmd, FBDF_dif_type_ec &view_def) const {
 		this->folder_manager.WriteFile(cmd, view_def);
+		this->music_list.WriteSortType();
 	}
 
 public:
@@ -1062,12 +1172,43 @@ public:
 		return this->folder_manager.GetFolderPathString();
 	}
 
+	std::string GetSortTypeString(void) const {
+		return this->music_list.GetSortTypeString();
+	}
+
 	bool IsAllFolder(void) const {
 		return this->folder_manager.NowFolder()->name == "ALL MUSIC";
 	}
 
 	bool IsMusicFolderNow(void) const {
 		return this->folder_manager.IsMusicFolderNow();
+	}
+};
+
+class FBDF_select_sidebar_c {
+private:
+	const int pic_size = 22;
+	dxcur_pic_c cursor{ _T("pic/select/side_seek_cursor.png") };
+	dxcur_divpic_c pic{_T("pic/select/side_seek.png"), 3, 1, 3};
+
+public:
+	void draw(size_t cmd, size_t size) const {
+		const int DrawLeft = WINDOW_SIZE_X - pic_size - 20;
+		DrawGraph(DrawLeft, 50, pic.handle(0), TRUE);
+		DrawExtendGraph(
+			DrawLeft, pic_size + 50, WINDOW_SIZE_X - 20, WINDOW_SIZE_Y - pic_size - 50,
+			pic.handle(1), TRUE
+		);
+		DrawGraph(DrawLeft, WINDOW_SIZE_Y - pic_size - 50, pic.handle(2), TRUE);
+		if (size <= 1) {
+			DrawGraph(DrawLeft, 59,cursor.handle(), TRUE);
+		}
+		else {
+			DrawGraph(
+				DrawLeft, lins_scale(0, 59, size - 1, WINDOW_SIZE_Y - 48 - 50 - 9, cmd),
+				cursor.handle(), TRUE
+			);
+		}
 	}
 };
 
@@ -1079,6 +1220,7 @@ private:
 	dxcur_pic_c top_bar{ "pic/select/select_bar.png" };
 	FBDF_select_jacket_viewer_c jacket_viewer;
 	FBDF_select_difdraw_c dif_pic;
+	FBDF_select_sidebar_c side_pic;
 	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
@@ -1158,8 +1300,9 @@ public:
 	void Draw(int cmd) const {
 		this->back_pic.DrawPic();
 		DrawFormatString(
-			5, 80, COLOR_WHITE, _T("folder: %s"),
-			this->list_set.GetNowFolderPath().c_str()
+			5, 80, COLOR_WHITE, _T("folder: %s, sort: %s"),
+			this->list_set.GetNowFolderPath().c_str(),
+			this->list_set.GetSortTypeString().c_str()
 		);
 		if (this->list_set.OnAvailableMusicFolderNow()) {
 			this->list_set.DrawColorCount(5, 100, cmd);
@@ -1180,6 +1323,7 @@ public:
 			);
 		}
 		this->list_set.DrawList(cmd);
+		this->side_pic.draw(cmd, this->list_set.SizeViewString());
 		this->dif_pic.draw();
 		DrawGraph(0, 0, this->top_bar.handle(), TRUE);
 		this->usage.draw(0, WINDOW_SIZE_Y);
@@ -1281,6 +1425,10 @@ static void FBDF_Select_KeyHori(
 	PlaySoundMem(select_class.GetSeHandle(), DX_PLAYTYPE_BACK);
 }
 
+static void FBDF_Select_KeySort(FBDF_select_class_set_c &select_class) {
+	;
+}
+
 /**
  * @brief セレクト画面のキー入力を管理する
  * @param[out] key キークラス
@@ -1305,6 +1453,7 @@ static void FBDF_Select_KeyCheck(
 		FBDF_Select_DecideFolder(select_class, now_music, command, view_dif_type, cutin);
 		break;
 	case KEY_INPUT_BACK:
+	case KEY_INPUT_ESCAPE:
 		FBDF_Select_BackFolder(select_class, command, view_dif_type);
 		break;
 	case KEY_INPUT_UP:
@@ -1321,6 +1470,9 @@ static void FBDF_Select_KeyCheck(
 		break;
 	case KEY_INPUT_Z:
 		option_fg = true;
+		break;
+	case KEY_INPUT_X:
+		select_class.list_set.SwitchSortType(command, now_music);
 		break;
 	}
 }
