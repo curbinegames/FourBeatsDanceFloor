@@ -15,6 +15,8 @@
 #define FBDF_DANCER_TRIMBA  3
 #define FBDF_DANCER_QUATTRO 4
 
+#define FBDF_DIF_COUNT 3 /* ìÔà’ìxêî */
+
 #define FBDF_PLAYSTYLE_ASSIST_PLUS 0
 #define FBDF_PLAYSTYLE_ASSIST      1
 #define FBDF_PLAYSTYLE_NORMAL      2

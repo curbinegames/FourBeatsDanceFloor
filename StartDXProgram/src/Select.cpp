@@ -122,13 +122,194 @@ static uint FBDF_CalMapLength(const FBDF_map_t &map) {
 	return map.note[map.note.size() - 2].time - map.note[0].time;
 }
 
+class FBDF_music_list_base_c {
+private:
+	std::vector<FBDF_music_detail_t> data;
+	bool error_flag = false;
+
+public: /* コンストラクタ系 */
+	FBDF_music_list_base_c(void) = default;
+	FBDF_music_list_base_c(const FBDF_music_list_base_c &) = delete;
+	FBDF_music_list_base_c &operator=(const FBDF_music_list_base_c &) = delete;
+	FBDF_music_list_base_c(FBDF_music_list_base_c &&) = delete;
+	FBDF_music_list_base_c &operator=(FBDF_music_list_base_c &&) = delete;
+
+public: /* vector系 */
+	const FBDF_music_detail_t &operator[](size_t n) const {
+		return this->data.at(n);
+	}
+
+	const FBDF_music_detail_t &at(size_t n) const {
+		return this->data.at(n);
+	}
+
+	size_t size(void) const {
+		return this->data.size();
+	}
+
+private: /* 読み込み系 */
+	bool IsMusicDir(const char *d_name) const {
+		if (d_name[0] == '.') { return false; }
+		struct stat st;
+		std::string path;
+		path  = "music/";
+		path += d_name;
+		if (stat(path.c_str(), &st) != 0) { return false; }
+		if (!S_ISDIR(st.st_mode)) { return false; }
+		return true;
+	}
+
+	/**
+	 * @brief FBDF_map_t の内容で FBDF_music_detail_t を作成する。
+	 * @param[out] dest 代入先
+	 * @param[in] map 元となるデータ
+	 * @param[in] d_name フォルダー名
+	 * @param[in] dif 難易度
+	 * @return void
+	 */
+	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
+		dest.folder_name         = d_name;
+		dest.music_name          = map.music_name;
+		dest.music_file_name     = map.music_file_name;
+		dest.artist              = map.artist_name;
+		dest.jucket_name         = map.jacket_file_name;
+		dest.Length              = FBDF_CalMapLength(map);
+		dest.pre_time            = map.pre_time;
+		dest.auto_cal_dif.notes  = FBDF_CalMapNotesDif(map.note);
+		dest.auto_cal_dif.color  = FBDF_CalMapColorDif(map.note);
+		dest.auto_cal_dif.trick  = FBDF_CalMapTrickDif(map.note);
+		dest.auto_cal_dif.length = FBDF_CalMapLengthDif(map.note);
+		dest.auto_cal_dif.all    = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
+		dest.user_dif            = map.user_level;
+		dest.map_file_name       = map.map_file_name;
+		dest.dif_type            = dif;
+		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
+		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
+	}
+
+	/**
+	 * @brief ファイル名から楽曲を読み込む
+	 * @param[out] detail 読み込んだリストの保存先
+	 * @param[in] d_name PCフォルダー名
+	 * @param[in] dif 難易度タイプ
+	 * @return bool true:読み取り成功, false:失敗
+	 */
+	bool LoadOne(const char *d_name, FBDF_music_detail_t &dest, FBDF_dif_type_ec dif) {
+		FBDF_map_t map;
+
+		switch (FBDF_MapLoadOne(map, d_name, dif)) {
+		case FBDF_MAPENC_ERROR_NONE:
+		case FBDF_MAPENC_ERROR_NOTE_FULL:
+		case FBDF_MAPENC_ERROR_OPTION:
+		case FBDF_MAPENC_ERROR_INVALID_NOTE_CHAR:
+			break;
+		case FBDF_MAPENC_ERROR_FILE:
+		default:
+			return false;
+		}
+
+		this->MapToDetail(dest, map, d_name, dif);
+		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
+		return true;
+	}
+
+	void LoadAllDif(const char *d_name) {
+		const FBDF_dif_type_ec difs[] = {
+			FBDF_dif_type_ec::LIGHT,
+			FBDF_dif_type_ec::NORMAL,
+			FBDF_dif_type_ec::HYPER
+		};
+		bool insert_fg[FBDF_DIF_COUNT] = { false,false,false };
+		int dif_list[FBDF_DIF_COUNT] = { -1,-1,-1 };
+		FBDF_music_detail_t buf[FBDF_DIF_COUNT]{};
+		for (size_t id = 0; id < FBDF_DIF_COUNT; id++) {
+			insert_fg[id] = this->LoadOne(d_name, buf[id], difs[id]);
+			if (insert_fg[id]) {
+				dif_list[id] = buf[id].user_dif;
+			}
+		}
+		for (size_t ib = 0; ib < FBDF_DIF_COUNT; ib++) {
+			if (insert_fg[ib]) {
+				for (size_t ia = 0; ia < FBDF_DIF_COUNT; ia++) {
+					buf[ib].level_list[ia] = dif_list[ia];
+				}
+				this->data.emplace_back(std::move(buf[ib]));
+			}
+		}
+	}
+
+public: /* 読み込み系 */
+	void LoadBase(void) {
+		DIR *dir = opendir("music");
+		if (dir == nullptr) {
+			FBDF_LOG_ALERT("musicフォルダが見つかりません。");
+			this->error_flag = true;
+			return;
+		}
+
+		struct dirent *dirs;
+		while ((dirs = readdir(dir)) != nullptr) {
+			if (!this->IsMusicDir(dirs->d_name)) { continue; }
+			this->LoadAllDif(dirs->d_name);
+		}
+
+		closedir(dir);
+	}
+
+#if (FBDF_LOG_LEVEL_DEF <= 1)
+public: /* log系 */
+	void WriteDebugLogOne(const FBDF_music_detail_t &dest) const {
+		std::string buf = "mdif: ";
+		buf += std::to_string(dest.auto_cal_dif.length);
+		buf += "(";
+		buf += std::to_string(
+			lins(21000, 1, 28000, 9, dest.auto_cal_dif.length)
+		);
+		buf += ")";
+		buf += " : ";
+		buf += dest.folder_name;
+		buf += "[";
+		switch (dest.dif_type) {
+		case FBDF_dif_type_ec::LIGHT:
+			buf += "LIGHT";
+			break;
+		case FBDF_dif_type_ec::NORMAL:
+			buf += "NORMAL";
+			break;
+		case FBDF_dif_type_ec::HYPER:
+			buf += "HYPER";
+			break;
+		}
+		buf += "](";
+		buf += std::to_string(dest.user_dif);
+		buf += ")";
+		FBDF_LOG_INFO(buf.c_str());
+	}
+
+	void WriteDebugLogAll(void) const {
+		for (size_t i = 0; i < this->data.size(); i++) {
+			this->WriteDebugLogOne(this->data[i]);
+		}
+	}
+#endif
+
+public: /* is系 */
+	bool IsError(void) const {
+		return this->error_flag;
+	}
+};
+
 class FBDF_music_list_c {
 private:
 	int sort_type = 0; /* 0:デフォルト, 1:難易度, 2:accスコア */
 
 public:
-	std::vector<FBDF_music_detail_t>detail;
+	FBDF_music_list_base_c detail;
 	std::vector<uint>sort;
+
+	FBDF_music_list_c(void) {
+		this->detail.LoadBase();
+	}
 
 private: /* 並び替え系 */
 	/**
@@ -216,15 +397,7 @@ public: /* 絞り込み系 */
 	}
 
 public: /* 番地検索系 */
-	FBDF_music_detail_t& operator[](size_t n) {
-		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
-	}
-
 	const FBDF_music_detail_t& operator[](size_t n) const {
-		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
-	}
-
-	FBDF_music_detail_t& at(size_t n) {
 		return this->detail[sort[betweens(0, n, sort.size() - 1)]];
 	}
 
@@ -239,129 +412,6 @@ public: /* 番地検索系 */
 	void SwitchSortType(void) {
 		this->sort_type = LOOP_ADD(this->sort_type, 3);
 		this->SortList();
-	}
-
-	void MapToDetail(FBDF_music_detail_t &dest, const FBDF_map_t &map, const char *d_name, FBDF_dif_type_ec dif) const {
-		dest.folder_name         = d_name;
-		dest.music_name          = map.music_name;
-		dest.music_file_name     = map.music_file_name;
-		dest.artist              = map.artist_name;
-		dest.jucket_name         = map.jacket_file_name;
-		dest.Length              = FBDF_CalMapLength(map);
-		dest.pre_time            = map.pre_time;
-		dest.auto_cal_dif.notes  = FBDF_CalMapNotesDif(map.note);
-		dest.auto_cal_dif.color  = FBDF_CalMapColorDif(map.note);
-		dest.auto_cal_dif.trick  = FBDF_CalMapTrickDif(map.note);
-		dest.auto_cal_dif.length = FBDF_CalMapLengthDif(map.note);
-		dest.auto_cal_dif.all    = (dest.auto_cal_dif.notes + dest.auto_cal_dif.color + dest.auto_cal_dif.trick) / 3;
-		dest.user_dif            = map.user_level;
-		dest.map_file_name       = map.map_file_name;
-		dest.dif_type            = dif;
-		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
-		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
-		FBDF_Save_ReadScoreOneDif(dest.user_highscore, d_name, dif);
-#if (FBDF_LOG_LEVEL_DEF <= 1)
-		{
-			std::string buf = "mdif: ";
-			buf += std::to_string(dest.auto_cal_dif.length);
-			buf += "(";
-			buf += std::to_string(
-				lins(21000, 1, 28000, 9, dest.auto_cal_dif.length)
-			);
-			buf += ")";
-			buf += " : ";
-			buf += dest.folder_name;
-			buf += "[";
-			switch (dest.dif_type) {
-			case FBDF_dif_type_ec::LIGHT:
-				buf += "LIGHT";
-				break;
-			case FBDF_dif_type_ec::NORMAL:
-				buf += "NORMAL";
-				break;
-			case FBDF_dif_type_ec::HYPER:
-				buf += "HYPER";
-				break;
-			}
-			buf += "](";
-			buf += std::to_string(dest.user_dif);
-			buf += ")";
-			FBDF_LOG_INFO(buf.c_str());
-		}
-#endif
-	}
-
-	/**
-	 * @brief ファイル名から楽曲を読み込む
-	 * @param[out] detail 読み込んだリストの保存先
-	 * @param[in] d_name PCフォルダー名
-	 * @param[in] dif 難易度タイプ
-	 * @details d_name を "asd"、file を "map.txt" とすると、"music/asd/map.txt" ファイルから楽曲を読み込む
-	 * @return bool true:読み取り成功, false:失敗
-	 */
-	bool MapLoadMusicGetDetail(const char *d_name, FBDF_music_detail_t &dest, FBDF_dif_type_ec dif) {
-		FBDF_mapenc_error_et ret;
-		FBDF_map_t map;
-
-		ret = FBDF_MapLoadOne(map, d_name, dif);
-		if (ret != FBDF_MAPENC_ERROR_NONE) {
-			/* エラーメッセージか何かを残したい */
-			if (ret == FBDF_MAPENC_ERROR_FILE) {
-				return false;
-			}
-			else {
-				/* 気にせずスルー */
-			}
-		}
-		this->MapToDetail(dest, map, d_name, dif);
-		return true;
-	}
-
-	void MapLoadMusicGetDetailAllDif(const char *d_name) {
-		bool insert_fg[3] = { false,false,false };
-		int dif_list[3] = { -1,-1,-1 };
-		FBDF_music_detail_t buf[3];
-		insert_fg[0] = this->MapLoadMusicGetDetail(d_name, buf[0], FBDF_dif_type_ec::LIGHT);
-		if (insert_fg[0]) {
-			dif_list[0] = buf[0].user_dif;
-		}
-		insert_fg[1] = this->MapLoadMusicGetDetail(d_name, buf[1], FBDF_dif_type_ec::NORMAL);
-		if (insert_fg[1]) {
-			dif_list[1] = buf[1].user_dif;
-		}
-		insert_fg[2] = this->MapLoadMusicGetDetail(d_name, buf[2], FBDF_dif_type_ec::HYPER);
-		if (insert_fg[2]) {
-			dif_list[2] = buf[2].user_dif;
-		}
-		for (size_t ib = 0; ib < 3; ib++) {
-			if (insert_fg[ib]) {
-				for (size_t ia = 0; ia < 3; ia++) {
-					buf[ib].level_list[ia] = dif_list[ia];
-				}
-				this->detail.push_back(buf[ib]);
-			}
-		}
-	}
-
-	/**
-	 * @brief PCフォルダー内を調べて楽曲のリストを読み込む
-	 * @return bool true=成功, false=失敗
-	 */
-	bool LoadMusicList(void) {
-		DIR *dir;
-		struct dirent *dirs;
-		dir = opendir("music");
-		if (dir == NULL) { return false; }
-
-		while (1) {
-			dirs = readdir(dir);
-			if (dirs == NULL) { break; }
-			if (dirs->d_name[0] == '.') { continue; }
-			MapLoadMusicGetDetailAllDif(dirs->d_name);
-		}
-
-		closedir(dir);
-		return true;
 	}
 
 	bool ReadSortType(void) {
@@ -1005,7 +1055,7 @@ public:
 		this->dif_hyper = -1;
 	}
 
-	void SetDifNum(int dif_list[]) {
+	void SetDifNum(const int dif_list[]) {
 		this->light = dif_list[0];
 		this->normal = dif_list[1];
 		this->dif_hyper = dif_list[2];
@@ -1241,7 +1291,7 @@ private:
 public:
 	/* TODO: now_musicはメンバ変数にしないか? */
 	bool Init(int &cmd, FBDF_dif_type_ec &view_def, std::string &now_music) {
-		if (this->list_set.music_list.LoadMusicList() == false) { return false; }
+		if (this->list_set.music_list.size() == 0) { return false; }
 		this->list_set.ReadUserData(cmd, view_def);
 		this->list_set.MakeMusicListInner(view_def);
 		this->list_set.MakeMusicListView();
@@ -1500,7 +1550,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
 
 	FBDF_Option_ReloadPic();
-	if (select_class.Init(command, view_dif_type, now_music) == false) { return VIEW_SELECT; }
+	if (select_class.Init(command, view_dif_type, now_music) == false) { return VIEW_EXIT; }
 	cutin.SetIo(CUT_FRAG_OUT);
 
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
