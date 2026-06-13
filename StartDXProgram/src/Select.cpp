@@ -183,6 +183,7 @@ private: /* “Ç‚Ýž‚ÝŒn */
 		dest.user_dif            = map.user_level;
 		dest.map_file_name       = map.map_file_name;
 		dest.dif_type            = dif;
+		dest.note_density        = DIV_AVOID_ZERO(map.note.size(), dest.Length / 2500, 0);
 		FBDF_CalMapMostColorPat(dest.most_colorpat, &map);
 		FBDF_CountMapColor(&dest.color_count, map.note, dest.Length);
 	}
@@ -1193,6 +1194,13 @@ public:
 	}
 
 public:
+	void DrawNoteDensity(int x, int y, int cmd) const {
+		int Len = pals_scale(35, 300, 0, 0, this->music_list[cmd].note_density);
+		int BaseY = y;
+		DrawBox(x, BaseY, x + Len, BaseY + 55, GetColor(0x5a, 0x1c, 0x96), TRUE);
+		DrawBox(x, BaseY, x + Len, BaseY + 55, GetColor(0xff, 0xff, 0xff), FALSE);
+	}
+
 	void DrawColorCount(int x, int y, int cmd) const {
 		const FBDF_music_colorcount_t &count = this->music_list[cmd].color_count;
 		int Len = pals_scale(35, 300, 0, 0, count.c1);
@@ -1211,7 +1219,6 @@ public:
 		BaseY += 15;
 		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_4, TRUE);
 		DrawBox(x, BaseY, x + Len, BaseY + 10, NOTE_COLOR_DARK_4, FALSE);
-		return;
 	}
 
 	void DrawList(int cmd) const {
@@ -1355,6 +1362,7 @@ public:
 			this->list_set.GetSortTypeString().c_str()
 		);
 		if (this->list_set.OnAvailableMusicFolderNow()) {
+			this->list_set.DrawNoteDensity(5, 100, cmd);
 			this->list_set.DrawColorCount(5, 100, cmd);
 			this->jacket_viewer.draw();
 			DrawFormatString(

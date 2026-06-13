@@ -77,6 +77,7 @@ typedef struct FBDF_music_most_colorpat_s {
 	uint count = 0;
 } FBDF_music_most_colorpat_t;
 
+/* count‚Á‚Ä‘‚¢‚Ä‚é‚¯‚Ç³Šm‚É‚Í–§“x */
 typedef struct FBDF_music_colorcount_s {
 	double c1 = 0;
 	double c2 = 0;

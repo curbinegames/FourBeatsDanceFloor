@@ -34,6 +34,7 @@
 
 #define ISPASSLYRICS(c) ( \
 	(c) == 'k' ||         \
+	(c) == 'l' ||         \
 	(c) == 'r' ||         \
 	(c) == 'z' ||         \
 	(c) == 'g' ||         \
@@ -44,6 +45,7 @@
 
 #define ISLYRICS(c) ( \
 	(c) == '.' ||   \
+	(c) == '/' ||   \
 	(c) == 'f' ||   \
 	(c) == 'a' ||   \
 	(c) == 'i' ||   \
@@ -56,6 +58,7 @@
 	(c) == 'w' ||   \
 	(c) == 'b' ||   \
 	(c) == 'p' ||   \
+	(c) == 'v' ||   \
 	(c) == 'n' ||   \
 	ISPASSLYRICS(c) \
 )
@@ -542,6 +545,8 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 			case 'i':
 			case 's':
 			case 't':
+			case 'f':
+			case 'v':
 				data_buf = FBDF_LYRICS_MAT_I;
 				break;
 			case 'u':
@@ -560,7 +565,7 @@ static FBDF_mapenc_error_et GetLyricsBlock(
 			case 'p':
 				data_buf = FBDF_LYRICS_MAT_N;
 				break;
-			case 'f':
+			case '/':
 				data_buf = FBDF_LYRICS_MAT_FREE;
 				break;
 			}

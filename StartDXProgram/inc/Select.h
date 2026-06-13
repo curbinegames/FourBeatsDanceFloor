@@ -28,6 +28,7 @@ typedef struct FBDF_music_detail_s {
 	FBDF_dif_type_ec dif_type = FBDF_dif_type_ec::LIGHT;
 	FBDF_music_most_colorpat_t most_colorpat[MOST_COLORPAT_NUM];
 	FBDF_music_colorcount_t color_count;
+	double note_density = 0;
 	FBDF_file_music_score_st user_highscore;
 } FBDF_music_detail_t;
 
