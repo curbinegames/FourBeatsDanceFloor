@@ -18,6 +18,7 @@
 #define ISNOTE(c) ( \
 	(c) == '-' ||   \
 	(c) == '.' ||   \
+	(c) == '*' ||   \
 	(c) == 'u' ||   \
 	(c) == 'd' ||   \
 	(c) == 'l' ||   \
@@ -233,6 +234,36 @@ static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
 	return ret;
 }
 
+static void GetNoteOne(
+	FBDF_map_t &map, const FBDF_map_enc_t &option, char ch, uint count
+) {
+	FBDF_note_t dest;
+	dest.motion = GetMotionAssign(ch);
+	dest.pos = option.now_shutpos + count;
+	dest.btn = GetNoteButton(option.now_block, count);
+	dest.len = 99;
+	if (!map.note.empty()) {
+		FBDF_note_t before_note = map.note.lastData();
+		map.note.pop_back();
+		before_note.len = (dest.pos > before_note.pos) ? (dest.pos - before_note.pos) : (1);
+		map.note.push_back(before_note);
+	}
+	dest.time = (
+		60000 * 4 * count /
+		(option.now_bpm * option.scrool * option.measure_u * option.now_block) +
+		game_option.note_offset_timing + option.now_shuttime
+		);
+	dest.mtime = 750;
+	if (!map.note.empty()) {
+		FBDF_note_t before_note = map.note.lastData();
+		map.note.pop_back();
+		before_note.mtime = dest.time - before_note.time;
+		map.note.push_back(before_note);
+	}
+	dest.bpm = option.now_bpm;
+	map.note.push_back(dest);
+}
+
 /**
  * @brief ノーツ情報を読み込む。ブロック版。
  * @param[out] map 格納先
@@ -259,38 +290,49 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 		}
 	}
 
+	bool flip_frag = false;
 	for (size_t ic = 0; ic < option.now_block; ic++) {
-		FBDF_note_t buf_note;
 		if (buf[ic] != '.') {
-			buf_note.motion = GetMotionAssign(buf[ic]);
-			buf_note.pos = option.now_shutpos + ic;
-			buf_note.btn = GetNoteButton(option.now_block, ic);
-			buf_note.len = 99;
-			if (!map.note.empty()) {
-				FBDF_note_t before_note = map.note.lastData();
-				map.note.pop_back();
-				before_note.len = buf_note.pos - before_note.pos;
-				map.note.push_back(before_note);
+			if (buf[ic] == '*') {
+				int block_set = option.now_block;
+				flip_frag = true;
+				option.now_block = option.now_block * 3 / 2;
+				if (MOD_AVOID_ZERO(ic, 2, 1) == 1) {
+					GetNoteOne(map, option, buf[ic], (ic + 1) * 3 / 2 - 2);
+					GetNoteOne(map, option, buf[ic], (ic + 1) * 3 / 2 - 1);
+				}
+				else {
+					GetNoteOne(map, option, buf[ic], ic * 3 / 2);
+				}
+				option.now_block = block_set;
 			}
-			buf_note.time = (
-				60000 * 4 * ic /
-				(option.now_bpm * option.scrool * option.measure_u * option.now_block) +
-				game_option.note_offset_timing + option.now_shuttime
-			);
-			buf_note.mtime = 750;
-			if (!map.note.empty()) {
-				FBDF_note_t before_note = map.note.lastData();
-				map.note.pop_back();
-				before_note.mtime = buf_note.time - before_note.time;
-				map.note.push_back(before_note);
+			else {
+				if (flip_frag) {
+					int block_set = option.now_block;
+					option.now_block = option.now_block * 3 / 2;
+					if (MOD_AVOID_ZERO(ic, 2, 1) == 1) {
+						GetNoteOne(map, option, buf[ic], (ic + 1) * 3 / 2 - 2);
+					}
+					else {
+						// GetNoteOne(map, option, buf[ic], ic * 3 / 2 - 1);
+						GetNoteOne(map, option, buf[ic], ic * 3 / 2);
+					}
+					option.now_block = block_set;
+					flip_frag = false;
+				}
+				else {
+					GetNoteOne(map, option, buf[ic], ic);
+				}
 			}
-			buf_note.bpm = option.now_bpm;
-			map.note.push_back(buf_note);
-			map.Etime = buf_note.time;
-			if (map.note.isfull()) {
-				FBDF_LOG_ERROR("ノーツ数が多すぎます!");
-				return FBDF_MAPENC_ERROR_NOTE_FULL;
-			}
+		}
+		else {
+			flip_frag = false;
+		}
+
+		if (map.note.isfull()) {
+			FBDF_LOG_ERROR("ノーツ数が多すぎます!");
+			map.Etime = map.note.lastData().time;
+			return FBDF_MAPENC_ERROR_NOTE_FULL;
 		}
 	}
 	option.now_shutpos += option.now_block;
@@ -373,6 +415,10 @@ static bool FBDF_Mapenc_GetsCmdGeneral(FBDF_map_t &map, FBDF_map_enc_t &option, 
 		map.samp_rate = strtol(buf, NULL, 10);
 		return true;
 	}
+	if (strands(buf, "LINK:")) {
+		/* 曲へのリンク。スルーでOK */
+		return true;
+	}
 	return false;
 }
 
@@ -419,6 +465,7 @@ static FBDF_mapenc_error_et FBDF_MapLoadOneCap(FBDF_map_t &map, FBDF_map_enc_t &
 	}
 	fclose(fp);
 
+	map.Etime = map.note.lastData().time;
 	/* ラストノート挿入 */ {
 		FBDF_note_t buf_note;
 		map.note.push_back(buf_note);
