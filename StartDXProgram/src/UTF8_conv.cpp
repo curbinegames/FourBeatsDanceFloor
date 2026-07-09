@@ -6,6 +6,8 @@
 typedef unsigned char uchar;
 typedef unsigned int  uint;
 
+#if 1
+
 std::string UTF8_converter(std::string src) {
 #ifdef LIGHT_MODE
 	return src;
@@ -32,6 +34,7 @@ std::string UTF8_converter(std::string src) {
 			}                          \
 			break
 
+			cat(0xE29886, "☆");
 			cat(0xE38080, "　");
 			cat(0xE38081, "、");
 			cat(0xE38082, "。");
@@ -42314,3 +42317,11 @@ std::string UTF8_converter(std::string src) {
 	return string_buf;
 #endif
 }
+
+#else
+
+std::string UTF8_converter(std::string src) {
+	return src;
+}
+
+#endif

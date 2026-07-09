@@ -113,6 +113,14 @@ public:
 	}
 
 	/**
+	* @brief 現在のパーティクルの最大数を取得する
+	* @return int
+	*/
+	int GetMaxCount() const {
+		return this->max_count;
+	}
+
+	/**
 	 * @brief 全体の時間の進み具合を変える
 	 * @param[in] val 進む速さ
 	 * @return なし
@@ -190,6 +198,7 @@ view_num_t FBDF_TitleView(void) {
 	/* TODO: 前半と後半に分ける */
 	int keybox[1] = { KEY_INPUT_RETURN };
 	int STime = 0;
+	int NTime = 0;
 	const int BPM = 150;
 
 	dxcur_pic_c title_pic(_T("pic/title.png"));
@@ -198,8 +207,8 @@ view_num_t FBDF_TitleView(void) {
 	dxcur_snd_c loop_bgm(_T("SE/Midsummer Philosophy/loop.mp3"));
 	dxcur_key_c key;
 
-	particle_system_c particle_pent(_T("pic/titlePent.png"));
-	particle_system_c particle_dot(_T("pic/titleDot.png"));
+	particle_system_c particle_pent(_T("pic/titlePent_small.png"));
+	particle_system_c particle_dot(_T("pic/titleDot_small.png"));
 
 	FBDF_cutin_c cutin;
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);
@@ -212,15 +221,14 @@ view_num_t FBDF_TitleView(void) {
 	}
 
 	loop_bgm.PlaySound(true); /* TODO: 順序もっと後では? */
-	STime = GetNowCount();
 
 	particle_pent.SetSize(
-		lins(0, 0, 960, 0.03, WINDOW_SIZE_X), lins(0, 0, 960, 0.12, WINDOW_SIZE_X)
+		lins(0, 0, 960, 0.25, WINDOW_SIZE_X), lins(0, 0, 960, 1.00, WINDOW_SIZE_X)
 	);
 	particle_pent.SetMaxCount(500);
 	particle_pent.SetSimTime(2);
 	particle_dot.SetSize(
-		lins(0, 0, 960, 0.01, WINDOW_SIZE_X), lins(0, 0, 960, 0.15, WINDOW_SIZE_X)
+		lins(0, 0, 960, 0.10, WINDOW_SIZE_X), lins(0, 0, 960, 1.00, WINDOW_SIZE_X)
 	);
 	particle_dot.SetMaxCount(500);
 	particle_dot.SetSimTime(2);
@@ -228,9 +236,37 @@ view_num_t FBDF_TitleView(void) {
 	particle_pent.init();
 	particle_dot.init();
 
+	STime = GetNowCount();
+	NTime = STime;
+	std::vector<int> gap_time(30, NTime);
 	while (!GetWindowUserCloseFlag() && !cutin.IsEndAnim()) {
 		key.update();
 		if (!cutin.IsClosing() && (key.GetKeyState(KEY_INPUT_RETURN) == 1)) { cutin.SetIo(CUT_FRAG_IN); }
+
+		/* FPS計測 */
+		NTime = GetNowCount();
+		gap_time.push_back(NTime);
+		if (gap_time.back() > 1000 + gap_time[0] && !gap_time.empty()) {
+			gap_time.pop_back();
+		}
+
+		if (gap_time.size() < 30) {
+			if (50 <= particle_pent.GetMaxCount()) {
+				particle_pent.SetMaxCount(particle_pent.GetMaxCount() - 10);
+			}
+			if (50 <= particle_dot.GetMaxCount()) {
+				particle_dot.SetMaxCount(particle_dot.GetMaxCount() - 10);
+			}
+		}
+
+		if (50 < gap_time.size()) {
+			if (particle_pent.GetMaxCount() < 500) {
+				particle_pent.SetMaxCount(particle_pent.GetMaxCount() + 1);
+			}
+			if (particle_dot.GetMaxCount() < 500) {
+				particle_dot.SetMaxCount(particle_dot.GetMaxCount() + 1);
+			}
+		}
 
 		particle_pent.SetSimTime(lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));
 		particle_dot.SetSimTime( lins(0, 4, 60000 / (double)BPM, 1, (GetNowCount() - STime) % (60000 / BPM)));

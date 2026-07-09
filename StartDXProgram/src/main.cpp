@@ -97,6 +97,7 @@ static void update_all_save(void) {
 int WINAPI WinMain(DX_MAIN_DEF) {
 	// update_all_save(); /* セーブデータ更新用 */
 	/* dxlibの初期化 */
+	// SetUseCharCodeFormat(DX_CHARCODEFORMAT_UTF8);
 	ChangeWindowMode(TRUE); // ウィンドウモードにする
 	SetGraphMode(WINDOW_SIZE_X, WINDOW_SIZE_Y, 32); // ウィンドウサイズの変更
 	SetAlwaysRunFlag(TRUE); // 非アクティブでも動くようにする

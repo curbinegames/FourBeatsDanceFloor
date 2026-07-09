@@ -225,7 +225,7 @@ static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
 			uint next_block = block / 2 + 1;
 			if (next_block <= ic) {
 				ic -= next_block;
-				next_block - 1;
+				next_block -= 1;
 			}
 			ret = GetNoteButton(next_block, ic);
 		}
@@ -239,7 +239,12 @@ static void GetNoteOne(
 ) {
 	FBDF_note_t dest;
 	dest.motion = GetMotionAssign(ch);
-	dest.pos = option.now_shutpos + count;
+	if (option.now_block == 2 && count == 1) {
+		dest.pos = option.now_shutpos + 2;
+	}
+	else {
+		dest.pos = option.now_shutpos + count;
+	}
 	dest.btn = GetNoteButton(option.now_block, count);
 	dest.len = 99;
 	if (!map.note.empty()) {
@@ -335,7 +340,12 @@ static FBDF_mapenc_error_et GetNoteBlock(FBDF_map_t &map, char const *buf, FBDF_
 			return FBDF_MAPENC_ERROR_NOTE_FULL;
 		}
 	}
-	option.now_shutpos += option.now_block;
+	if (option.now_block <= 2) {
+		option.now_shutpos += 4;
+	}
+	else {
+		option.now_shutpos += option.now_block;
+	}
 	option.now_shuttime += 60000 * 4 / (double)(option.now_bpm * option.scrool * option.measure_u);
 	map.blockNo++;
 	return FBDF_MAPENC_ERROR_NONE;
