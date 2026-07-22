@@ -38,6 +38,57 @@ typedef struct FBDF_title_particle_backlight_s {
 	double divrot = 0.0; /* 秒間角度移動量 */
 } FBDF_title_particle_backlight_t;
 
+class FBDF_title_spotlight_c {
+private:
+	int xpos = 0;
+	int ypos = 0;
+	int divx = 0;
+	int divy = 0;
+	dxcur_pic_c pic;
+
+public:
+	FBDF_title_spotlight_c(const TCHAR *path) : pic(path) {}
+
+	void position_reset(void) {
+		this->xpos = GetRand(WINDOW_SIZE_X);
+		this->ypos = GetRand(WINDOW_SIZE_Y);
+		switch (GetRand(3)) {
+		case 0: /* 左スタート */
+			this->xpos = -200;
+			this->divx = 15;
+			this->divy = GetRand(30) - 15;
+			break;
+		case 1: /* 右スタート */
+			this->xpos = WINDOW_SIZE_X + 200;
+			this->divx = -15;
+			this->divy = GetRand(30) - 15;
+			break;
+		case 2: /* 上スタート */
+			this->ypos = -200;
+			this->divy = 15;
+			this->divx = GetRand(30) - 15;
+			break;
+		case 3: /* 下スタート */
+			this->ypos = WINDOW_SIZE_Y + 200;
+			this->divy = -15;
+			this->divx = GetRand(30) - 15;
+			break;
+		}
+	}
+
+	void update(void) {
+		this->xpos += this->divx;
+		this->ypos += this->divy;
+		if (this->xpos < -400 || WINDOW_SIZE_X + 400 < this->xpos || this->ypos < -400 || WINDOW_SIZE_Y + 400 < this->ypos) {
+			this->position_reset();
+		}
+	}
+
+	void draw(void) const {
+		DrawDeformationPic(this->xpos, this->ypos, 1.0, 1.0, 0.0, this->pic.handle());
+	}
+};
+
 /**
  * 下から出るタイプのパーティクル
  */
@@ -204,6 +255,7 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 	int NTime = 0;
 	int FTime = 0;
 	int NDanser = GetRand(14);
+	bool TurnFlag = false;
 	dxcur_pic_c back_light_pic(_T("pic/title/backlight.png"));
 	dxcur_pic_c danser_pic[15] = {
 		_T("pic/title/101.png"),
@@ -236,7 +288,8 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 		NTime = GetNowCount() - STime;
 		if (FTime < NTime && NTime < 1600) {
 			NDanser = GetRand(14);
-			FTime += 100;
+			TurnFlag = (GetRand(1) == 0) ? true : false;
+			FTime += 80;
 		}
 		ClearDrawScreen(); // 作画エリアここから
 		// バックライトの描画
@@ -272,7 +325,7 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 			}
 			DrawDeformationPic(
 				WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2,
-				DrawSX, DrawSY, 0.0,
+				DrawSX * (TurnFlag ? -1 : 1), DrawSY, 0.0,
 				danser_pic[NDanser].handle()
 			);
 		}
@@ -294,6 +347,13 @@ view_num_t FBDF_TitleView(void) {
 	int NTime = 0;
 	const int BPM = 150;
 
+	FBDF_title_spotlight_c spotlight_pic[4] = {
+		FBDF_title_spotlight_c(_T("pic/title/spotlight1.png")),
+		FBDF_title_spotlight_c(_T("pic/title/spotlight2.png")),
+		FBDF_title_spotlight_c(_T("pic/title/spotlight3.png")),
+		FBDF_title_spotlight_c(_T("pic/title/spotlight4.png"))
+	};
+
 	dxcur_pic_c title_pic(_T("pic/title.png"));
 	dxcur_pic_c ring_pic(_T("pic/white_ring.png"));
 	dxcur_snd_c intro_bgm(_T("SE/Midsummer Philosophy/intro.mp3"));
@@ -310,7 +370,9 @@ view_num_t FBDF_TitleView(void) {
 
 	if (FBDF_TitleViewP1(intro_bgm) != true) { return VIEW_EXIT; }
 
-	loop_bgm.PlaySound(true); /* TODO: 順序もっと後では? */
+	for (int i = 0; i < 4; i++) {
+		spotlight_pic[i].position_reset();
+	}
 
 	particle_pent.SetSize(
 		lins(0, 0, 960, 0.25, WINDOW_SIZE_X), lins(0, 0, 960, 1.00, WINDOW_SIZE_X)
@@ -326,6 +388,8 @@ view_num_t FBDF_TitleView(void) {
 	particle_pent.init();
 	particle_dot.init();
 
+	loop_bgm.PlaySound(true);
+
 	STime = GetNowCount();
 	NTime = STime;
 	std::vector<int> gap_time(30, NTime);
@@ -333,28 +397,29 @@ view_num_t FBDF_TitleView(void) {
 		key.update();
 		if (!cutin.IsClosing() && (key.GetKeyState(KEY_INPUT_RETURN) == 1)) { cutin.SetIo(CUT_FRAG_IN); }
 
-		/* FPS計測 */
-		NTime = GetNowCount();
-		gap_time.push_back(NTime);
-		if (gap_time.back() > 1000 + gap_time[0] && !gap_time.empty()) {
-			gap_time.pop_back();
-		}
+		/* FPS補正 */ {
+			NTime = GetNowCount();
+			gap_time.push_back(NTime);
+			if (gap_time.back() > 1000 + gap_time[0] && !gap_time.empty()) {
+				gap_time.pop_back();
+			}
 
-		if (gap_time.size() < 30) {
-			if (50 <= particle_pent.GetMaxCount()) {
-				particle_pent.SetMaxCount(particle_pent.GetMaxCount() - 10);
+			if (gap_time.size() < 30) {
+				if (50 <= particle_pent.GetMaxCount()) {
+					particle_pent.SetMaxCount(particle_pent.GetMaxCount() - 10);
+				}
+				if (50 <= particle_dot.GetMaxCount()) {
+					particle_dot.SetMaxCount(particle_dot.GetMaxCount() - 10);
+				}
 			}
-			if (50 <= particle_dot.GetMaxCount()) {
-				particle_dot.SetMaxCount(particle_dot.GetMaxCount() - 10);
-			}
-		}
 
-		if (50 < gap_time.size()) {
-			if (particle_pent.GetMaxCount() < 500) {
-				particle_pent.SetMaxCount(particle_pent.GetMaxCount() + 1);
-			}
-			if (particle_dot.GetMaxCount() < 500) {
-				particle_dot.SetMaxCount(particle_dot.GetMaxCount() + 1);
+			if (50 < gap_time.size()) {
+				if (particle_pent.GetMaxCount() < 500) {
+					particle_pent.SetMaxCount(particle_pent.GetMaxCount() + 1);
+				}
+				if (particle_dot.GetMaxCount() < 500) {
+					particle_dot.SetMaxCount(particle_dot.GetMaxCount() + 1);
+				}
 			}
 		}
 
@@ -363,10 +428,20 @@ view_num_t FBDF_TitleView(void) {
 
 		particle_pent.update();
 		particle_dot.update();
+		for (int i = 0; i < 4; i++) {
+			spotlight_pic[i].update();
+		}
 
 		cutin.update();
 
 		ClearDrawScreen(); // 作画エリアここから
+
+		/* spotlight */
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 127);
+		for (int i = 0; i < 4; i++) {
+			spotlight_pic[i].draw();
+		}
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 
 		/* particle */
 		particle_pent.draw();
