@@ -21,7 +21,7 @@ class FBDF_option_item_base_c {
 protected:
     FBDF_param_type_et param_type = FBDF_PARAM_TYPE_BOOL;
     bool is_loop_param = false; /* is_bool_paramがtrueだったら無効 */
-    int  lower_limit   = 0;     /* is_bool_paramがtrueだったら無効、is_loop_paramがtrueだったら0固定 */
+    int  lower_limit   = 0;     /* is_bool_paramがtrueだったら無効 */
     int  upper_limit   = 0;     /* is_bool_paramがtrueだったら無効 */
     void *option_p     = &game_option.empty_val;
     dxcur_pic_c base_pic = dxcur_pic_c();
@@ -37,7 +37,10 @@ public:
             break;
         case FBDF_PARAM_TYPE_UINT:
             if (this->is_loop_param) {
-                *(uint *)(this->option_p) = LOOP_ADD(*(uint *)(this->option_p), this->upper_limit + 1);
+                *(uint *)(this->option_p) += 1;
+                if (*(uint *)(this->option_p) > this->upper_limit) {
+                    *(uint *)(this->option_p) = this->lower_limit;
+                }
             }
             else {
                 *(uint *)(this->option_p) = min(*(uint *)(this->option_p) + 1, this->upper_limit);
@@ -45,7 +48,10 @@ public:
             break;
         case FBDF_PARAM_TYPE_INT:
             if (this->is_loop_param) {
-                *(int *)(this->option_p) = LOOP_ADD(*(int *)(this->option_p), this->upper_limit + 1);
+                *(int *)(this->option_p) += 1;
+                if (*(int *)(this->option_p) > this->upper_limit) {
+                    *(int *)(this->option_p) = this->lower_limit;
+                }
             }
             else {
                 *(int *)(this->option_p) = min(*(int *)(this->option_p) + 1, this->upper_limit);
@@ -61,7 +67,15 @@ public:
             break;
         case FBDF_PARAM_TYPE_UINT:
             if (this->is_loop_param) {
-                *(uint *)(this->option_p) = LOOP_SUB(*(uint *)(this->option_p), this->upper_limit + 1);
+                if (*(uint *)(this->option_p) == 0) {
+                    *(uint *)(this->option_p) = this->upper_limit;
+                }
+                else {
+                    *(uint *)(this->option_p) -= 1;
+                }
+                if (*(uint *)(this->option_p) < this->lower_limit) {
+                    *(uint *)(this->option_p) = this->upper_limit;
+                }
             }
             else {
                 *(uint *)(this->option_p) = max(this->lower_limit, *(uint *)(this->option_p) - 1);
@@ -69,7 +83,10 @@ public:
             break;
         case FBDF_PARAM_TYPE_INT:
             if (this->is_loop_param) {
-                *(int *)(this->option_p) = LOOP_SUB(*(int *)(this->option_p), this->upper_limit + 1);
+                *(int *)(this->option_p) -= 1;
+                if (*(int *)(this->option_p) < this->lower_limit) {
+                    *(int *)(this->option_p) = this->upper_limit;
+                }
             }
             else {
                 *(int *)(this->option_p) = max(this->lower_limit, *(int *)(this->option_p) - 1);
@@ -109,7 +126,8 @@ public:
     FBDF_option_item_chara_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_UINT;
         this->is_loop_param = true;
-        this->upper_limit   = 3;
+        this->lower_limit   = 1;
+        this->upper_limit   = 2;
         this->option_p      = &game_option.chara;
         this->item_name     = "ダンサー";
         this->item_detail   = "使用するダンサーを選びます。";
@@ -124,12 +142,14 @@ public:
         case FBDF_DANCER_NEIDA:
             s = LANGUAGE_CHOOSE("ニーダ", "neida");
             break;
+#if 0
         case FBDF_DANCER_TRIMBA:
             s = LANGUAGE_CHOOSE("トリンバ", "trimba");
             break;
         case FBDF_DANCER_QUATTRO:
             s = LANGUAGE_CHOOSE("クアトロ", "quattro");
             break;
+#endif
         }
         return s;
     }
@@ -470,7 +490,7 @@ public:
 #endif /* class */
 
 static std::vector<FBDF_option_item_base_c *> s_op_list = {
-    // new FBDF_option_item_chara_c(),
+    new FBDF_option_item_chara_c(),
     new FBDF_option_item_playstyle_c(),
     new FBDF_option_item_autoen_c(),
     new FBDF_option_item_lanespeed_c(),

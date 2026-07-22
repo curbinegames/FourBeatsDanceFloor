@@ -31,6 +31,16 @@ typedef struct FBDF_title_particle_mat_s {
 	double divrot = 0; /* 回転量 */
 } FBDF_title_particle_mat_t;
 
+typedef struct FBDF_title_particle_backlight_s {
+	/* 位置は中央固定 */
+	double size   = 0.8; /* 単位は倍率 */
+	double rot    = 0.0; /* 単位はdeg */
+	double divrot = 0.0; /* 秒間角度移動量 */
+} FBDF_title_particle_backlight_t;
+
+/**
+ * 下から出るタイプのパーティクル
+ */
 class particle_system_c {
 private:
 	std::vector<FBDF_title_particle_mat_t> particle;
@@ -189,6 +199,89 @@ public:
 	}
 };
 
+bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
+	int STime = 0;
+	int NTime = 0;
+	int FTime = 0;
+	int NDanser = GetRand(14);
+	dxcur_pic_c back_light_pic(_T("pic/title/backlight.png"));
+	dxcur_pic_c danser_pic[15] = {
+		_T("pic/title/101.png"),
+		_T("pic/title/102.png"),
+		_T("pic/title/103.png"),
+		_T("pic/title/104.png"),
+		_T("pic/title/105.png"),
+		_T("pic/title/106.png"),
+		_T("pic/title/107.png"),
+		_T("pic/title/201.png"),
+		_T("pic/title/202.png"),
+		_T("pic/title/203.png"),
+		_T("pic/title/204.png"),
+		_T("pic/title/205.png"),
+		_T("pic/title/206.png"),
+		_T("pic/title/207.png"),
+		_T("pic/title/208.png")
+	};
+	std::vector<FBDF_title_particle_backlight_t> particle_backlight(100);
+
+	for (int i = 0; i < particle_backlight.size(); i++) {
+		particle_backlight[i].size   = lins(0, 0.2, 1500, 0.7, GetRand(1500));
+		particle_backlight[i].rot    = GetRand(359);
+		particle_backlight[i].divrot = GetRand(180) - 90.0;
+	}
+
+	STime = GetNowCount();
+	while (CheckSoundMem(intro_bgm.handle()) == 1) {
+		if (GetWindowUserCloseFlag()) { return false; } // 閉じるボタンが押された
+		NTime = GetNowCount() - STime;
+		if (FTime < NTime && NTime < 1600) {
+			NDanser = GetRand(14);
+			FTime += 100;
+		}
+		ClearDrawScreen(); // 作画エリアここから
+		// バックライトの描画
+		for (int i = 0; i < particle_backlight.size(); i++) {
+			// SetDrawBlendMode(DX_BLENDMODE_ADD, 255);
+			double DrawSX = particle_backlight[i].size * 0.7;
+			double DrawSY = particle_backlight[i].size;
+			double DrawR  = particle_backlight[i].rot + particle_backlight[i].divrot * (NTime / 1000.0);
+			DrawSX *= pals_scale(300, 0, 1500, 1, NTime);
+			DrawSY *= pals_scale(300, 0, 1500, 1, NTime);
+			if (1500 <= NTime) {
+				DrawSX = pals_scale(1500, DrawSX, 1950, 0.0, NTime);
+				if (DrawR < 180) {
+					DrawR = pals_scale(1500, DrawR, 1950, 90, NTime);
+				} else {
+					DrawR = pals_scale(1500, DrawR, 1950, 270, NTime);
+				}
+			}
+			DrawRotaGraph3(
+				WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2,
+				100, 747, DrawSX, DrawSY,
+				DrawR * 3.14159 / 180.0,
+				back_light_pic.handle(), TRUE
+			);
+			// SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+		}
+		/* ダンサーの描画 */ {
+			double DrawSX = pals_scale(300, 0.0, 1500, 0.9, NTime);
+			double DrawSY = DrawSX;
+			if (1500 <= NTime) {
+				DrawSX = pals_scale(1500, DrawSX, 1950, 2.2, NTime);
+				DrawSY = pals_scale(1500, DrawSY, 1950, 0.0, NTime);
+			}
+			DrawDeformationPic(
+				WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2,
+				DrawSX, DrawSY, 0.0,
+				danser_pic[NDanser].handle()
+			);
+		}
+		ScreenFlip(); // 作画エリアここまで
+		WaitTimer(1000 / 30); // ループウェイト
+	}
+	return true;
+}
+
 /**
  * @brief タイトル画面のベース
  * @param なし
@@ -215,10 +308,7 @@ view_num_t FBDF_TitleView(void) {
 
 	intro_bgm.PlaySound();
 
-	while (CheckSoundMem(intro_bgm.handle()) == 1) {
-		if (GetWindowUserCloseFlag()) { return VIEW_EXIT; } // 閉じるボタンが押された
-		WaitTimer(1000 / 30); // ループウェイト
-	}
+	if (FBDF_TitleViewP1(intro_bgm) != true) { return VIEW_EXIT; }
 
 	loop_bgm.PlaySound(true); /* TODO: 順序もっと後では? */
 
