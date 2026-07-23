@@ -251,6 +251,7 @@ public:
 };
 
 bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
+	const int SwitchTime = 1700;
 	int STime = 0;
 	int NTime = 0;
 	int FTime = 0;
@@ -286,7 +287,7 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 	while (CheckSoundMem(intro_bgm.handle()) == 1) {
 		if (GetWindowUserCloseFlag()) { return false; } // 閉じるボタンが押された
 		NTime = GetNowCount() - STime;
-		if (FTime < NTime && NTime < 1600) {
+		if (FTime < NTime) {
 			NDanser = GetRand(14);
 			TurnFlag = (GetRand(1) == 0) ? true : false;
 			FTime += 80;
@@ -298,14 +299,14 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 			double DrawSX = particle_backlight[i].size * 0.7;
 			double DrawSY = particle_backlight[i].size;
 			double DrawR  = particle_backlight[i].rot + particle_backlight[i].divrot * (NTime / 1000.0);
-			DrawSX *= pals_scale(300, 0, 1500, 1, NTime);
-			DrawSY *= pals_scale(300, 0, 1500, 1, NTime);
-			if (1500 <= NTime) {
-				DrawSX = pals_scale(1500, DrawSX, 1950, 0.0, NTime);
+			DrawSX *= pals_scale(300, 0, SwitchTime, 1, NTime);
+			DrawSY *= pals_scale(300, 0, SwitchTime, 1, NTime);
+			if (SwitchTime <= NTime) {
+				DrawSX = pals_scale(SwitchTime, DrawSX, 1950, 0.0, NTime);
 				if (DrawR < 180) {
-					DrawR = pals_scale(1500, DrawR, 1950, 90, NTime);
+					DrawR = pals_scale(SwitchTime, DrawR, 1950, 90, NTime);
 				} else {
-					DrawR = pals_scale(1500, DrawR, 1950, 270, NTime);
+					DrawR = pals_scale(SwitchTime, DrawR, 1950, 270, NTime);
 				}
 			}
 			DrawRotaGraph3(
@@ -317,12 +318,14 @@ bool FBDF_TitleViewP1(const dxcur_snd_c &intro_bgm) {
 			// SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 		}
 		/* ダンサーの描画 */ {
-			double DrawSX = pals_scale(300, 0.0, 1500, 0.9, NTime);
+			double DrawSX = pals_scale(300, 0.0, SwitchTime, 0.9, NTime);
 			double DrawSY = DrawSX;
-			if (1500 <= NTime) {
-				DrawSX = pals_scale(1500, DrawSX, 1950, 2.2, NTime);
-				DrawSY = pals_scale(1500, DrawSY, 1950, 0.0, NTime);
+#if 0
+			if (SwitchTime <= NTime) {
+				DrawSX = pals_scale(SwitchTime, DrawSX, 1950, 2.2, NTime);
+				DrawSY = pals_scale(SwitchTime, DrawSY, 1950, 0.0, NTime);
 			}
+#endif
 			DrawDeformationPic(
 				WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2,
 				DrawSX * (TurnFlag ? -1 : 1), DrawSY, 0.0,

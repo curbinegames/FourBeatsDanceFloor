@@ -155,6 +155,11 @@ typedef struct FBDT_hit_snd_s {
 	dxcur_snd_c SE2Data = dxcur_snd_c(_T("SE/SE2.wav"));
 } FBDT_hit_snd_t;
 
+typedef struct FBDF_play_noteeff_data_s {
+	int gap = 0; /* 判定の差[ms] */
+	int time = 0; /* 発生した時間[ms] */
+} FBDF_play_noteeff_data_st;
+
 #endif /* struct */
 
 #if 1 /* class */
@@ -1468,6 +1473,38 @@ public:
 	}
 };
 
+class FBDF_play_noteeff_c {
+private:
+	dxcur_divpic_c effpic{_T("pic/play/NoteEffect.png"), 6, 1, 6};
+	std::vector<FBDF_play_noteeff_data_st> data;
+
+public:
+	void AddData(int gap) {
+		FBDF_play_noteeff_data_st buf;
+		buf.gap  = gap;
+		buf.time = GetNowCount();
+		this->data.push_back(buf);
+	}
+
+	void update(void) {
+		while (!this->data.empty() && this->data[0].time + 200 < GetNowCount()) {
+			this->data.erase(this->data.begin());
+		}
+	}
+
+	void draw(int x, int y) const {
+		int DrawY = 0;
+		int DrawP = 0;
+		int Ntime = GetNowCount();
+		for (size_t in = 0; in < this->data.size(); in++) {
+			if (this->data[in].time + 200 < Ntime) { continue; }
+			DrawY = y - (int)((this->data[in].gap - 16 + game_option.note_offset_draw) * game_option.lane_speed) / 50;
+			DrawP = lins_scale(0, 0, 200, 5, Ntime - this->data[in].time);
+			DrawExtendGraph(x, DrawY, x + 231, DrawY + 33, this->effpic.handle(DrawP), TRUE);
+		}
+	}
+};
+
 #endif /* class */
 
 /* プレイ画面に関するクラスをまとめたもの */
@@ -1478,6 +1515,7 @@ typedef struct FBDF_play_class_set_s {
 	FBDF_gap_bar_c gap_bar_class;
 	FBDF_play_notes_draw_c notes_draw_class;
 	FBDF_play_chain_draw_c chain_draw_class;
+	FBDF_play_noteeff_c noteeff_class;
 } FBDF_play_class_set_t;
 
 #if 1 /* ノーツ判定系 */
@@ -1536,6 +1574,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
 	FBDF_gap_bar_c         &gap_bar_class    = play_class.gap_bar_class;
 	FBDF_play_notes_draw_c &notes_draw_class = play_class.notes_draw_class;
 	FBDF_play_chain_draw_c &chain_draw_class = play_class.chain_draw_class;
+	FBDF_play_noteeff_c    &noteeff_class    = play_class.noteeff_class;
 
 	while (!judge_event.empty()) {
 		buf = judge_event.front();
@@ -1612,6 +1651,7 @@ static void FBDF_Play_NoteJudgeEventAntion(
 		/* gap追加 */
 		if (buf.mat != JUDGE_MISS) {
 			gap_bar_class.SetVal(buf.gap);
+			noteeff_class.AddData(buf.gap);
 		}
 
 		/* ノーツ描画に影響するパラメータ */
@@ -1931,6 +1971,7 @@ static void FBDF_Play_AllUpdate(
 	/* update系 */
 	play_class.dancer_class.Update(map.lyrics, map.Ntime);
 	play_class.score_bar_class.update_graph(map.Ntime);
+	play_class.noteeff_class.update();
 	cutin.update();
 }
 
@@ -2014,6 +2055,12 @@ static void FBDF_Play_AllDraw(
 		lins(0, 0, 960, 166, WINDOW_SIZE_X), lins(0, 0, 720, 653, WINDOW_SIZE_Y) + 10,
 		COLOR_WHITE, _T("%s"), map.music_name.c_str()
 	);
+	if (game_option.hit_effect_en) {
+		play_class.noteeff_class.draw(
+			lins(0, 0, 960, -18, WINDOW_SIZE_X),
+			lins(0, 0, 720, 540, WINDOW_SIZE_Y)
+		);
+	}
 	play_class.notes_draw_class.DrawNotes(
 		lins(0, 0, 960, 42      , WINDOW_SIZE_X),
 		lins(0, 0, 960, 42 + 110, WINDOW_SIZE_X),
