@@ -1278,7 +1278,7 @@ private:
 	FBDF_select_jacket_viewer_c jacket_viewer;
 	FBDF_select_difdraw_c dif_pic;
 	FBDF_select_sidebar_c side_pic;
-	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む" };
+	FBDF_usage_c usage{ "上下キー: 曲選択、左右キー: 難易度選択\nEnterキー: 実行、Backキー: 戻る、Zキー: オプションに進む", "Up/Down: Select song, Left/Right: Select difficulty\nEnter key: Execute, Back key: Go back, Z key: Go to options" };
 	FBDF_select_bgm_c bgm;
 	dxcur_snd_c se{ "SE/select.mp3" };
 
@@ -1552,7 +1552,7 @@ view_num_t FBDF_SelectView(FBDF_play_choose_music_st &nex_music) {
 	FBDF_select_class_set_c select_class;
 	dxcur_key_c key;
 	FBDF_option_pic_st option_pic;
-	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る");
+	FBDF_usage_c option_usage("上下キー: 項目選択、左右キー: 設定の変更\nBack/Zキー: 選曲画面に戻る", "Up/Down: Select item, Left/Right: Change setting\nBack/Z key: Return to select screen");
 	FBDF_cutin_c cutin;
 
 	cutin.SetWindowSize(WINDOW_SIZE_X, WINDOW_SIZE_Y);

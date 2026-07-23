@@ -80,14 +80,26 @@ typedef struct FBDF_score_bar_s {
 	double bar_99 = 99.1;
 } FBDF_score_bar_st;
 
+class FBDF_language_c {
+private:
+	std::string str_jp = "";
+	std::string str_en = "";
+
+public:
+	FBDF_language_c(void) = delete;
+	FBDF_language_c(const char *str_jp, const char *str_en);
+	void set(const char *str_jp, const char *str_en);
+	std::string get(void) const;
+};
+
 class FBDF_usage_c {
 private:
-    std::string usage = "";
+    FBDF_language_c usage{"", ""};
     dxcur_pic_c pic{_T("pic/select/usage.png")};
 
 public:
     FBDF_usage_c(void);
-    FBDF_usage_c(const char *str);
+    FBDF_usage_c(const char *str_jp, const char *str_en);
 
     void draw(int left, int down) const;
 };

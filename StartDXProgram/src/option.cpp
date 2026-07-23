@@ -27,8 +27,8 @@ protected:
     dxcur_pic_c base_pic = dxcur_pic_c();
 
 public:
-    std::string item_name = "";
-    std::string item_detail = "";
+    FBDF_language_c item_name{"", ""};
+    FBDF_language_c item_detail{"", ""};
 
     void CmdUp(void) {
         switch (this->param_type) {
@@ -129,8 +129,8 @@ public:
         this->lower_limit   = 1;
         this->upper_limit   = 2;
         this->option_p      = &game_option.chara;
-        this->item_name     = "ダンサー";
-        this->item_detail   = "使用するダンサーを選びます。";
+        this->item_name.set("ダンサー", "Dancer");
+        this->item_detail.set("使用するダンサーを選びます。", "Choose the dancer to use.");
     }
 
     std::string GetParamName(void) const override {
@@ -177,8 +177,8 @@ public:
         this->is_loop_param = true;
         this->upper_limit   = 4;
         this->option_p      = &game_option.play_style;
-        this->item_name     = "プレイスタイル";
-        this->item_detail   = "プレイスタイルを選びます。";
+        this->item_name.set("プレイスタイル", "Play Style");
+        this->item_detail.set("プレイスタイルを選びます。", "Choose the play style.");
     }
 
     std::string GetParamName(void) const override {
@@ -207,19 +207,31 @@ public:
         std::string s = "";
         switch (*(uint *)(this->option_p)) {
         case FBDF_PLAYSTYLE_ASSIST_PLUS:
-            s = "常にボタン位置のアシストが付きます。\nその代わり、得られるスコアがかなり減り、accスコアが保存されません。";
+            s = LANGUAGE_CHOOSE(
+                "常にボタン位置のアシストが付きます。\nその代わり、得られるスコアがかなり減り、accスコアが保存されません。",
+                "Always has button position assist.\nIn exchange, the score you can get is significantly reduced, and acc score is not saved."
+            );
             break;
         case FBDF_PLAYSTYLE_ASSIST:
-            s = "ミスをすると一定時間ボタン位置のアシストが付きます。\nその代わり、得られるスコアが減り、accスコアが保存されません。";
+            s = LANGUAGE_CHOOSE(
+                "ミスをすると一定時間ボタン位置のアシストが付きます。\nその代わり、得られるスコアが減り、accスコアが保存されません。",
+                "When you miss, button position assist is available for a certain time.\nIn exchange, the score you can get is reduced, and acc score is not saved."
+            );
             break;
         case FBDF_PLAYSTYLE_NORMAL:
-            s = "通常のモードです。";
+            s = LANGUAGE_CHOOSE("通常のモードです。", "This is the normal mode.");
             break;
         case FBDF_PLAYSTYLE_BLANC:
-            s = "色が分からなくなりますが、その代わり得られるスコアがほんの僅かだけ増えます。\nミスをすると一定時間色が復活します。";
+            s = LANGUAGE_CHOOSE(
+                "色が分からなくなりますが、その代わり得られるスコアがほんの僅かだけ増えます。\nミスをすると一定時間色が復活します。",
+                "All notes become the same color, but you earn slightly more points.\nAfter a miss, the original colors return for a short time."
+            );
             break;
         case FBDF_PLAYSTYLE_BLANC_PLUS:
-            s = "色が分からなくなりますが、その代わり得られるスコアがちょっとだけ増えます。\nミスをしても色は復活しません。スコアは別で保存されます。";
+            s = LANGUAGE_CHOOSE(
+                "色が分からなくなりますが、その代わり得られるスコアがちょっとだけ増えます。\nミスをしても色は復活しません。スコアは別で保存されます。",
+                "All notes become the same color, but you earn slightly more points.\nThe original colors do not return after a miss. Scores are saved separately."
+            );
             break;
         }
         return s;
@@ -241,8 +253,8 @@ public:
     FBDF_option_item_autoen_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_BOOL;
         this->option_p      = &game_option.auto_en;
-        this->item_name     = "オート";
-        this->item_detail   = "自動演奏モードの切り替えをします。\n有効にすると記録は保存されません。";
+        this->item_name.set("オート", "AutoMode");
+        this->item_detail.set("自動演奏モードの切り替えをします。\n有効にすると記録は保存されません。", "Toggles the auto-play mode.\nIf enabled, scores will not be saved.");
     }
 
     std::string GetParamName(void) const override {
@@ -271,8 +283,8 @@ public:
         this->lower_limit   = 1;
         this->upper_limit   = 100;
         this->option_p      = &game_option.lane_speed;
-        this->item_name     = "ノーツ速度";
-        this->item_detail   = "ノーツの速度を変更します。増やすと速くなります。";
+        this->item_name.set("ノーツ速度", "Notes Speed");
+        this->item_detail.set("ノーツの速度を変更します。増やすと速くなります。", "Changes the speed of the notes. Increasing it makes them faster.");
     }
 
     std::string GetParamName(void) const override {
@@ -293,8 +305,8 @@ public:
         this->lower_limit   = -10000;
         this->upper_limit   =  10000;
         this->option_p      = &game_option.note_offset_timing;
-        this->item_name     = "ノーツタイミング";
-        this->item_detail   = "ノーツが来るタイミングをずらします。\nfast多いなら減らして、slow多いなら増やしてください。";
+        this->item_name.set("ノーツタイミング", "Note Timing");
+        this->item_detail.set("ノーツが来るタイミングをずらします。\nfast多いなら減らして、slow多いなら増やしてください。", "Adjusts the timing of when notes appear.\nIf you have many fast notes, decrease this value; if you have many slow notes, increase it.");
     }
 
     std::string GetParamName(void) const override {
@@ -318,8 +330,8 @@ public:
         this->lower_limit   = -10000;
         this->upper_limit   =  10000;
         this->option_p      = &game_option.note_offset_draw;
-        this->item_name     = "ノーツ描画位置";
-        this->item_detail   = "ノーツを描く位置をずらします。\n増やすと上に、減らすと下にずれます。";
+        this->item_name.set("ノーツ描画位置", "Notes Draw Position");
+        this->item_detail.set("ノーツを描く位置をずらします。\n増やすと上に、減らすと下にずれます。", "Adjusts the position where notes are drawn.\nIncreasing it moves them up, decreasing it moves them down.");
     }
 
     std::string GetParamName(void) const override {
@@ -340,8 +352,8 @@ public:
     FBDF_option_item_hiteffecten_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_BOOL;
         this->option_p      = &game_option.hit_effect_en;
-        this->item_name     = "ノーツエフェクト";
-        this->item_detail   = "ノーツを叩いた時のエフェクトの表示切替をします。";
+        this->item_name.set("ノーツエフェクト", "Notes Effects");
+        this->item_detail.set("ノーツを叩いた時のエフェクトの表示切替をします。", "Toggles the display of effects when notes are hit.");
     }
 
     std::string GetParamName(void) const override {
@@ -367,8 +379,8 @@ public:
     FBDF_option_item_judgedrawen_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_BOOL;
         this->option_p      = &game_option.judge_draw_en;
-        this->item_name     = "判定表示";
-        this->item_detail   = "ノーツの判定表示を切り替えます。";
+        this->item_name.set("判定表示", "Judge Display");
+        this->item_detail.set("ノーツの判定表示を切り替えます。", "Toggles the display of note judgments.");
     }
 
     std::string GetParamName(void) const override {
@@ -394,8 +406,8 @@ public:
     FBDF_option_item_fastslowen_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_BOOL;
         this->option_p      = &game_option.fast_slow_en;
-        this->item_name     = "判定詳細表示";
-        this->item_detail   = "ノーツを叩いたタイミングの詳細判定の表示を切り替えます。";
+        this->item_name.set("判定詳細表示", "Detailed Judge Display");
+        this->item_detail.set("ノーツを叩いたタイミングの詳細判定の表示を切り替えます。", "Toggles the display of detailed judge timing when notes are hit.");
     }
 
     std::string GetParamName(void) const override {
@@ -421,8 +433,8 @@ public:
     FBDF_option_item_chaindrawen_c (void) {
         this->param_type    = FBDF_PARAM_TYPE_BOOL;
         this->option_p      = &game_option.chain_draw_en;
-        this->item_name     = "チェイン数表示";
-        this->item_detail   = "チェイン数の表示を切り替えます。";
+        this->item_name.set("チェイン数表示", "Chain Count Display");
+        this->item_detail.set("チェイン数の表示を切り替えます。", "Toggles the display of the chain count.");
     }
 
     std::string GetParamName(void) const override {
@@ -450,8 +462,8 @@ public:
         this->is_loop_param = true;
         this->upper_limit   = 1;
         this->option_p      = &game_option.language;
-        this->item_name     = "言語";
-        this->item_detail   = "ゲーム内で使用する言語を選択します。";
+        this->item_name.set("言語", "Language");
+        this->item_detail.set("ゲーム内で使用する言語を選択します。", "Selects the language to be used in the game.");
     }
 
     std::string GetParamName(void) const override {
@@ -474,7 +486,7 @@ public:
             s = "";
             break;
         case 1:
-            s = "※すべてに対応していない可能性があります。";
+            s = "※Translations may be inaccurate or incomplete.";
             break;
         }
         return s;
@@ -505,7 +517,7 @@ static std::vector<FBDF_option_item_base_c *> s_op_list = {
 
 static void FBDF_Option_DrawItemOne(int no, int x, int y, const FBDF_option_pic_st &pic) {
     DrawGraph(       x,     y,      pic.box.handle(), TRUE);
-    DrawFormatString(x + 9, y + 10, COLOR_WHITE, _T("%s"), s_op_list.at(no)->item_name.c_str());
+    DrawFormatString(x + 9, y + 10, COLOR_WHITE, _T("%s"), s_op_list.at(no)->item_name.get().c_str());
     DrawFormatString(x + 9, y + 37, COLOR_WHITE, _T("%s"), s_op_list.at(no)->GetParamName().c_str());
 }
 
@@ -578,6 +590,6 @@ void FBDF_Option_Draw(int cmd, const FBDF_option_pic_st &pic, const FBDF_usage_c
     usage.draw(0, WINDOW_SIZE_Y - 70);
     /* 詳細を描く */
     DrawExtendGraph( 0, WINDOW_SIZE_Y - 75, WINDOW_SIZE_X, WINDOW_SIZE_Y, pic.detail.handle(), TRUE);
-    DrawFormatString(5, WINDOW_SIZE_Y - 65, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.c_str());
+    DrawFormatString(5, WINDOW_SIZE_Y - 65, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->item_detail.get().c_str());
     DrawFormatString(5, WINDOW_SIZE_Y - 40, COLOR_WHITE, _T("%s"), s_op_list.at(cmd)->GetParamDetail().c_str());
 }

@@ -48,8 +48,28 @@ FBDF_dif_type_ec &operator--(FBDF_dif_type_ec &val) {
     return val;
 }
 
+#if 1 /* FBDF_language_c */
+
+FBDF_language_c::FBDF_language_c(const char *str_jp, const char *str_en) : str_jp(str_jp), str_en(str_en) {}
+
+void FBDF_language_c::set(const char *str_jp, const char *str_en) {
+    this->str_jp = str_jp;
+    this->str_en = str_en;
+}
+
+std::string FBDF_language_c::get(void) const {
+    return (game_option.language == 0) ? this->str_jp : this->str_en;
+}
+
+#endif /* FBDF_language_c */
+
 FBDF_usage_c::FBDF_usage_c(void) {}
-FBDF_usage_c::FBDF_usage_c(const char *str) : usage(str) {}
+FBDF_usage_c::FBDF_usage_c(const char *str_jp, const char *str_en) : usage(str_jp, str_en) {}
+
+void FBDF_usage_c::draw(int left, int down) const {
+    DrawGraph(left, down - 48, this->pic.handle(), TRUE);
+    DrawFormatString(left + 5, down - 40, COLOR_WHITE, _T("%s"), this->usage.get().c_str());
+}
 
 #if 1 /* FBDF_cascadia_pic_c */
 
@@ -136,11 +156,6 @@ void FBDF_cascadia_pic_c::DrawFloat(int x, int y, double size, double num, uint 
 }
 
 #endif /* FBDF_cascadia_pic_c */
-
-void FBDF_usage_c::draw(int left, int down) const {
-    DrawGraph(left, down - 48, this->pic.handle(), TRUE);
-    DrawFormatString(left + 5, down - 40, COLOR_WHITE, _T("%s"), this->usage.c_str());
-}
 
 #if 1 /* DrawScoreBarån */
 
