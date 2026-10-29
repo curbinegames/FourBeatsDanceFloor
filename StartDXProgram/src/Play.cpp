@@ -1,4 +1,5 @@
 
+#include <array>
 #include <vector>
 #include <queue>
 
@@ -247,6 +248,341 @@ public:
 	}
 };
 
+class FBDF_dancer_base_c {
+private:
+	Dx3Dobj_t model_handle = -1;
+	std::string path = "";
+
+	Dx3Danim_t anim_idle = -1;
+	Dx3Danim_t anim_miss = -1;
+	Dx3Danim_t anim_dance = -1;
+
+	int shape_blink = -1;
+	int shape_smile = -1;
+	int shape_surps = -1;
+	int shape_a = -1;
+	int shape_i = -1;
+	int shape_u = -1;
+	int shape_e = -1;
+	int shape_o = -1;
+
+private:
+
+	void setSize(float size) {
+		MV1SetScale(this->model_handle, VGet(size, size, size));
+	}
+
+	void LoadBase(const std::string &path) {
+		this->model_handle = MV1LoadModel(path.c_str());
+		if (!this->IsValid()) { return; }
+		this->path = path;
+		MV1SetPosition(this->model_handle, VGet(
+			lins(0, 0, 2000, WINDOW_SIZE_X, 1000),
+			lins(0, 0, 2000, WINDOW_SIZE_Y,  300),
+			lins(0, 0,  720, 500,  WINDOW_SIZE_Y)
+		));
+		this->setSize(lins(0, 0, 720, 2, WINDOW_SIZE_Y));
+		this->anim_idle   = MV1AttachAnim(this->model_handle, 0);
+		this->anim_miss   = MV1AttachAnim(this->model_handle, 1);
+		this->anim_dance  = MV1AttachAnim(this->model_handle, 2);
+		this->shape_blink = MV1SearchShape(this->model_handle, _T("まばたき"));
+		this->shape_smile = MV1SearchShape(this->model_handle, _T("笑い"));
+		this->shape_surps = MV1SearchShape(this->model_handle, _T("点目"));
+		this->shape_a     = MV1SearchShape(this->model_handle, _T("あ"));
+		this->shape_i     = MV1SearchShape(this->model_handle, _T("い"));
+		this->shape_u     = MV1SearchShape(this->model_handle, _T("う"));
+		this->shape_e     = MV1SearchShape(this->model_handle, _T("え"));
+		this->shape_o     = MV1SearchShape(this->model_handle, _T("お"));
+		MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,  1);
+		MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,  0);
+		MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 0);
+	}
+
+	void DeleteBase(void) {
+		if (this->IsValid()) {
+			MV1DeleteModel(this->model_handle);
+			this->model_handle = -1;
+			this->path.clear();
+			this->anim_idle = -1;
+			this->anim_miss = -1;
+			this->anim_dance = -1;
+			this->shape_blink = -1;
+			this->shape_smile = -1;
+			this->shape_surps = -1;
+			this->shape_a = -1;
+			this->shape_i = -1;
+			this->shape_u = -1;
+			this->shape_e = -1;
+			this->shape_o = -1;
+		}
+	}
+
+public:
+	FBDF_dancer_base_c(void) {};
+
+	FBDF_dancer_base_c(const std::string &path) {
+		this->LoadBase(path);
+	}
+
+	~FBDF_dancer_base_c() {
+		this->DeleteBase();
+	}
+
+	FBDF_dancer_base_c(const FBDF_dancer_base_c &obj) {
+		this->DeleteBase();
+		if (obj.IsValid()) {
+			this->LoadBase(obj.path);
+		}
+	}
+
+	FBDF_dancer_base_c &operator=(const FBDF_dancer_base_c &obj) {
+		if (this != &obj) {
+			this->DeleteBase();
+			if (obj.IsValid()) {
+				this->LoadBase(obj.path);
+			}
+		}
+		return *this;
+	}
+
+	FBDF_dancer_base_c(FBDF_dancer_base_c &&obj) noexcept {
+		this->DeleteBase();
+		this->model_handle = obj.model_handle;
+		this->path = std::move(obj.path);
+		this->anim_idle = obj.anim_idle;
+		this->anim_miss = obj.anim_miss;
+		this->anim_dance = obj.anim_dance;
+		this->shape_blink = obj.shape_blink;
+		this->shape_smile = obj.shape_smile;
+		this->shape_surps = obj.shape_surps;
+		this->shape_a = obj.shape_a;
+		this->shape_i = obj.shape_i;
+		this->shape_u = obj.shape_u;
+		this->shape_e = obj.shape_e;
+		this->shape_o = obj.shape_o;
+		obj.model_handle = -1;
+		obj.path.clear();
+		obj.anim_idle = -1;
+		obj.anim_miss = -1;
+		obj.anim_dance = -1;
+		obj.shape_blink = -1;
+		obj.shape_smile = -1;
+		obj.shape_surps = -1;
+		obj.shape_a = -1;
+		obj.shape_i = -1;
+		obj.shape_u = -1;
+		obj.shape_e = -1;
+		obj.shape_o = -1;
+	}
+
+	FBDF_dancer_base_c &operator=(FBDF_dancer_base_c &&obj) noexcept {
+		if (this != &obj) {
+			this->DeleteBase();
+			this->model_handle = obj.model_handle;
+			this->path = std::move(obj.path);
+			this->anim_idle = obj.anim_idle;
+			this->anim_miss = obj.anim_miss;
+			this->anim_dance = obj.anim_dance;
+			this->shape_blink = obj.shape_blink;
+			this->shape_smile = obj.shape_smile;
+			this->shape_surps = obj.shape_surps;
+			this->shape_a = obj.shape_a;
+			this->shape_i = obj.shape_i;
+			this->shape_u = obj.shape_u;
+			this->shape_e = obj.shape_e;
+			this->shape_o = obj.shape_o;
+			obj.model_handle = -1;
+			obj.path.clear();
+			obj.anim_idle = -1;
+			obj.anim_miss = -1;
+			obj.anim_dance = -1;
+			obj.shape_blink = -1;
+			obj.shape_smile = -1;
+			obj.shape_surps = -1;
+			obj.shape_a = -1;
+			obj.shape_i = -1;
+			obj.shape_u = -1;
+			obj.shape_e = -1;
+			obj.shape_o = -1;
+		}
+		return *this;
+	}
+
+public:
+	Dx3Dobj_t handle(void) const {
+		return this->model_handle;
+	}
+
+	void reload(const std::string &path) {
+		this->DeleteBase();
+		this->LoadBase(path);
+	}
+
+	void draw(void) const {
+		if (!this->IsValid()) { return; }
+		MV1DrawModel(this->model_handle);
+	}
+
+	/**
+	 * @param[in] n アニメタイプ、0=idle, 1=miss, 2=dance
+	 * @param[in] idle_per idleを混ぜる割合
+	 */
+	void setAnimType(int n, float idle_per = 0) {
+		if (!this->IsValid()) { return; }
+		idle_per = betweens(0.0, idle_per, 1.0);
+		switch (n) {
+		case 0:
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,  1);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,  0);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 0);
+			break;
+		case 1:
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,  0);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,  1);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 0);
+			break;
+		case 2:
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,      idle_per);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,             0);
+			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 1 - idle_per);
+			break;
+		}
+	}
+
+	void setDance(size_t n) {
+		if (!this->IsValid()) { return; }
+		MV1DetachAnim(this->model_handle, this->anim_dance);
+		this->anim_dance = MV1AttachAnim(this->model_handle, n + 2);
+	}
+
+	void setAnimTimeIdle(size_t time) {
+		if (!this->IsValid()) { return; }
+		MV1SetAttachAnimTime(this->model_handle, this->anim_idle, time);
+	}
+
+	void setAnimTimeMiss(size_t time) {
+		if (!this->IsValid()) { return; }
+		MV1SetAttachAnimTime(this->model_handle, this->anim_miss, time);
+	}
+
+	void setAnimTimeDance(size_t time) {
+		if (!this->IsValid()) { return; }
+		MV1SetAttachAnimTime(this->model_handle, this->anim_dance, time);
+	}
+
+	/**
+	 * @param[in] n 目の状態、0=瞬き, 1=目閉じ, 2=驚き, 3=ジト目
+	 */
+	void setShapeEyes(size_t n) {
+		if (!this->IsValid()) { return; }
+		switch(n) {
+		case 0:
+			MV1SetShapeRate(this->model_handle, this->shape_blink, 1.0 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
+			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
+			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
+			break;
+		case 1:
+			MV1SetShapeRate(this->model_handle, this->shape_blink, 1.0);
+			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
+			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
+			break;
+		case 2:
+			MV1SetShapeRate(this->model_handle, this->shape_blink, 0.0);
+			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
+			MV1SetShapeRate(this->model_handle, this->shape_surps, 1.0);
+			break;
+		case 3: /* TODO: ジト目ブレンドシェイプを用意する */
+			MV1SetShapeRate(this->model_handle, this->shape_blink, 0.5);
+			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.5);
+			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
+			break;
+		}
+	}
+
+	/**
+	 * @param[in] n 口の形状、0=n, 1=a, 2=i, 3=u, 4=e, 5=o
+	 * @param[in] mix pの割合。
+	 * @param[in] p 口の形状、0=n, 1=a, 2=i, 3=u, 4=e, 5=o
+	 */
+	void setShapeMouth(size_t n, float mix = 0.0, size_t p = 0) {
+		if (!this->IsValid()) { return; }
+		if (n == p) { mix = 0.0; }
+		mix = betweens(0.0, mix, 1.0);
+		int ns = -1;
+		int ps = -1;
+
+		MV1SetShapeRate(this->model_handle, this->shape_a, 0.0);
+		MV1SetShapeRate(this->model_handle, this->shape_i, 0.0);
+		MV1SetShapeRate(this->model_handle, this->shape_u, 0.0);
+		MV1SetShapeRate(this->model_handle, this->shape_e, 0.0);
+		MV1SetShapeRate(this->model_handle, this->shape_o, 0.0);
+
+		switch (n) {
+		case 0:
+			ns = -1;
+			break;
+		case 1:
+			ns = this->shape_a;
+			break;
+		case 2:
+			ns = this->shape_i;
+			break;
+		case 3:
+			ns = this->shape_u;
+			break;
+		case 4:
+			ns = this->shape_e;
+			break;
+		case 5:
+			ns = this->shape_o;
+			break;
+		}
+
+		switch (p) {
+		case 0:
+			ps = -1;
+			break;
+		case 1:
+			ps = this->shape_a;
+			break;
+		case 2:
+			ps = this->shape_i;
+			break;
+		case 3:
+			ps = this->shape_u;
+			break;
+		case 4:
+			ps = this->shape_e;
+			break;
+		case 5:
+			ps = this->shape_o;
+			break;
+		}
+
+		if (ns != -1) {
+			MV1SetShapeRate(this->model_handle, ns, 1.0 - mix);
+		}
+		if (ps != -1) {
+			MV1SetShapeRate(this->model_handle, ps,       mix);
+		}
+	}
+
+	std::array<float, 5> getShapeRateMouth(void) const {
+		if (!this->IsValid()) { return {}; }
+		std::array<float, 5> ret;
+		ret[0] = MV1GetShapeApplyRate(this->model_handle, this->shape_a);
+		ret[1] = MV1GetShapeApplyRate(this->model_handle, this->shape_i);
+		ret[2] = MV1GetShapeApplyRate(this->model_handle, this->shape_u);
+		ret[3] = MV1GetShapeApplyRate(this->model_handle, this->shape_e);
+		ret[4] = MV1GetShapeApplyRate(this->model_handle, this->shape_o);
+		return ret;
+	}
+
+	bool IsValid(void) const {
+		return (this->handle() != -1);
+	}
+};
+
 /**
  * ダンサーを管理するクラス
  * ステート推移
@@ -269,24 +605,7 @@ private:
 	FBDF_Play_note_btn_et btn = FBDF_PLAY_NOTE_BTN_1;
 	FBDF_dancer_state_et Nstate = FBDF_DANCER_STATE_IDLE;
 
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-	dxcur_divpic_c idle_pic;
-	dxcur_divpic_c miss_pic;
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	Dx3Dobj_t  n3Dmodel_handle     = -1;
-	Dx3Danim_t n3Dmotion_idle_ath  = -1;
-	Dx3Danim_t n3Dmotion_miss_ath  = -1;
-	Dx3Danim_t n3Dmotion_dance_ath = -1;
-#endif /* 3Dモデル */
-
-	int n3Dshape_blick_hdl = -1;
-	int n3Dshape_smile_hdl = -1;
-	int n3Dshape_surps_hdl = -1;
-	int n3Dshape_a_hdl = -1;
-	int n3Dshape_i_hdl = -1;
-	int n3Dshape_u_hdl = -1;
-	int n3Dshape_e_hdl = -1;
-	int n3Dshape_o_hdl = -1;
+	FBDF_dancer_base_c n3Dmodel;
 
 	std::vector<size_t> searched_motion;
 	std::vector<FBDF_Play_motion_st> motion_data;
@@ -295,14 +614,8 @@ public: /* コンストラクタ系 */
 	FBDF_dancer_c(void) : FBDF_dancer_c(FBDF_DANCER_UNIOW) {} /* ユニオとして初期化 */
 
 	FBDF_dancer_c(size_t n) {
-		float model_size = lins(0, 0, 720, 2, WINDOW_SIZE_Y);
 		std::string chara_name;
-		std::string folder_path = "dancer/";
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-		std::string image_path;
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		std::string n3Dmodel_path;
-#endif /* 3Dモデル */
+		std::string n3Dmodel_path = "dancer/";
 
 		switch (n) {
 		case FBDF_DANCER_UNIOW:
@@ -323,99 +636,32 @@ public: /* コンストラクタ系 */
 		}
 		FBDF_DancerMotionEnc(motion_data, chara_name.c_str());
 
-		folder_path += chara_name;
-		folder_path += '/';
+		n3Dmodel_path += chara_name;
+		n3Dmodel_path += "/model.mv1";
 
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-		image_path  = folder_path;
-		image_path += "idle.png";
-		idle_pic = dxcur_divpic_c(image_path.c_str(), 8, 4, 2);
-
-		image_path  = folder_path;
-		image_path += "miss.png";
-		miss_pic = dxcur_divpic_c(image_path.c_str(), 4, 2, 2);
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		n3Dmodel_path  = folder_path;
-		n3Dmodel_path += "model.mv1";
-		this->n3Dmodel_handle = MV1LoadModel(n3Dmodel_path.c_str());
-		MV1SetPosition(this->n3Dmodel_handle, VGet(
-			lins(0, 0, 2000, WINDOW_SIZE_X, 1000),
-			lins(0, 0, 2000, WINDOW_SIZE_Y,  300),
-			lins(0, 0,  720, 500,  WINDOW_SIZE_Y)
-		));
-		MV1SetScale(this->n3Dmodel_handle, VGet(model_size, model_size, model_size));
-		this->n3Dmotion_idle_ath = MV1AttachAnim(this->n3Dmodel_handle, 0);
-		this->n3Dmotion_miss_ath = MV1AttachAnim(this->n3Dmodel_handle, 1);
-		this->n3Dshape_blick_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("まばたき"));
-		this->n3Dshape_smile_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("笑い"));
-		this->n3Dshape_surps_hdl = MV1SearchShape(this->n3Dmodel_handle, _T("点目"));
-		this->n3Dshape_a_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("あ"));
-		this->n3Dshape_i_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("い"));
-		this->n3Dshape_u_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("う"));
-		this->n3Dshape_e_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("え"));
-		this->n3Dshape_o_hdl     = MV1SearchShape(this->n3Dmodel_handle, _T("お"));
-		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
-		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-		MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+		this->n3Dmodel.reload(n3Dmodel_path);
 #if (FBDF_LOG_LEVEL_DEF <= 1)
 		{
-			int anim_num = MV1GetAnimNum(this->n3Dmodel_handle);
+			int anim_num = MV1GetAnimNum(this->n3Dmodel.handle());
 			std::string log_str = "";
 			for (int inum = 0; inum < anim_num; inum++) {
 				log_str  = "検出したアニメ[";
 				log_str += ('0' + inum);
 				log_str += "]: ";
-				log_str += MV1GetAnimName(this->n3Dmodel_handle, inum);
+				log_str += MV1GetAnimName(this->n3Dmodel.handle(), inum);
 				FBDF_LOG_INFO(log_str.c_str());
 			}
 		}
 		{
-			int shape_num = MV1GetShapeNum(this->n3Dmodel_handle);
+			int shape_num = MV1GetShapeNum(this->n3Dmodel.handle());
 			std::string log_str = "検出したシェイプキーの数: ";
 			log_str += std::to_string(shape_num);
 			FBDF_LOG_INFO(log_str.c_str());
 		}
 #endif
-#endif /* 3Dモデル */
 	}
-
-#if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-	~FBDF_dancer_c() {
-		MV1DeleteModel(this->n3Dmodel_handle);
-	}
-#endif /* 3Dモデル */
 
 private:
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-	/* アニメ番号を取得する */
-	size_t GetMotionAnimNo(void) const {
-		if (this->len == 1) { /* ダンスモーション1 */
-			return this->btn - 1;
-		}
-		else if (this->len == 2) { /* ダンスモーション2 */
-			return (size_t)((this->btn - 1) / 2);
-		}
-		else if (IS_BETWEEN(3, this->len, 4)) { /* ダンスモーション3/4 */
-			return min((int)lins(0, 0, this->mtime, this->len, GetNowCount() - this->Stime), this->len);
-		}
-		else if (5 <= this->len) { /* ロングモーション */
-			return lins_scale(0, 0, 750, 8, GetNowCount() - this->Stime);
-		}
-		else if (this->len < 0) { /* ミスモーション */
-			if (5000 <= GetNowCount() - this->Stime) { return 3; } /* ミス放置モーション */
-			return lins_scale(0, 0, 100, 2, GetNowCount() - this->Stime);
-		}
-		else { /* 待機モーション */
-			double loop_time = 2 * 60000 / this->bpm; /* 1ループの時間、this->bpmは0以外を保証 */
-			int base_time = GetNowCount() - this->Stime - this->offset; /* オフセットからの時間 */
-			int now_block = (int)(base_time / loop_time); /* ループ回数、loop_timeは0以外を保証 */
-			int in_time = base_time - now_block * loop_time; /* ループ内の時間 */
-			if (in_time < 0) { in_time += loop_time; } /* マイナス補正 */
-			return (int)lins(0, 0, loop_time, 8, in_time) % 8;
-		}
-		return 0; /* 通らないけど一応明記 */
-	}
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
 	/**
 	 * @brief 待機モーションのアニメ番号を取得する
 	 * @param なし
@@ -491,8 +737,6 @@ private:
 		}
 		return retval;
 	}
-
-#endif /* 3Dモデル */
 
 #if 1 /* デバッグ描画 */
 	/**
@@ -766,11 +1010,7 @@ private:
 			this->Nmotion_picNo = this->GetMotionRandom();
 		}
 
-#if FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		MV1DetachAnim(this->n3Dmodel_handle, this->n3Dmotion_dance_ath);
-		/* this->Nmotion_picNoを+2しているのは、0,1を別の用途で使用していて、nextに登録している番号はそれを考慮していないため */
-		this->n3Dmotion_dance_ath = MV1AttachAnim(this->n3Dmodel_handle, this->Nmotion_picNo + 2);
-#endif /* 3Dモデル */
+		this->n3Dmodel.setDance(this->Nmotion_picNo);
 	}
 
 #endif /* ダンスモーション抽選系 */
@@ -809,17 +1049,14 @@ public:
 		this->DrawDebugDanceString(x, y);
 		this->DrawDebugDanceWaitTime(x, y + 22);
 		this->DrawDebugDanceMotionTime(x, y + 42);
+		std::array<float, 5> mouthpar = this->n3Dmodel.getShapeRateMouth();
+		DrawBox(200,  20, lins_scale(0, 200, 1, 300, mouthpar[0]),  35, COLOR_WHITE, TRUE);
+		DrawBox(200,  40, lins_scale(0, 200, 1, 300, mouthpar[1]),  55, COLOR_WHITE, TRUE);
+		DrawBox(200,  60, lins_scale(0, 200, 1, 300, mouthpar[2]),  75, COLOR_WHITE, TRUE);
+		DrawBox(200,  80, lins_scale(0, 200, 1, 300, mouthpar[3]),  95, COLOR_WHITE, TRUE);
+		DrawBox(200, 100, lins_scale(0, 200, 1, 300, mouthpar[4]), 115, COLOR_WHITE, TRUE);
 #endif
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-		this->DrawDancerGraph(x, y);
-#elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dモデル */
-		MV1DrawModel(this->n3Dmodel_handle);
-		//DrawBox(200,  20, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl)),  35, COLOR_WHITE, TRUE);
-		//DrawBox(200,  40, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl)),  55, COLOR_WHITE, TRUE);
-		//DrawBox(200,  60, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl)),  75, COLOR_WHITE, TRUE);
-		//DrawBox(200,  80, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl)),  95, COLOR_WHITE, TRUE);
-		//DrawBox(200, 100, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl)), 115, COLOR_WHITE, TRUE);
-#endif /* 3Dモデル */
+		this->n3Dmodel.draw();
 	}
 
 #if 1 /* update系 */
@@ -828,21 +1065,21 @@ private: /* update系 */
 		size_t motion_frameNo = this->GetMotionAnimNo();
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_IDLE:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  motion_frameNo);
+			this->n3Dmodel.setAnimTimeIdle(motion_frameNo);
 			break;
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  motion_frameNo);
+			this->n3Dmodel.setAnimTimeMiss(motion_frameNo);
 			break;
 		case FBDF_DANCER_STATE_DANCING_1:
 		case FBDF_DANCER_STATE_DANCING_2:
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
+			this->n3Dmodel.setAnimTimeDance(motion_frameNo);
 			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, motion_frameNo);
-			MV1SetAttachAnimTime(this->n3Dmodel_handle, this->n3Dmotion_idle_ath, this->GetIdleMotionAnimNo()); /* idleも計算する必要あり */
+			this->n3Dmodel.setAnimTimeDance(motion_frameNo);
+			this->n3Dmodel.setAnimTimeIdle(this->GetIdleMotionAnimNo()); /* idleも計算する必要あり */
 			break;
 		}
 	}
@@ -850,31 +1087,20 @@ private: /* update系 */
 	void UpdateAttachAnimMat(void) {
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_IDLE:
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			this->n3Dmodel.setAnimType(0);
 			break;
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  1);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 0);
+			this->n3Dmodel.setAnimType(1);
 			break;
 		case FBDF_DANCER_STATE_DANCING_1:
 		case FBDF_DANCER_STATE_DANCING_2:
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,  0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1);
+			this->n3Dmodel.setAnimType(2);
 			break;
 		case FBDF_DANCER_STATE_DANCING_LONG:
-		{
-			float idle_per = lins_scale(500, 0.0, 750, 1.0, GetNowCount() - this->Stime);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_idle_ath,      idle_per);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_miss_ath,             0);
-			MV1SetAttachAnimBlendRate(this->n3Dmodel_handle, this->n3Dmotion_dance_ath, 1 - idle_per);
-		}
+			this->n3Dmodel.setAnimType(2, lins_scale(500, 0.0, 750, 1.0, GetNowCount() - this->Stime));
 			break;
 		}
 	}
@@ -917,99 +1143,98 @@ private: /* update系 */
 	 * @param なし
 	 * @return なし
 	 */
-	void UpdateEyesShape(void) const {
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 0.0);
+	void UpdateEyesShape(void) {
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_MISS:
 		case FBDF_DANCER_STATE_AFK:
 			/* FIXME: ユニオ専用の設定になってる */
 			if (GetNowCount() - this->Stime < 1000 * 20 / 60) {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_surps_hdl, 1.0);
+				this->n3Dmodel.setShapeEyes(2);
 			}
 			else if (GetNowCount() - this->Stime < 5000) {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, 0.5);
+				this->n3Dmodel.setShapeEyes(1);
 			}
 			else {
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 0.5);
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_smile_hdl, lins_scale(5000, 0.5, 5500, 0.0, GetNowCount() - this->Stime));
+				this->n3Dmodel.setShapeEyes(3);
 			}
 			break;
 		default:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_blick_hdl, 1 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
+			this->n3Dmodel.setShapeEyes(0);
 			break;
 		}
 	}
 
 	/* 口のシェイプキーの更新 */
-	void UpdateMouthShape(const tvec<FBDF_lyrics_mat_et> &lyrics, int Ntime) const {
-		double now_blend = lins_scale(-100, 1.0, 0, 0.0, Ntime - lyrics.offsetDataTime(1));
-		double nex_blend = lins_scale(-100, 0.0, 0, 1.0, Ntime - lyrics.offsetDataTime(1));
+	void UpdateMouthShape(const tvec<FBDF_lyrics_mat_et> &lyrics, int Ntime) {
+		size_t n = 0;
 		
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, 0.0);
-		MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, 0.0);
 		if ((this->Nstate == FBDF_DANCER_STATE_MISS) ||
 		    (this->Nstate == FBDF_DANCER_STATE_AFK)) {
+				this->n3Dmodel.setShapeMouth(0);
 			return;
 		}
 
 		switch (lyrics.nowData()) {
 		case FBDF_LYRICS_MAT_A:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, now_blend);
+			n = 1;
 			break;
 		case FBDF_LYRICS_MAT_I:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, now_blend);
+			n = 2;
 			break;
 		case FBDF_LYRICS_MAT_U:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, now_blend);
+			n = 3;
 			break;
 		case FBDF_LYRICS_MAT_E:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, now_blend);
+			n = 4;
 			break;
 		case FBDF_LYRICS_MAT_O:
-			MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, now_blend);
+			n = 5;
 			break;
 		case FBDF_LYRICS_MAT_N:
-			/* 口閉じなので何もしない */
+			n = 0;
 			break;
 		case FBDF_LYRICS_MAT_NONE:
 		case FBDF_LYRICS_MAT_FREE:
 		default:
+			n = 0;
 			/* 指定なし、キャラの気分で勝手に動く。 */
 			/* TODO: ↑の実装をする */
 			break;
 		}
 
-		if (lyrics.offsetDataTime(1) <= Ntime + 100) {
-			switch (lyrics.offsetData(1)) {
-			case FBDF_LYRICS_MAT_A:
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl, nex_blend);
-				break;
-			case FBDF_LYRICS_MAT_I:
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl, nex_blend);
-				break;
-			case FBDF_LYRICS_MAT_U:
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl, nex_blend);
-				break;
-			case FBDF_LYRICS_MAT_E:
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl, nex_blend);
-				break;
-			case FBDF_LYRICS_MAT_O:
-				MV1SetShapeRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl, nex_blend);
-				break;
-			case FBDF_LYRICS_MAT_N:
-			case FBDF_LYRICS_MAT_NONE:
-			case FBDF_LYRICS_MAT_FREE:
-			default:
-				/* 何もしない */
-				break;
-			}
+		if (Ntime + 100 < lyrics.offsetDataTime(1)) {
+			this->n3Dmodel.setShapeMouth(n);
+			return;
 		}
+
+		size_t p = 0;
+		double mix = lins_scale(-100, 0.0, 0, 1.0, Ntime - lyrics.offsetDataTime(1));
+		switch (lyrics.offsetData(1)) {
+		case FBDF_LYRICS_MAT_A:
+			p = 1;
+			break;
+		case FBDF_LYRICS_MAT_I:
+			p = 2;
+			break;
+		case FBDF_LYRICS_MAT_U:
+			p = 3;
+			break;
+		case FBDF_LYRICS_MAT_E:
+			p = 4;
+			break;
+		case FBDF_LYRICS_MAT_O:
+			p = 5;
+			break;
+		case FBDF_LYRICS_MAT_N:
+		case FBDF_LYRICS_MAT_NONE:
+		case FBDF_LYRICS_MAT_FREE:
+		default:
+			p = 0;
+			/* 何もしない */
+			break;
+		}
+
+		this->n3Dmodel.setShapeMouth(n, mix, p);
 	}
 
 public: /* update系 */
