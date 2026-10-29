@@ -1,4 +1,8 @@
 ﻿
+#pragma warning(push)
+#pragma warning(disable : 4365)
+#pragma warning(disable : 4566)
+#pragma warning(disable : 4710)
 #include <string>
 
 //#define LIGHT_MODE
@@ -13,7 +17,7 @@ std::string UTF8_converter(std::string src) {
 	return src;
 #else
 	std::string string_buf = src.substr(0, 2);
-	for (int ic = 2; ic < src.size(); ic++) {
+	for (size_t ic = 2; ic < src.size(); ic++) {
 		switch (((uint)(uchar)src[ic - 2] << 16) +
 			((uint)(uchar)src[ic - 1] <<  8) +
 			(uint)(uchar)src[ic])
@@ -42325,3 +42329,5 @@ std::string UTF8_converter(std::string src) {
 }
 
 #endif
+
+#pragma warning(pop)

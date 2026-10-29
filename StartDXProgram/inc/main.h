@@ -81,7 +81,11 @@
 
 #define WINDOW_SIZE_MODE 0 // 0~4 を切り替えながら使ってね
 
-#define TOOL_NAME "Four Beatz Dance Floor" // ツールの名前
+#if DEBUG
+#define TOOL_NAME "Four Beatz Dance Floor(debug)" // ツールの名前
+#else
+#define TOOL_NAME "Four Beatz Dance Floor Ver1.01" // ツールの名前
+#endif
 
 #if WINDOW_SIZE_MODE == 0 /* いつもの */
 #define WINDOW_SIZE_X 960 // ウィンドウの横のサイズ

@@ -207,6 +207,31 @@ static FBDF_Play_note_btn_et GetNoteButton(uint block, uint ic) {
 			break;
 		}
 		break;
+	case 7: /* 1234234 */
+		switch (ic) {
+		case 0:
+			ret = FBDF_PLAY_NOTE_BTN_1;
+			break;
+		case 1:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		case 2:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 3:
+			ret = FBDF_PLAY_NOTE_BTN_4;
+			break;
+		case 4:
+			ret = FBDF_PLAY_NOTE_BTN_2;
+			break;
+		case 5:
+			ret = FBDF_PLAY_NOTE_BTN_3;
+			break;
+		case 6:
+			ret = FBDF_PLAY_NOTE_BTN_4;
+			break;
+		}
+		break;
 	default:
 		if ((block % 3) == 0) {
 			/* 3等分して再計算 */

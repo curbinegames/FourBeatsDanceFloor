@@ -814,11 +814,11 @@ public:
 		this->DrawDancerGraph(x, y);
 #elif FBDF_DANCER_MAT_TYPE == 1 /* 3Dƒ‚ƒfƒ‹ */
 		MV1DrawModel(this->n3Dmodel_handle);
-		DrawBox(200,  20, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl)),  35, COLOR_WHITE, TRUE);
-		DrawBox(200,  40, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl)),  55, COLOR_WHITE, TRUE);
-		DrawBox(200,  60, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl)),  75, COLOR_WHITE, TRUE);
-		DrawBox(200,  80, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl)),  95, COLOR_WHITE, TRUE);
-		DrawBox(200, 100, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl)), 115, COLOR_WHITE, TRUE);
+		//DrawBox(200,  20, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_a_hdl)),  35, COLOR_WHITE, TRUE);
+		//DrawBox(200,  40, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_i_hdl)),  55, COLOR_WHITE, TRUE);
+		//DrawBox(200,  60, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_u_hdl)),  75, COLOR_WHITE, TRUE);
+		//DrawBox(200,  80, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_e_hdl)),  95, COLOR_WHITE, TRUE);
+		//DrawBox(200, 100, lins_scale(0, 200, 1, 300, MV1GetShapeApplyRate(this->n3Dmodel_handle, this->n3Dshape_o_hdl)), 115, COLOR_WHITE, TRUE);
 #endif /* 3Dƒ‚ƒfƒ‹ */
 	}
 
