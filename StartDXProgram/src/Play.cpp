@@ -267,7 +267,6 @@ private:
 	int shape_o = -1;
 
 private:
-
 	void setSize(float size) {
 		MV1SetScale(this->model_handle, VGet(size, size, size));
 	}
@@ -431,17 +430,17 @@ public:
 		if (!this->IsValid()) { return; }
 		idle_per = betweens(0.0, idle_per, 1.0);
 		switch (n) {
-		case 0:
+		case 0: /* idle */
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,  1);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,  0);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 0);
 			break;
-		case 1:
+		case 1: /* miss */
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,  0);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,  1);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 0);
 			break;
-		case 2:
+		case 2: /* dance */
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_idle,      idle_per);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_miss,             0);
 			MV1SetAttachAnimBlendRate(this->model_handle, this->anim_dance, 1 - idle_per);
@@ -476,22 +475,22 @@ public:
 	void setShapeEyes(size_t n) {
 		if (!this->IsValid()) { return; }
 		switch(n) {
-		case 0:
+		case 0: /* 瞬き */
 			MV1SetShapeRate(this->model_handle, this->shape_blink, 1.0 - abs(lins_scale(0, 0.0, 200, 2.0, GetNowCount() % 6000) - 1));
 			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
 			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
 			break;
-		case 1:
+		case 1:/* 目閉じ */
 			MV1SetShapeRate(this->model_handle, this->shape_blink, 1.0);
 			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
 			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
 			break;
-		case 2:
+		case 2: /* 驚き */
 			MV1SetShapeRate(this->model_handle, this->shape_blink, 0.0);
 			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.0);
 			MV1SetShapeRate(this->model_handle, this->shape_surps, 1.0);
 			break;
-		case 3: /* TODO: ジト目ブレンドシェイプを用意する */
+		case 3: /* ジト目 */ /* TODO: ジト目ブレンドシェイプを用意する */
 			MV1SetShapeRate(this->model_handle, this->shape_blink, 0.5);
 			MV1SetShapeRate(this->model_handle, this->shape_smile, 0.5);
 			MV1SetShapeRate(this->model_handle, this->shape_surps, 0.0);
@@ -518,43 +517,43 @@ public:
 		MV1SetShapeRate(this->model_handle, this->shape_o, 0.0);
 
 		switch (n) {
-		case 0:
+		case 0: /* n */
 			ns = -1;
 			break;
-		case 1:
+		case 1: /* a */
 			ns = this->shape_a;
 			break;
-		case 2:
+		case 2: /* i */
 			ns = this->shape_i;
 			break;
-		case 3:
+		case 3: /* u */
 			ns = this->shape_u;
 			break;
-		case 4:
+		case 4: /* e */
 			ns = this->shape_e;
 			break;
-		case 5:
+		case 5: /* o */
 			ns = this->shape_o;
 			break;
 		}
 
 		switch (p) {
-		case 0:
+		case 0: /* n */
 			ps = -1;
 			break;
-		case 1:
+		case 1: /* a */
 			ps = this->shape_a;
 			break;
-		case 2:
+		case 2: /* i */
 			ps = this->shape_i;
 			break;
-		case 3:
+		case 3: /* u */
 			ps = this->shape_u;
 			break;
-		case 4:
+		case 4: /* e */
 			ps = this->shape_e;
 			break;
-		case 5:
+		case 5: /* o */
 			ps = this->shape_o;
 			break;
 		}
@@ -593,7 +592,7 @@ public:
  * dance    --一定時間経過した--> idle
  */
 class FBDF_dancer_c {
-private:
+private: /* パラメータ定義 */
 	const size_t motion_len = 120;
 
 	int      len    = 0; /* -1:miss, 0:idle, 1~4:tip, 5~:long */
@@ -610,32 +609,37 @@ private:
 	std::vector<size_t> searched_motion;
 	std::vector<FBDF_Play_motion_st> motion_data;
 
+private: /* コンストラクタ系 */
+	std::string GetDancerName(size_t n) const {
+		std::string name;
+		switch (n) {
+		case FBDF_DANCER_UNIOW:
+			name = "uniow";
+			break;
+		case FBDF_DANCER_NEIDA:
+			name = "neida";
+			break;
+		case FBDF_DANCER_TRIMBA:
+			name = "trimba";
+			break;
+		case FBDF_DANCER_QUATTRO:
+			name = "quattro";
+			break;
+		default:
+			name = "uniow";
+			break;
+		}
+		return name;
+	}
+
 public: /* コンストラクタ系 */
 	FBDF_dancer_c(void) : FBDF_dancer_c(FBDF_DANCER_UNIOW) {} /* ユニオとして初期化 */
 
 	FBDF_dancer_c(size_t n) {
-		std::string chara_name;
-		std::string n3Dmodel_path = "dancer/";
-
-		switch (n) {
-		case FBDF_DANCER_UNIOW:
-			chara_name = "uniow";
-			break;
-		case FBDF_DANCER_NEIDA:
-			chara_name = "neida";
-			break;
-		case FBDF_DANCER_TRIMBA:
-			chara_name = "trimba";
-			break;
-		case FBDF_DANCER_QUATTRO:
-			chara_name = "quattro";
-			break;
-		default:
-			chara_name = "uniow";
-			break;
-		}
+		std::string chara_name = this->GetDancerName(n);
 		FBDF_DancerMotionEnc(motion_data, chara_name.c_str());
 
+		std::string n3Dmodel_path = "dancer/";
 		n3Dmodel_path += chara_name;
 		n3Dmodel_path += "/model.mv1";
 
@@ -661,7 +665,7 @@ public: /* コンストラクタ系 */
 #endif
 	}
 
-private:
+private: /* アニメ番号取得系 */
 	/**
 	 * @brief 待機モーションのアニメ番号を取得する
 	 * @param なし
@@ -677,46 +681,66 @@ private:
 	}
 
 	/**
+	 * @brief ダンス1モーションのアニメ番号を取得する
+	 * @param なし
+	 * @return アニメ番号
+	 */
+	size_t GetDance1MotionAnimNo(void) const {
+		size_t start = 0;
+		size_t end = 60;
+		switch (this->btn) {
+		case FBDF_PLAY_NOTE_BTN_1:
+			start = 0;
+			break;
+		case FBDF_PLAY_NOTE_BTN_2:
+			start = this->motion_len / 4;
+			break;
+		case FBDF_PLAY_NOTE_BTN_3:
+			start = this->motion_len / 2;
+			break;
+		case FBDF_PLAY_NOTE_BTN_4:
+			start = this->motion_len * 3 / 4;
+			break;
+		}
+		end = start + this->motion_len / 4;
+		return lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+	}
+
+	/**
+	 * @brief ダンス2モーションのアニメ番号を取得する
+	 * @param なし
+	 * @return アニメ番号
+	 */
+	size_t GetDance2MotionAnimNo(void) const {
+		size_t start = 0;
+		size_t end = 60;
+		switch (this->btn) {
+		case FBDF_PLAY_NOTE_BTN_1:
+		case FBDF_PLAY_NOTE_BTN_2:
+			start = 0;
+			break;
+		case FBDF_PLAY_NOTE_BTN_3:
+		case FBDF_PLAY_NOTE_BTN_4:
+			start = this->motion_len / 2;
+			break;
+		}
+		end = start + this->motion_len / 2;
+		return lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+	}
+
+	/**
 	 * @brief 今のモーションのアニメ番号を取得する
 	 * @param なし
 	 * @return アニメ番号
 	 */
 	size_t GetMotionAnimNo(void) const {
 		size_t retval = 0;
-		size_t start = 0;
-		size_t end = 60;
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_DANCING_1:
-			switch (this->btn) {
-			case FBDF_PLAY_NOTE_BTN_1:
-				start = 0;
-				break;
-			case FBDF_PLAY_NOTE_BTN_2:
-				start = this->motion_len / 4;
-				break;
-			case FBDF_PLAY_NOTE_BTN_3:
-				start = this->motion_len / 2;
-				break;
-			case FBDF_PLAY_NOTE_BTN_4:
-				start = this->motion_len * 3 / 4;
-				break;
-			}
-			end = start + this->motion_len / 4;
-			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+			retval = GetDance1MotionAnimNo();
 			break;
 		case FBDF_DANCER_STATE_DANCING_2:
-			switch (this->btn) {
-			case FBDF_PLAY_NOTE_BTN_1:
-			case FBDF_PLAY_NOTE_BTN_2:
-				start = 0;
-				break;
-			case FBDF_PLAY_NOTE_BTN_3:
-			case FBDF_PLAY_NOTE_BTN_4:
-				start = this->motion_len / 2;
-				break;
-			}
-			end = start + this->motion_len / 2;
-			retval = lins_scale(0, start, this->mtime, end, GetNowCount() - this->Stime);
+			retval = GetDance2MotionAnimNo();
 			break;
 		case FBDF_DANCER_STATE_DANCING_3:
 		case FBDF_DANCER_STATE_DANCING_4:
@@ -738,7 +762,7 @@ private:
 		return retval;
 	}
 
-#if 1 /* デバッグ描画 */
+private: /* デバッグ描画 */
 	/**
 	 * @brief デバッグ用、ステート情報を描く
 	 * @param[in] x 描画横位置
@@ -844,10 +868,26 @@ private:
 		return;
 	}
 
-#endif /* デバッグ描画 */
+	/**
+	 * @brief デバッグをすべて表示する
+	 * @param[in] x 描画横位置
+	 * @param[in] y 描画縦位置
+	 * @return なし
+	 */
+	void DrawDebug(int x, int y) const {
+		DrawString(x, y - 20, "ここでダンサーが踊る", COLOR_WHITE);
+		this->DrawDebugDanceString(x, y);
+		this->DrawDebugDanceWaitTime(x, y + 22);
+		this->DrawDebugDanceMotionTime(x, y + 42);
+		std::array<float, 5> mouthpar = this->n3Dmodel.getShapeRateMouth();
+		DrawBox(200,  20, lins_scale(0, 200, 1, 300, mouthpar[0]),  35, COLOR_WHITE, TRUE);
+		DrawBox(200,  40, lins_scale(0, 200, 1, 300, mouthpar[1]),  55, COLOR_WHITE, TRUE);
+		DrawBox(200,  60, lins_scale(0, 200, 1, 300, mouthpar[2]),  75, COLOR_WHITE, TRUE);
+		DrawBox(200,  80, lins_scale(0, 200, 1, 300, mouthpar[3]),  95, COLOR_WHITE, TRUE);
+		DrawBox(200, 100, lins_scale(0, 200, 1, 300, mouthpar[4]), 115, COLOR_WHITE, TRUE);
+	}
 
-#if 1 /* ダンスモーション抽選系 */
-
+private: /* ダンスモーション抽選系 */
 	/**
 	 * @brief srcがしたい下条件に合うかどうかを返す
 	 * @param[in] src モーションデータ
@@ -967,7 +1007,7 @@ private:
 	 * @return size_t 抽選結果
 	 */
 	size_t GetMotionRandom(void) const {
-		if (this->searched_motion.size() < 1) { return 0; } /* searched_motionが空っぽなのでとりあえず0を返しておく(1個でも画像データがあればそれを表示できる) */
+		if (this->searched_motion.size() < 1) { return 0; } /* searched_motionが空っぽなのでとりあえず0を返しておく(1個でもモーションデータがあればそれを表示できる) */
 		return searched_motion.at(GetRand(this->searched_motion.size() - 1));
 	}
 
@@ -1013,30 +1053,7 @@ private:
 		this->n3Dmodel.setDance(this->Nmotion_picNo);
 	}
 
-#endif /* ダンスモーション抽選系 */
-
-#if FBDF_DANCER_MAT_TYPE == 0 /* 画像 */
-	/**
-	 * @brief ダンサーを描く
-	 * @param[in] x 描画横位置
-	 * @param[in] y 描画縦位置
-	 * @return なし
-	 */
-	void DrawDancerGraph(int x, int y) const {
-		if (this->len == 0) { /* 待機モーション */
-			DrawGraph(x, y, this->idle_pic.handle(this->GetMotionAnimNo()), TRUE);
-		}
-		else if (this->len < 0) { /* ミスモーション */
-			DrawGraph(x, y, this->miss_pic.handle(this->GetMotionAnimNo()), TRUE);
-		}
-		else { /* ダンスモーション */
-			const FBDF_Play_motion_st &motion_p = this->motion_data.at(Nmotion_picNo);
-			DrawGraph(x, y, motion_p.pic.handle(this->GetMotionAnimNo()), TRUE);
-		}
-	}
-#endif /* 画像 */
-
-public:
+public: /* draw系 */
 	/**
 	 * @brief ダンサー描画
 	 * @param[in] x 描画横位置
@@ -1044,23 +1061,14 @@ public:
 	 * @return なし
 	 */
 	void DrawDance(int x, int y) const {
-#if 0 /* デバッグ */
-		DrawString(x, y - 20, "ここでダンサーが踊る", COLOR_WHITE);
-		this->DrawDebugDanceString(x, y);
-		this->DrawDebugDanceWaitTime(x, y + 22);
-		this->DrawDebugDanceMotionTime(x, y + 42);
-		std::array<float, 5> mouthpar = this->n3Dmodel.getShapeRateMouth();
-		DrawBox(200,  20, lins_scale(0, 200, 1, 300, mouthpar[0]),  35, COLOR_WHITE, TRUE);
-		DrawBox(200,  40, lins_scale(0, 200, 1, 300, mouthpar[1]),  55, COLOR_WHITE, TRUE);
-		DrawBox(200,  60, lins_scale(0, 200, 1, 300, mouthpar[2]),  75, COLOR_WHITE, TRUE);
-		DrawBox(200,  80, lins_scale(0, 200, 1, 300, mouthpar[3]),  95, COLOR_WHITE, TRUE);
-		DrawBox(200, 100, lins_scale(0, 200, 1, 300, mouthpar[4]), 115, COLOR_WHITE, TRUE);
-#endif
 		this->n3Dmodel.draw();
+#if 0 /* デバッグ */
+		this->DrawDebug(x, y);
+#endif
 	}
 
-#if 1 /* update系 */
 private: /* update系 */
+	/* アニメ番号を更新する */
 	void UpdateAnimTime(void) {
 		size_t motion_frameNo = this->GetMotionAnimNo();
 		switch (this->Nstate) {
@@ -1084,6 +1092,7 @@ private: /* update系 */
 		}
 	}
 
+	/* モーションを更新する */
 	void UpdateAttachAnimMat(void) {
 		switch (this->Nstate) {
 		case FBDF_DANCER_STATE_IDLE:
@@ -1265,9 +1274,8 @@ public: /* update系 */
 		this->UpdateMouthShape(lyrics, Ntime);
 		return;
 	}
-#endif /* update系 */
 
-#if 1 /* set系 */
+public: /* set系 */
 	/**
 	 * @brief ミスモーションにする
 	 * @param なし 
@@ -1311,7 +1319,6 @@ public: /* update系 */
 	void SetBpm(double val) {
 		this->bpm = max(0.1, val);
 	}
-#endif /* set系 */
 };
 
 class FBDF_score_bar_c {
